@@ -61,7 +61,7 @@ export function calculateDebtBalance(principal: CZK, annualRateBps: Bps, termMon
   if (monthsPaid <= 0) return principal;
   const sched = calculateAmortization(principal, annualRateBps, termMonths);
   if (monthsPaid >= sched.length) return 0;
-  return sched[monthsPaid - 1].balance;
+  return sched[monthsPaid - 1]?.balance ?? 0;
 }
 
 /** Principal repaid over the first n months. */
@@ -250,10 +250,10 @@ export function calculateTotalReturn(input: InvestmentInput): InvestmentResult {
     yearly.push({ year: y, value, debt, equity: value - debt, cashFlow: cf, rent });
     flows.push(cf);
   }
-  const last = yearly[yearly.length - 1];
+  const last = yearly[yearly.length - 1]!;
   const saleCosts = Math.round(last.value * bpsToRate(input.saleCostsBps));
   const exitEquity = last.value - last.debt - saleCosts;
-  flows[flows.length - 1] += exitEquity;
+  flows[flows.length - 1] = (flows[flows.length - 1] ?? 0) + exitEquity;
   const totalReturn = cumulativeCash + exitEquity - cashInvested;
 
   return {
