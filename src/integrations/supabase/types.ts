@@ -250,6 +250,7 @@ export type Database = {
           name: string
           notes: string | null
           property_types: string[]
+          risk_level: string | null
           strategy: string
           updated_at: string
           user_id: string
@@ -268,6 +269,7 @@ export type Database = {
           name: string
           notes?: string | null
           property_types?: string[]
+          risk_level?: string | null
           strategy?: string
           updated_at?: string
           user_id: string
@@ -286,6 +288,7 @@ export type Database = {
           name?: string
           notes?: string | null
           property_types?: string[]
+          risk_level?: string | null
           strategy?: string
           updated_at?: string
           user_id?: string
@@ -562,6 +565,24 @@ export type Database = {
           is_sample?: boolean
           listings_count?: number | null
           period?: string
+        }
+        Relationships: []
+      }
+      notification_settings: {
+        Row: {
+          prefs: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          prefs?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          prefs?: Json
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
