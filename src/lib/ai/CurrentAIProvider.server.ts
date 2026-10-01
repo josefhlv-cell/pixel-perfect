@@ -90,12 +90,12 @@ export class CurrentAIProvider implements AIProvider {
     const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
     const str = (v: unknown) => (typeof v === "string" && v.trim() ? v : null);
     return {
-      price: num(j.price),
-      area_m2: num(j.area_m2),
-      rooms: str(j.rooms),
-      city: str(j.city),
-      address: str(j.address),
-      statusMarker: j.statusMarker === "SOLD" || j.statusMarker === "RESERVED" ? j.statusMarker : null,
+      price: num(j["price"]),
+      area_m2: num(j["area_m2"]),
+      rooms: str(j["rooms"]),
+      city: str(j["city"]),
+      address: str(j["address"]),
+      statusMarker: (j["statusMarker"] === "SOLD" || j["statusMarker"] === "RESERVED" ? j["statusMarker"] : null) as "SOLD" | "RESERVED" | null,
     };
   }
 
@@ -105,7 +105,7 @@ export class CurrentAIProvider implements AIProvider {
       JSON.stringify(input),
     );
     const j = parseJsonLoose(text);
-    return Array.isArray(j?.queries) ? (j!.queries as unknown[]).filter((q): q is string => typeof q === "string").slice(0, 8) : [];
+    return Array.isArray(j?.["queries"]) ? (j!["queries"] as unknown[]).filter((q): q is string => typeof q === "string").slice(0, 8) : [];
   }
 
   async summarizeMarket(input: MarketSummaryInput) {

@@ -48,7 +48,7 @@ describe("amortization", () => {
   it("ends at zero balance and principal sums to loan", () => {
     const s = calculateAmortization(1_000_000, 500, 120);
     expect(s).toHaveLength(120);
-    expect(s[119].balance).toBe(0);
+    expect(s[119]?.balance).toBe(0);
     const sum = s.reduce((a, r) => a + r.principal, 0);
     expect(Math.abs(sum - 1_000_000)).toBeLessThanOrEqual(120);
   });

@@ -34,13 +34,13 @@ export function parseAnalysis(text: string): PropertyAnalysis {
     return { summary: text.trim().slice(0, 1200), advantages: [], risks: [], missingInfo: [], sellerQuestions: [], dueDiligence: [], scenarios: [], redFlags: [] };
   }
   return {
-    summary: typeof j.summary === "string" ? j.summary : "",
-    advantages: claims(j.advantages),
-    risks: claims(j.risks),
-    missingInfo: strings(j.missingInfo),
-    sellerQuestions: strings(j.sellerQuestions),
-    dueDiligence: strings(j.dueDiligence),
-    scenarios: claims(j.scenarios),
-    redFlags: claims(j.redFlags),
+    summary: typeof j["summary"] === "string" ? j["summary"] : "",
+    advantages: claims(j["advantages"]),
+    risks: claims(j["risks"]),
+    missingInfo: strings(j["missingInfo"]),
+    sellerQuestions: strings(j["sellerQuestions"]),
+    dueDiligence: strings(j["dueDiligence"]),
+    scenarios: claims(j["scenarios"]),
+    redFlags: claims(j["redFlags"]),
   };
 }

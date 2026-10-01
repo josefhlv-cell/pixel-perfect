@@ -35,7 +35,7 @@ describe("availability decisions", () => {
   it("9 blocked source", () => {
     const d = decideAvailability({ previousStatus: "ACTIVE_CONFIRMED", previousPrice: 1, outcome: { kind: "blocked", http: 403 } });
     expect(d.newStatus).toBe("ACTIVE_UNCONFIRMED");
-    expect(d.events[0].type).toBe("source_blocked");
+    expect(d.events[0]?.type).toBe("source_blocked");
   });
   it("10 price decrease event", () => {
     const d = decideAvailability({ previousStatus: "ACTIVE_CONFIRMED", previousPrice: 100, outcome: { kind: "ok", http: 200, price: 90 } });
