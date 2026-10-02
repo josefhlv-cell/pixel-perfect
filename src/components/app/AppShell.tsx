@@ -12,7 +12,6 @@ import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
 
 export const NAV = [
   { to: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
@@ -103,9 +102,10 @@ function TopBar() {
     setT(next);
   };
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await qc.cancelQueries();
     qc.clear();
-    navigate({ to: "/auth" });
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
   };
 
   return (
@@ -157,6 +157,3 @@ function TopBar() {
   );
 }
 
-export function NavIconCn(active: boolean) {
-  return cn(active && "text-primary");
-}
