@@ -90,7 +90,6 @@ function Portfolio() {
                         <Button size="icon" variant="ghost" aria-label="Ocenění" onClick={() => setVal(p)}><TrendingUp className="h-4 w-4" /></Button>
                         <Button size="icon" variant="ghost" aria-label="Upravit" onClick={() => setEdit(p)}><Pencil className="h-4 w-4" /></Button>
                         <Button size="icon" variant="ghost" aria-label="Odstranit" onClick={() => setDel(p)}><Trash2 className="h-4 w-4" /></Button>
-                        {p.property_id && <Link to="/properties" className="sr-only">detail</Link>}
                       </td>
                     </tr>
                   );
