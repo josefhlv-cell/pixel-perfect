@@ -127,7 +127,7 @@ function Fields<T extends Record<string, string>>({ v, set, defs }: { v: T; set:
       {defs.map(([k, label, type]) => (
         <div key={k} className={k === "name" || k === "note" ? "col-span-2 space-y-1" : "space-y-1"}>
           <Label htmlFor={`f-${k}`} className="text-xs">{label}</Label>
-          <Input id={`f-${k}`} type={type ?? "text"} value={v[k]} onChange={(e) => set({ ...v, [k]: e.target.value })} />
+          <Input id={`f-${k}`} type={type ?? "text"} value={v[k] ?? ""} onChange={(e) => set({ ...v, [k]: e.target.value })} />
         </div>
       ))}
     </div>
@@ -141,14 +141,14 @@ function EditDialog({ row, onClose }: { row: PortfolioRow | null; onClose: () =>
     rent: String(row?.monthly_rent ?? 0), expenses: String(row?.monthly_expenses ?? 0), vacancy: String((row?.vacancy_bps ?? 500) / 100),
   });
   const save = async () => {
-    if (!v.name.trim() || n(v.price) <= 0) return toast.error("Vyplňte název a kupní cenu.");
+    if (!v.name.trim() || n(v.price) <= 0) return void toast.error("Vyplňte název a kupní cenu.");
     const payload = {
       name: v.name.trim().slice(0, 200), city: v.city.trim() || null, area_m2: v.area ? Number(v.area.replace(",", ".")) : null, purchase_price: n(v.price), purchase_date: v.date,
       current_value: v.value ? n(v.value) : null, mortgage_principal: n(v.mortgage), interest_rate_bps: Math.round(Number(v.rate.replace(",", ".")) * 100),
       term_months: Math.max(12, Math.round(Number(v.years) * 12)), monthly_rent: n(v.rent), monthly_expenses: n(v.expenses), vacancy_bps: Math.round(Number(v.vacancy.replace(",", ".")) * 100),
     };
     const { error } = row ? await supabase.from("portfolio_properties").update(payload).eq("id", row.id) : await supabase.from("portfolio_properties").insert({ ...payload, user_id: await uid() });
-    if (error) return toast.error("Uložení se nepovedlo.");
+    if (error) return void toast.error("Uložení se nepovedlo.");
     toast.success("Uloženo");
     onClose();
   };
@@ -169,7 +169,7 @@ function TxDialog({ row, onClose }: { row: PortfolioRow; onClose: () => void }) 
   const save = async () => {
     const sign = ["rent", "income", "sale"].includes(kind) ? 1 : -1;
     const { error } = await supabase.from("portfolio_transactions").insert({ user_id: await uid(), portfolio_property_id: row.id, kind, amount: sign * Math.abs(n(v.amount)), occurred_on: v.date, note: v.note.slice(0, 300) || null });
-    if (error) return toast.error("Uložení se nepovedlo.");
+    if (error) return void toast.error("Uložení se nepovedlo.");
     toast.success("Transakce přidána");
     onClose();
   };
@@ -180,7 +180,7 @@ function TxDialog({ row, onClose }: { row: PortfolioRow; onClose: () => void }) 
         <Select value={kind} onValueChange={setKind}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
-            {[["rent", "Nájem"], ["income", "Jiný příjem"], ["expense", "Náklad"], ["repair", "Oprava"], ["tax", "Daň"], ["sale", "Prodej"]].map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}
+            {([["rent", "Nájem"], ["income", "Jiný příjem"], ["expense", "Náklad"], ["repair", "Oprava"], ["tax", "Daň"], ["sale", "Prodej"]] as const).map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}
           </SelectContent>
         </Select>
         <Fields v={v} set={setV} defs={[["amount", "Částka (Kč)"], ["date", "Datum", "date"], ["note", "Poznámka"]]} />
@@ -194,7 +194,7 @@ function ValDialog({ row, onClose }: { row: PortfolioRow; onClose: () => void })
   const [v, setV] = useState({ value: String(row.current_value ?? row.purchase_price), date: new Date().toISOString().slice(0, 10) });
   const save = async () => {
     const { error } = await supabase.from("portfolio_valuations").insert({ user_id: await uid(), portfolio_property_id: row.id, value: n(v.value), valued_on: v.date, source: "manual" });
-    if (error) return toast.error("Uložení se nepovedlo.");
+    if (error) return void toast.error("Uložení se nepovedlo.");
     toast.success("Ocenění uloženo");
     onClose();
   };

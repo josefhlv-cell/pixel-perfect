@@ -61,7 +61,7 @@ export function AnalysisView({ a, focus }: { a: PropertyAnalysis; focus?: AiKind
   );
 }
 
-export function AiRunner({ kind, listingId, label }: { kind: AiKind; listingId?: string; label?: string }) {
+export function AiRunner({ kind, listingId, label }: { kind: AiKind; listingId?: string | undefined; label?: string | undefined }) {
   const run = useServerFn(runAiAnalysis);
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState<Result | null>(null);

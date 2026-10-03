@@ -44,7 +44,7 @@ export function ListingCard({ e, showReasons }: { e: EnrichedListing; showReason
   );
 }
 
-function Stat({ k, v, tone }: { k: string; v: string; tone?: "pos" | "neg" }) {
+function Stat({ k, v, tone }: { k: string; v: string; tone?: "pos" | "neg" | undefined }) {
   return (
     <div>
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</div>

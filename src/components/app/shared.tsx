@@ -49,7 +49,7 @@ export function PriorityBadge({ value, size = "sm" }: { value: number; size?: "s
   );
 }
 
-export function Kpi({ label, value, sub, tone }: { label: string; value: ReactNode; sub?: ReactNode; tone?: "pos" | "neg" }) {
+export function Kpi({ label, value, sub, tone }: { label: string; value: ReactNode; sub?: ReactNode; tone?: "pos" | "neg" | undefined }) {
   return (
     <div className="rounded-md border bg-card p-3">
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>

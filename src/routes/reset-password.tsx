@@ -23,9 +23,9 @@ function Reset() {
   const navigate = useNavigate();
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (pw.length < 8) return toast.error("Heslo musí mít alespoň 8 znaků");
+    if (pw.length < 8) return void toast.error("Heslo musí mít alespoň 8 znaků");
     const { error } = await supabase.auth.updateUser({ password: pw });
-    if (error) return toast.error(error.message);
+    if (error) return void toast.error(error.message);
     toast.success("Heslo změněno");
     navigate({ to: "/dashboard" });
   };
