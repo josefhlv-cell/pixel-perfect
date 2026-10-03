@@ -55,7 +55,7 @@ function MapPage() {
       <div className="flex flex-wrap gap-4 rounded-md border bg-card p-3">
         {LAYERS.map((l) => (
           <div key={l.k} className="flex items-center gap-2">
-            <Switch id={`layer-${l.k}`} checked={on[l.k]} onCheckedChange={(c) => setOn({ ...on, [l.k]: c })} />
+            <Switch id={`layer-${l.k}`} checked={!!on[l.k]} onCheckedChange={(c) => setOn({ ...on, [l.k]: c })} />
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: l.color }} />
             <Label htmlFor={`layer-${l.k}`} className="text-sm">{l.label}</Label>
           </div>

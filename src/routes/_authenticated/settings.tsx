@@ -49,13 +49,13 @@ function Settings() {
       interest_rate_bps: Math.round(num(v.rate) * 100),
     };
     const { error } = inv ? await supabase.from("investor_profiles").update(payload).eq("id", inv.id) : await supabase.from("investor_profiles").insert({ ...payload, user_id: data.userId });
-    if (error) return toast.error("Uložení se nepovedlo.");
+    if (error) return void toast.error("Uložení se nepovedlo.");
     toast.success("Investiční profil uložen");
     qc.invalidateQueries({ queryKey: ["profile"] });
   };
   const saveName = async () => {
     const { error } = await supabase.from("profiles").update({ display_name: name.trim().slice(0, 80) || null }).eq("id", data.userId);
-    if (error) return toast.error("Uložení se nepovedlo.");
+    if (error) return void toast.error("Uložení se nepovedlo.");
     toast.success("Uloženo");
     qc.invalidateQueries({ queryKey: ["profile"] });
   };
