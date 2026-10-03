@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { ExternalLink, Star, Plus } from "lucide-react";
 import { addToWatchlist, listingsQuery, uid, watchlistQuery } from "@/lib/queries";
 import { calculateMortgagePayment, calculateTotalReturn } from "@/lib/calculations";
-import { defaultInvestmentInput, priorityBreakdown } from "@/lib/deals";
+import { defaultInvestmentInput, priorityBreakdown, type EnrichedListing } from "@/lib/deals";
 import { formatBps, formatCZK, formatNumber, formatRelative } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import { pageHead } from "@/lib/head";
@@ -221,7 +221,7 @@ function Detail() {
   );
 }
 
-function AddToPortfolio({ open, onOpenChange, e }: { open: boolean; onOpenChange: (o: boolean) => void; e: ReturnType<typeof useDetailType> }) {
+function AddToPortfolio({ open, onOpenChange, e }: { open: boolean; onOpenChange: (o: boolean) => void; e: EnrichedListing }) {
   const qc = useQueryClient();
   const price = e.listing.price ?? 0;
   const [v, setV] = useState({ name: e.listing.title ?? "", price: String(price), mortgage: String(Math.round(price * 0.8)), rate: "4.89", years: "30", rent: String(e.rent ?? 0), expenses: String(Math.round((e.rent ?? 0) * 0.15)), date: new Date().toISOString().slice(0, 10) });
@@ -260,5 +260,3 @@ function AddToPortfolio({ open, onOpenChange, e }: { open: boolean; onOpenChange
     </Dialog>
   );
 }
-type DetailE = Awaited<ReturnType<NonNullable<typeof listingsQuery.queryFn>>>[number];
-function useDetailType(): DetailE { return null as never; }
