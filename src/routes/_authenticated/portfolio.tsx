@@ -180,7 +180,7 @@ function TxDialog({ row, onClose }: { row: PortfolioRow; onClose: () => void }) 
         <Select value={kind} onValueChange={setKind}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
-            {[["rent", "Nájem"], ["income", "Jiný příjem"], ["expense", "Náklad"], ["repair", "Oprava"], ["tax", "Daň"], ["sale", "Prodej"]].map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}
+            {([["rent", "Nájem"], ["income", "Jiný příjem"], ["expense", "Náklad"], ["repair", "Oprava"], ["tax", "Daň"], ["sale", "Prodej"]] as const).map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}
           </SelectContent>
         </Select>
         <Fields v={v} set={setV} defs={[["amount", "Částka (Kč)"], ["date", "Datum", "date"], ["note", "Poznámka"]]} />
