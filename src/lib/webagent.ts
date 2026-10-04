@@ -155,3 +155,103 @@ export function parseQuery(q: string): { rooms: string | null; maxPrice: number 
   const minYieldPct = y ? Number(y[1]!.replace(",", ".")) : null;
   return { rooms, maxPrice, minYieldPct };
 }
+
+// ---------------------------------------------------------------------------
+// Location / rooms / geo helpers used by Deal Hunter filters
+// ---------------------------------------------------------------------------
+
+/** Normalize Czech city names for matching (lowercase, strip diacritics, common suffixes). */
+export function normalizeLocation(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s*[-–—]\s*.+$/, "") // "Pardubice - centrum" → "pardubice"
+    .replace(/\s+(mesto|obec|mestska cast|okres)\b.*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** True when listing city matches the user location filter. */
+export function locationMatches(listingCity: string | null | undefined, filter: string): boolean {
+  if (!filter.trim()) return true;
+  if (!listingCity) return false;
+  const a = normalizeLocation(listingCity);
+  const b = normalizeLocation(filter);
+  if (!a || !b) return false;
+  return a === b || a.startsWith(b + " ") || a.includes(b) || b.includes(a);
+}
+
+/** Normalize disposition string ("2 + kk" → "2+kk"). */
+export function normalizeRooms(s: string | null | undefined): string {
+  if (!s) return "";
+  return s.replace(/\s+/g, "").toLowerCase();
+}
+
+/** Exact-ish rooms match: "2+kk" matches "2+kk" / "2+KK", not "12+kk". */
+export function roomsMatch(listingRooms: string | null | undefined, filter: string): boolean {
+  if (!filter.trim()) return true;
+  const a = normalizeRooms(listingRooms);
+  const b = normalizeRooms(filter);
+  if (!a || !b) return false;
+  return a === b || a.startsWith(b) || b.startsWith(a);
+}
+
+/** Haversine distance in km between two WGS84 points. */
+export function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/** Approximate city centroids for common Czech cities (used when radius filter is set but listing has no coords). */
+const CITY_CENTROIDS: Record<string, { lat: number; lng: number }> = {
+  praha: { lat: 50.0755, lng: 14.4378 },
+  brno: { lat: 49.1951, lng: 16.6068 },
+  ostrava: { lat: 49.8209, lng: 18.2625 },
+  plzen: { lat: 49.7465, lng: 13.3775 },
+  liberec: { lat: 50.7663, lng: 15.0543 },
+  olomouc: { lat: 49.5938, lng: 17.2509 },
+  usti: { lat: 50.6607, lng: 14.0323 },
+  "usti nad labem": { lat: 50.6607, lng: 14.0323 },
+  hradec: { lat: 50.2104, lng: 15.8252 },
+  "hradec kralove": { lat: 50.2104, lng: 15.8252 },
+  ceske: { lat: 48.9745, lng: 14.4747 },
+  "ceske budejovice": { lat: 48.9745, lng: 14.4747 },
+  pardubice: { lat: 50.0343, lng: 15.7812 },
+  zlin: { lat: 49.2265, lng: 17.6707 },
+  havirov: { lat: 49.7798, lng: 18.4369 },
+  kladno: { lat: 50.1473, lng: 14.1029 },
+  most: { lat: 50.503, lng: 13.636 },
+  opava: { lat: 49.9387, lng: 17.9026 },
+  frydek: { lat: 49.6853, lng: 18.3506 },
+  "frydek mistek": { lat: 49.6853, lng: 18.3506 },
+  karvina: { lat: 49.854, lng: 18.5417 },
+  jihlava: { lat: 49.3961, lng: 15.5912 },
+  teplice: { lat: 50.6404, lng: 13.8245 },
+  decin: { lat: 50.7822, lng: 14.2148 },
+  chomutov: { lat: 50.4605, lng: 13.4178 },
+  prerov: { lat: 49.4551, lng: 17.4509 },
+  jablonec: { lat: 50.7245, lng: 15.1711 },
+  mlada: { lat: 50.4114, lng: 14.9033 },
+  "mlada boleslav": { lat: 50.4114, lng: 14.9033 },
+  prostejov: { lat: 49.472, lng: 17.1118 },
+  trinec: { lat: 49.6776, lng: 18.6708 },
+  ceska: { lat: 50.759, lng: 15.051 },
+  "ceska lipa": { lat: 50.6855, lng: 14.5376 },
+  tabor: { lat: 49.4144, lng: 14.6578 },
+  znojmo: { lat: 48.8555, lng: 16.0488 },
+  pribram: { lat: 49.6899, lng: 14.0104 },
+  kolin: { lat: 50.028, lng: 15.200 },
+};
+
+export function cityCentroid(city: string | null | undefined): { lat: number; lng: number } | null {
+  if (!city) return null;
+  const key = normalizeLocation(city);
+  return CITY_CENTROIDS[key] ?? null;
+}

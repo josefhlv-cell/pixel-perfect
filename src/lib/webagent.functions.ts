@@ -9,7 +9,22 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { computeFreshnessScore, computeFreshnessStatus, decideAvailability, isLikelyDuplicate } from "./freshness";
 import { canonicalUrl, isUsable, LIVE_SOURCE_TYPE } from "./webagent";
 
-const MAX_PAGES = 8;
+const MAX_PAGES = 12;
+const OPEN_RETRIES = 2;
+
+async function openWithRetry(
+  agent: { open: (url: string) => Promise<{ url: string; http: number; html: string | null }> },
+  url: string,
+): Promise<{ url: string; http: number; html: string | null }> {
+  let last = await agent.open(url);
+  for (let i = 0; i < OPEN_RETRIES; i++) {
+    // Retry only on timeout / network / 429 / 503
+    if (last.html || (last.http !== 0 && last.http !== 429 && last.http !== 503)) break;
+    await new Promise((r) => setTimeout(r, 400 * (i + 1)));
+    last = await agent.open(url);
+  }
+  return last;
+}
 
 export const runWebAgent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -21,7 +36,7 @@ export const runWebAgent = createServerFn({ method: "POST" })
     try {
       agent = new WebAgentProvider(process.env["LOVABLE_API_KEY"] ?? "");
     } catch {
-      return { ok: false as const, error: "Webové vyhledávání není momentálně dostupné." };
+      return { ok: false as const, error: "Webové vyhledávání není momentálně dostupné (chybí API klíč)." };
     }
 
     let urls: string[];
@@ -32,6 +47,10 @@ export const runWebAgent = createServerFn({ method: "POST" })
       return { ok: false as const, error: "Webové vyhledávání není momentálně dostupné." };
     }
 
+    if (urls.length === 0) {
+      return { ok: true as const, pagesFound: 0, analyzed: 0, listingIds: [], failed: [] };
+    }
+
     const candidates = urls.slice(0, MAX_PAGES);
     const failed: { url: string; reason: string }[] = [];
     const listingIds: string[] = [];
@@ -40,9 +59,17 @@ export const runWebAgent = createServerFn({ method: "POST" })
 
     await Promise.all(
       candidates.map(async (url) => {
-        const page = await agent.open(url);
+        const page = await openWithRetry(agent, url);
         if (!page.html) {
-          failed.push({ url, reason: page.http === 404 || page.http === 410 ? "404 – stránka neexistuje" : `Inzerát se nepodařilo načíst (HTTP ${page.http || "timeout"})` });
+          failed.push({
+            url,
+            reason:
+              page.http === 404 || page.http === 410
+                ? "404 – stránka neexistuje"
+                : page.http === 429 || page.http === 503
+                  ? `Dočasně nedostupné (HTTP ${page.http})"
+                  : `Inzerát se nepodařilo načíst (HTTP ${page.http || "timeout"})`,
+          });
           return;
         }
         let ex;

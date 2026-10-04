@@ -17,6 +17,7 @@ import { Empty, PageHeader, SampleBadge } from "@/components/app/shared";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cityCentroid, haversineKm, locationMatches, roomsMatch } from "@/lib/webagent";
 
 export const Route = createFileRoute("/_authenticated/deals")({
   head: () => pageHead("Deal Hunter", "Potenciální investiční dealy s transparentním Deal Priority."),
@@ -47,6 +48,9 @@ function DealHunter() {
 
   const results = useMemo(() => {
     const ltvBps = Math.round((num(f.maxLtv) ?? 80) * 100);
+    const radiusKm = num(f.radius);
+    const center = f.location.trim() ? cityCentroid(f.location) : null;
+
     return data
       .filter((e) => isActive(e.listing.availability_status as never))
       .map((e) => ({
@@ -54,9 +58,22 @@ function DealHunter() {
         cf: e.listing.price && e.rent ? calculateTotalReturn(defaultInvestmentInput(e.listing.price, e.rent, { ltvBps })).monthlyCashFlow : null,
       }))
       .filter(({ e, cf }) => {
-        if (f.location && !(e.city ?? "").toLowerCase().includes(f.location.toLowerCase())) return false;
+        // Location: normalized city match
+        if (f.location && !locationMatches(e.city, f.location)) return false;
+
+        // Radius: only when both radius and a known center exist; prefer listing coords, fall back to city centroid
+        if (radiusKm != null && radiusKm > 0 && center) {
+          const lat = e.listing.latitude ?? e.property?.latitude ?? null;
+          const lng = e.listing.longitude ?? e.property?.longitude ?? null;
+          if (lat != null && lng != null) {
+            if (haversineKm(center.lat, center.lng, Number(lat), Number(lng)) > radiusKm) return false;
+          } else {
+            // No coords → allow only exact city match (already applied above)
+          }
+        }
+
         if (f.type !== "all" && e.listing.property_type && e.listing.property_type !== f.type) return false;
-        if (f.rooms && !(e.listing.rooms ?? "").includes(f.rooms)) return false;
+        if (f.rooms && !roomsMatch(e.listing.rooms, f.rooms)) return false;
         const mp = num(f.maxPrice); if (mp != null && (e.listing.price ?? Infinity) > mp) return false;
         const my = num(f.minYield); if (my != null && (e.grossYieldBps ?? -1) < my * 100) return false;
         const md = num(f.minDiscount); if (md != null && (e.diffBps == null || -e.diffBps < md * 100)) return false;
@@ -79,7 +96,16 @@ function DealHunter() {
 
       <div className="grid grid-cols-2 gap-3 rounded-md border bg-card p-4 md:grid-cols-5">
         <F label="Lokalita"><Input value={f.location} onChange={set("location")} placeholder="např. Brno" /></F>
-        <F label="Radius (km)"><Input value={f.radius} onChange={set("radius")} inputMode="numeric" placeholder="vyžaduje živý zdroj" disabled /></F>
+        <F label="Radius (km)">
+          <Input
+            value={f.radius}
+            onChange={set("radius")}
+            inputMode="numeric"
+            placeholder="např. 20"
+            disabled={!f.location.trim()}
+            title={!f.location.trim() ? "Nejdřív zadejte lokalitu" : "Vzdálenost od středu města (vyžaduje GPS u inzerátu)"}
+          />
+        </F>
         <F label="Typ">
           <Select value={f.type} onValueChange={(v) => setF({ ...f, type: v })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
