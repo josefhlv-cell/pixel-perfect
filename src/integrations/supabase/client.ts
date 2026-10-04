@@ -27,6 +27,73 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
   };
 }
 
+function createNoopSupabaseClient() {
+  const noopPromise = async () => ({ data: null, error: null });
+  const noopQueryBuilder = () => ({
+    select: () => noopQueryBuilder(),
+    eq: () => noopQueryBuilder(),
+    order: () => noopQueryBuilder(),
+    limit: () => noopQueryBuilder(),
+    async maybeSingle() {
+      return { data: null, error: null };
+    },
+    async single() {
+      return { data: null, error: null };
+    },
+    async insert() {
+      return { data: null, error: null };
+    },
+    async update() {
+      return { data: null, error: null };
+    },
+    async delete() {
+      return { data: null, error: null };
+    },
+    async upsert() {
+      return { data: null, error: null };
+    },
+    async then() {
+      return { data: null, error: null };
+    },
+  });
+
+  return {
+    auth: {
+      async getSession() {
+        return { data: { session: null }, error: null };
+      },
+      onAuthStateChange() {
+        return {
+          data: {
+            subscription: { unsubscribe() {} },
+          },
+          error: null,
+        };
+      },
+      async signOut() {
+        return { error: null };
+      },
+      async signInWithPassword() {
+        return { data: { session: null, user: null }, error: null };
+      },
+      async signUp() {
+        return { data: { session: null, user: null }, error: null };
+      },
+    },
+    from: () => noopQueryBuilder(),
+    rpc: noopPromise,
+    channel: () => ({
+      on: () => ({
+        subscribe: () => ({ unsubscribe() {} }),
+      }),
+    }),
+    functions: {
+      async invoke() {
+        return { data: null, error: null };
+      },
+    },
+  } as ReturnType<typeof createClient<Database>>;
+}
 
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
@@ -40,8 +107,8 @@ function createSupabaseClient() {
       ...(!SUPABASE_PUBLISHABLE_KEY ? ['SUPABASE_PUBLISHABLE_KEY'] : []),
     ];
     const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Connect Supabase in Lovable Cloud.`;
-    console.error(`[Supabase] ${message}`);
-    throw new Error(message);
+    console.warn(`[Supabase] ${message} Falling back to a safe no-op client so the app can still render.`);
+    return createNoopSupabaseClient();
   }
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
@@ -66,4 +133,3 @@ export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>,
     return Reflect.get(_supabase, prop, receiver);
   },
 });
-
