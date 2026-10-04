@@ -28,7 +28,6 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 }
 
 function createNoopSupabaseClient() {
-  const noopPromise = async () => ({ data: null, error: null });
   const noopQueryBuilder = () => ({
     select: () => noopQueryBuilder(),
     eq: () => noopQueryBuilder(),
@@ -52,15 +51,15 @@ function createNoopSupabaseClient() {
     async upsert() {
       return { data: null, error: null };
     },
-    async then() {
-      return { data: null, error: null };
-    },
   });
 
   return {
     auth: {
       async getSession() {
         return { data: { session: null }, error: null };
+      },
+      async getUser() {
+        return { data: { user: null }, error: null };
       },
       onAuthStateChange() {
         return {
@@ -81,7 +80,7 @@ function createNoopSupabaseClient() {
       },
     },
     from: () => noopQueryBuilder(),
-    rpc: noopPromise,
+    rpc: async () => ({ data: null, error: null }),
     channel: () => ({
       on: () => ({
         subscribe: () => ({ unsubscribe() {} }),
