@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
-import { ExternalLink, Loader2, Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ExternalLink, Loader2, MapPin, Search } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { runWebAgent } from "@/lib/webagent.functions";
+import { geocodePlace } from "@/lib/geocode.functions";
+import type { GeoPoint } from "@/lib/geocode";
 import { Button } from "@/components/ui/button";
 import { formatCZK, formatNumber } from "@/lib/format";
 import { listingsQuery, profileQuery } from "@/lib/queries";
@@ -31,6 +33,8 @@ function DealHunter() {
   const { data } = useSuspenseQuery(listingsQuery);
   const { data: prof } = useSuspenseQuery(profileQuery);
   const inv = prof.investor;
+  const geocode = useServerFn(geocodePlace);
+
   const [f, setF] = useState({
     location: inv?.locations?.[0] ?? "",
     radius: "",
@@ -46,30 +50,96 @@ function DealHunter() {
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value });
   const num = (s: string) => (s.trim() === "" ? null : Number(s.replace(",", ".")));
 
+  // Geocoded origin for distance filter
+  const [origin, setOrigin] = useState<GeoPoint | null>(null);
+  const [geoStatus, setGeoStatus] = useState<"idle" | "loading" | "ok" | "error">("idle");
+  const [geoError, setGeoError] = useState("");
+
+  // Debounced geocode when location or radius changes
+  useEffect(() => {
+    const loc = f.location.trim();
+    const radiusKm = num(f.radius);
+    if (!loc || radiusKm == null || radiusKm <= 0) {
+      setOrigin(null);
+      setGeoStatus("idle");
+      setGeoError("");
+      return;
+    }
+
+    // Prefer known city centroid first (instant), then refine with Nominatim for full addresses
+    const centroid = cityCentroid(loc);
+    if (centroid && !/[0-9]/.test(loc) && loc.split(/\s+/).length <= 2) {
+      setOrigin({ lat: centroid.lat, lng: centroid.lng, displayName: loc });
+      setGeoStatus("ok");
+      setGeoError("");
+    }
+
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      setGeoStatus("loading");
+      setGeoError("");
+      try {
+        const r = await geocode({ data: { query: loc } });
+        if (cancelled) return;
+        if (r.ok) {
+          setOrigin(r.point);
+          setGeoStatus("ok");
+        } else {
+          // Keep centroid if we already have one
+          if (!centroid) {
+            setOrigin(null);
+            setGeoStatus("error");
+            setGeoError(r.error);
+          } else {
+            setGeoStatus("ok");
+          }
+        }
+      } catch {
+        if (cancelled) return;
+        if (!centroid) {
+          setOrigin(null);
+          setGeoStatus("error");
+          setGeoError("Geokódování selhalo.");
+        } else {
+          setGeoStatus("ok");
+        }
+      }
+    }, 450);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [f.location, f.radius]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const results = useMemo(() => {
     const ltvBps = Math.round((num(f.maxLtv) ?? 80) * 100);
     const radiusKm = num(f.radius);
-    const center = f.location.trim() ? cityCentroid(f.location) : null;
+    const useDistance = radiusKm != null && radiusKm > 0 && origin != null;
 
     return data
       .filter((e) => isActive(e.listing.availability_status as never))
-      .map((e) => ({
-        e,
-        cf: e.listing.price && e.rent ? calculateTotalReturn(defaultInvestmentInput(e.listing.price, e.rent, { ltvBps })).monthlyCashFlow : null,
-      }))
-      .filter(({ e, cf }) => {
-        // Location: normalized city match
-        if (f.location && !locationMatches(e.city, f.location)) return false;
-
-        // Radius: only when both radius and a known center exist; prefer listing coords, fall back to city centroid
-        if (radiusKm != null && radiusKm > 0 && center) {
-          const lat = e.listing.latitude ?? e.property?.latitude ?? null;
-          const lng = e.listing.longitude ?? e.property?.longitude ?? null;
-          if (lat != null && lng != null) {
-            if (haversineKm(center.lat, center.lng, Number(lat), Number(lng)) > radiusKm) return false;
-          } else {
-            // No coords → allow only exact city match (already applied above)
-          }
+      .map((e) => {
+        const lat = e.listing.latitude ?? e.property?.latitude ?? null;
+        const lng = e.listing.longitude ?? e.property?.longitude ?? null;
+        let distanceKm: number | null = null;
+        if (useDistance && lat != null && lng != null) {
+          distanceKm = haversineKm(origin!.lat, origin!.lng, Number(lat), Number(lng));
+        }
+        return {
+          e,
+          cf: e.listing.price && e.rent ? calculateTotalReturn(defaultInvestmentInput(e.listing.price, e.rent, { ltvBps })).monthlyCashFlow : null,
+          distanceKm,
+        };
+      })
+      .filter(({ e, cf, distanceKm }) => {
+        // Distance filter from address / place
+        if (useDistance) {
+          if (distanceKm == null) return false; // no GPS → exclude when filtering by radius
+          if (distanceKm > radiusKm!) return false;
+        } else if (f.location.trim()) {
+          // Text-only city match when no radius
+          if (!locationMatches(e.city, f.location)) return false;
         }
 
         if (f.type !== "all" && e.listing.property_type && e.listing.property_type !== f.type) return false;
@@ -81,12 +151,20 @@ function DealHunter() {
         return true;
       })
       .sort((a, b) => {
+        // When using distance, secondary sort by proximity
+        if (useDistance && a.distanceKm != null && b.distanceKm != null) {
+          if (f.strategy === "priority") {
+            const pd = b.e.priority - a.e.priority;
+            if (pd !== 0) return pd;
+            return a.distanceKm - b.distanceKm;
+          }
+        }
         if (f.strategy === "cashflow") return (b.cf ?? -1e12) - (a.cf ?? -1e12);
         if (f.strategy === "yield") return (b.e.grossYieldBps ?? -1) - (a.e.grossYieldBps ?? -1);
         if (f.strategy === "discount") return (a.e.diffBps ?? 1e9) - (b.e.diffBps ?? 1e9);
         return b.e.priority - a.e.priority;
       });
-  }, [data, f]);
+  }, [data, f, origin]);
 
   return (
     <div className="space-y-5">
@@ -95,15 +173,21 @@ function DealHunter() {
       <WebAgentBox />
 
       <div className="grid grid-cols-2 gap-3 rounded-md border bg-card p-4 md:grid-cols-5">
-        <F label="Lokalita"><Input value={f.location} onChange={set("location")} placeholder="např. Brno" /></F>
-        <F label="Radius (km)">
+        <F label="Adresa / lokalita">
+          <Input
+            value={f.location}
+            onChange={set("location")}
+            placeholder="např. Pardubice, Zelené Předměstí"
+          />
+        </F>
+        <F label="Vzdálenost (km)">
           <Input
             value={f.radius}
             onChange={set("radius")}
             inputMode="numeric"
-            placeholder="např. 20"
+            placeholder="např. 15"
             disabled={!f.location.trim()}
-            title={!f.location.trim() ? "Nejdřív zadejte lokalitu" : "Vzdálenost od středu města (vyžaduje GPS u inzerátu)"}
+            title={!f.location.trim() ? "Nejdřív zadejte adresu nebo město" : "Max. vzdálenost od zadané adresy"}
           />
         </F>
         <F label="Typ">
@@ -131,6 +215,29 @@ function DealHunter() {
         </F>
       </div>
 
+      {/* Geocode status */}
+      {f.location.trim() && num(f.radius) != null && num(f.radius)! > 0 && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          {geoStatus === "loading" && (
+            <>
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Hledám polohu adresy…
+            </>
+          )}
+          {geoStatus === "ok" && origin && (
+            <>
+              <MapPin className="h-3.5 w-3.5 text-primary" />
+              Střed: <span className="font-medium text-foreground">{origin.displayName}</span>
+              <span className="text-muted-foreground">({origin.lat.toFixed(4)}, {origin.lng.toFixed(4)})</span>
+              · do {num(f.radius)} km
+            </>
+          )}
+          {geoStatus === "error" && (
+            <span className="text-negative">{geoError || "Adresu se nepodařilo najít."}</span>
+          )}
+        </div>
+      )}
+
       <div className="flex items-center gap-2">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Potential deals</h2>
         <span className="num text-xs text-muted-foreground">({results.length})</span>
@@ -138,10 +245,25 @@ function DealHunter() {
       </div>
       {results.length === 0 ? <Empty>Kritériím neodpovídá žádná nabídka. Zkuste je uvolnit.</Empty> : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {results.map(({ e }) => <ListingCard key={e.listing.id} e={e} showReasons />)}
+          {results.map(({ e, distanceKm }) => (
+            <div key={e.listing.id} className="space-y-1">
+              <ListingCard e={e} showReasons />
+              {distanceKm != null && (
+                <p className="px-1 text-[11px] text-muted-foreground">
+                  <MapPin className="mr-0.5 inline h-3 w-3" />
+                  {distanceKm < 1
+                    ? `${Math.round(distanceKm * 1000)} m od středu`
+                    : `${distanceKm.toFixed(1)} km od středu`}
+                </p>
+              )}
+            </div>
+          ))}
         </div>
       )}
-      <p className="text-xs text-muted-foreground">Deal Priority = sleva vůči odhadu (max 35) + hrubý výnos (30) + čerstvost (20) + ověřená dostupnost (10) + snížení ceny (5). Rozpad bodů najdete na detailu nemovitosti.</p>
+      <p className="text-xs text-muted-foreground">
+        Deal Priority = sleva vůči odhadu (max 35) + hrubý výnos (30) + čerstvost (20) + ověřená dostupnost (10) + snížení ceny (5).
+        Při nastavené vzdálenosti se řadí i podle blízkosti. Inzeráty bez GPS se ve vzdálenostním filtru nezobrazí.
+      </p>
     </div>
   );
 }
