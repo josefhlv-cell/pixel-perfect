@@ -12,9 +12,9 @@ export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>): { mode?: "signup" } => (s["mode"] === "signup" ? { mode: "signup" } : {}),
   head: () => ({
     meta: [
-      { title: "Přihlášení — Reality Investor" },
-      { name: "description", content: "Přihlaste se nebo si vytvořte účet v Reality Investor." },
-      { property: "og:title", content: "Přihlášení — Reality Investor" },
+      { title: "Přihlášení — Deal-Hunt" },
+      { name: "description", content: "Přihlaste se nebo si vytvořte účet v Deal-Hunt." },
+      { property: "og:title", content: "Přihlášení — Deal-Hunt" },
       { property: "og:description", content: "Přístup k Deal Hunteru, portfoliu a AI analytikovi." },
     ],
   }),
@@ -25,6 +25,21 @@ const schema = z.object({
   email: z.string().trim().email("Neplatný e-mail").max(255),
   password: z.string().min(8, "Heslo musí mít alespoň 8 znaků").max(72),
 });
+
+function authErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  const lower = message.toLowerCase();
+  if (lower.includes("missing supabase") || lower.includes("connect supabase") || lower.includes("supabase_url") || lower.includes("publishable_key")) {
+    return "Připojení k databázi není nakonfigurované. Zkontrolujte Supabase nastavení aplikace.";
+  }
+  if (lower.includes("invalid login") || lower.includes("invalid credentials")) return "Nesprávný e-mail nebo heslo.";
+  if (lower.includes("email not confirmed") || lower.includes("confirm your email") || lower.includes("email_not_confirmed")) return "E-mail zatím není potvrzen. Zkontrolujte doručenou poštu a potvrďte účet.";
+  if (lower.includes("rate limit") || lower.includes("too many requests")) return "Příliš mnoho pokusů. Chvíli počkejte a zkuste to znovu.";
+  if (lower.includes("user already registered") || lower.includes("already registered")) return "Účet s tímto e-mailem už existuje. Zkuste se přihlásit.";
+  if (lower.includes("signup is disabled")) return "Registrace je momentálně vypnutá v nastavení Supabase.";
+  if (lower.includes("failed to fetch") || lower.includes("network")) return "Nepodařilo se spojit se serverem. Zkontrolujte připojení a zkuste to znovu.";
+  return message || "Nepodařilo se dokončit požadavek.";
+}
 
 function AuthPage() {
   const { mode: initial } = Route.useSearch();
@@ -42,8 +57,9 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword(parsed.data);
-        if (error) throw new Error(error.message.includes("Invalid") ? "Nesprávný e-mail nebo heslo." : error.message.includes("confirm") ? "E-mail zatím není potvrzen." : error.message);
+        const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
+        if (error) throw error;
+        if (!data.session || !data.user) throw new Error("Přihlášení nevrátilo platnou relaci. Zkontrolujte Supabase Auth konfiguraci.");
         navigate({ to: "/dashboard" });
       } else {
         const { data, error } = await supabase.auth.signUp({
@@ -51,11 +67,18 @@ function AuthPage() {
           options: { emailRedirectTo: `${window.location.origin}/dashboard`, data: { display_name: name.trim() || null } },
         });
         if (error) throw error;
-        if (data.session) navigate({ to: "/dashboard" });
-        else toast.success("Účet vytvořen. Potvrďte prosím e-mail – poslali jsme vám odkaz.");
+        if (data.session && data.user) {
+          toast.success("Účet byl vytvořen a jste přihlášen.");
+          navigate({ to: "/dashboard" });
+        } else if (data.user) {
+          toast.success("Účet byl vytvořen. Potvrďte prosím e-mail – odkaz vám musí dorazit z Supabase Auth.");
+        } else {
+          throw new Error("Registrace nevrátila uživatele. Zkontrolujte Supabase Auth a e-mailové nastavení.");
+        }
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Něco se nepovedlo.");
+      console.error("[auth] request failed", err);
+      toast.error(authErrorMessage(err));
     } finally {
       setBusy(false);
     }
@@ -65,8 +88,8 @@ function AuthPage() {
     <div className="grid min-h-screen place-items-center bg-background px-4">
       <div className="w-full max-w-sm">
         <Link to="/" className="mb-8 flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded bg-primary font-mono text-xs font-bold text-primary-foreground">RI</span>
-          <span className="font-semibold">Reality Investor</span>
+          <span className="grid h-8 w-8 place-items-center rounded bg-primary font-mono text-xs font-bold text-primary-foreground">DH</span>
+          <span className="font-semibold">Deal-Hunt</span>
         </Link>
         <Tabs value={mode} onValueChange={(v) => setMode(v as "signin" | "signup")}>
           <TabsList className="grid w-full grid-cols-2">
