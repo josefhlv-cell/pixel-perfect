@@ -67,7 +67,7 @@ export const runWebAgent = createServerFn({ method: "POST" })
               page.http === 404 || page.http === 410
                 ? "404 – stránka neexistuje"
                 : page.http === 429 || page.http === 503
-                  ? `Dočasně nedostupné (HTTP ${page.http})"
+                  ? `Dočasně nedostupné (HTTP ${page.http})`
                   : `Inzerát se nepodařilo načíst (HTTP ${page.http || "timeout"})`,
           });
           return;
