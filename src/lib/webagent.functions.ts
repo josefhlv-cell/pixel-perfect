@@ -18,7 +18,6 @@ async function openWithRetry(
 ): Promise<{ url: string; http: number; html: string | null }> {
   let last = await agent.open(url);
   for (let i = 0; i < OPEN_RETRIES; i++) {
-    // Retry only on timeout / network / 429 / 503
     if (last.html || (last.http !== 0 && last.http !== 429 && last.http !== 503)) break;
     await new Promise((r) => setTimeout(r, 400 * (i + 1)));
     last = await agent.open(url);
@@ -86,10 +85,8 @@ export const runWebAgent = createServerFn({ method: "POST" })
         const sourceUrl = canonicalUrl(url) ?? url;
         const now = new Date();
 
-        // Dedup 1: same source URL → reuse the single listing.
         const { data: existing } = await supabase.from("listings").select("*").eq("source_url", sourceUrl).maybeSingle();
 
-        // Freshness via existing engine (page loaded with HTTP 200).
         const decision = decideAvailability({
           previousStatus: (existing?.availability_status as never) ?? "UNKNOWN",
           previousPrice: existing?.price ?? null,
@@ -108,11 +105,12 @@ export const runWebAgent = createServerFn({ method: "POST" })
         };
 
         let listingId: string;
+        let isNew = false;
         if (existing) {
           listingId = existing.id;
           if (existing.created_by === userId) await supabase.from("listings").update(fresh).eq("id", existing.id);
         } else {
-          // Dedup 2: canonical property across portals (existing duplicate heuristic).
+          isNew = true;
           const city = ex.location;
           const match = (existingProps ?? []).find((p) =>
             isLikelyDuplicate(
@@ -154,6 +152,7 @@ export const runWebAgent = createServerFn({ method: "POST" })
           }
           listingId = ins.id;
         }
+
         await supabase.from("listing_freshness_events").insert(
           decision.events.map((ev) => ({
             listing_id: listingId, event_type: ev.type, http_status: ev.http ?? null, previous_status: (existing?.availability_status as never) ?? "UNKNOWN",
@@ -164,6 +163,49 @@ export const runWebAgent = createServerFn({ method: "POST" })
           listing_id: listingId, price: decision.newPrice, availability_status: decision.newStatus,
           raw: { ownership: ex.ownership, balcony: ex.balcony, terrace: ex.terrace, parking: ex.parking, elevator: ex.elevator } as never,
         });
+
+        // Alerts: new deal / price drop / availability change
+        const title = ex.title ?? sourceUrl;
+        try {
+          if (isNew) {
+            await supabase.from("alerts").insert({
+              user_id: userId,
+              kind: "new_deal",
+              severity: "opportunity",
+              title: "Nový potenciální deal",
+              body: title,
+              listing_id: listingId,
+            });
+          }
+          const priceDrop = decision.events.some((ev) => ev.type === "price_decrease");
+          if (priceDrop && existing?.price != null && decision.newPrice != null) {
+            await supabase.from("alerts").insert({
+              user_id: userId,
+              kind: "price_drop",
+              severity: "opportunity",
+              title: "Pokles ceny",
+              body: `${title}: ${existing.price.toLocaleString("cs-CZ")} → ${decision.newPrice.toLocaleString("cs-CZ")} Kč`,
+              listing_id: listingId,
+            });
+          }
+          const availChange =
+            existing &&
+            existing.availability_status &&
+            decision.newStatus !== existing.availability_status;
+          if (availChange) {
+            await supabase.from("alerts").insert({
+              user_id: userId,
+              kind: "availability_change",
+              severity: "warning",
+              title: "Změna dostupnosti",
+              body: `${title}: ${existing!.availability_status} → ${decision.newStatus}`,
+              listing_id: listingId,
+            });
+          }
+        } catch (alertErr) {
+          console.error("[webagent] alert insert", alertErr);
+        }
+
         listingIds.push(listingId);
       }),
     );
