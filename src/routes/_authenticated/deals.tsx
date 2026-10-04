@@ -1,25 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { ExternalLink, Loader2, MapPin, Search } from "lucide-react";
+import { Download, ExternalLink, Loader2, MapPin, Save, Search, Trash2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { runWebAgent } from "@/lib/webagent.functions";
 import { geocodePlace } from "@/lib/geocode.functions";
 import type { GeoPoint } from "@/lib/geocode";
 import { Button } from "@/components/ui/button";
-import { formatCZK, formatNumber } from "@/lib/format";
+import { formatBps, formatCZK, formatNumber } from "@/lib/format";
 import { listingsQuery, profileQuery } from "@/lib/queries";
 import { calculateTotalReturn } from "@/lib/calculations";
-import { defaultInvestmentInput } from "@/lib/deals";
+import { defaultInvestmentInput, type EnrichedListing } from "@/lib/deals";
 import { isActive } from "@/lib/freshness";
 import { pageHead } from "@/lib/head";
 import { ListingCard } from "@/components/app/ListingCard";
+import { ComparePanel } from "@/components/app/ComparePanel";
 import { Empty, PageHeader, SampleBadge } from "@/components/app/shared";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cityCentroid, haversineKm, locationMatches, roomsMatch } from "@/lib/webagent";
+import { downloadCsv } from "@/lib/export";
+import { deleteFilterPreset, loadSavedFilters, saveFilterPreset, type DealFilters, type SavedFilter } from "@/lib/saved-filters";
 
 export const Route = createFileRoute("/_authenticated/deals")({
   head: () => pageHead("Deal Hunter", "Potenciální investiční dealy s transparentním Deal Priority."),
@@ -27,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/deals")({
   component: DealHunter,
 });
 
-type Strategy = "cashflow" | "yield" | "discount" | "priority";
+type Strategy = "cashflow" | "yield" | "discount" | "priority" | "distance";
 
 function DealHunter() {
   const { data } = useSuspenseQuery(listingsQuery);
@@ -35,7 +39,7 @@ function DealHunter() {
   const inv = prof.investor;
   const geocode = useServerFn(geocodePlace);
 
-  const [f, setF] = useState({
+  const [f, setF] = useState<DealFilters & { strategy: Strategy }>({
     location: inv?.locations?.[0] ?? "",
     radius: "",
     type: "all",
@@ -45,17 +49,19 @@ function DealHunter() {
     minDiscount: "",
     minCashFlow: "",
     maxLtv: inv?.ltv_bps ? String(inv.ltv_bps / 100) : "80",
-    strategy: "priority" as Strategy,
+    strategy: "priority",
   });
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value });
   const num = (s: string) => (s.trim() === "" ? null : Number(s.replace(",", ".")));
 
-  // Geocoded origin for distance filter
   const [origin, setOrigin] = useState<GeoPoint | null>(null);
   const [geoStatus, setGeoStatus] = useState<"idle" | "loading" | "ok" | "error">("idle");
   const [geoError, setGeoError] = useState("");
 
-  // Debounced geocode when location or radius changes
+  const [saved, setSaved] = useState<SavedFilter[]>(() => (typeof window !== "undefined" ? loadSavedFilters() : []));
+  const [presetName, setPresetName] = useState("");
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+
   useEffect(() => {
     const loc = f.location.trim();
     const radiusKm = num(f.radius);
@@ -65,15 +71,12 @@ function DealHunter() {
       setGeoError("");
       return;
     }
-
-    // Prefer known city centroid first (instant), then refine with Nominatim for full addresses
     const centroid = cityCentroid(loc);
     if (centroid && !/[0-9]/.test(loc) && loc.split(/\s+/).length <= 2) {
       setOrigin({ lat: centroid.lat, lng: centroid.lng, displayName: loc });
       setGeoStatus("ok");
       setGeoError("");
     }
-
     let cancelled = false;
     const t = setTimeout(async () => {
       setGeoStatus("loading");
@@ -84,28 +87,20 @@ function DealHunter() {
         if (r.ok) {
           setOrigin(r.point);
           setGeoStatus("ok");
-        } else {
-          // Keep centroid if we already have one
-          if (!centroid) {
-            setOrigin(null);
-            setGeoStatus("error");
-            setGeoError(r.error);
-          } else {
-            setGeoStatus("ok");
-          }
-        }
+        } else if (!centroid) {
+          setOrigin(null);
+          setGeoStatus("error");
+          setGeoError(r.error);
+        } else setGeoStatus("ok");
       } catch {
         if (cancelled) return;
         if (!centroid) {
           setOrigin(null);
           setGeoStatus("error");
           setGeoError("Geokódování selhalo.");
-        } else {
-          setGeoStatus("ok");
-        }
+        } else setGeoStatus("ok");
       }
     }, 450);
-
     return () => {
       cancelled = true;
       clearTimeout(t);
@@ -123,8 +118,8 @@ function DealHunter() {
         const lat = e.listing.latitude ?? e.property?.latitude ?? null;
         const lng = e.listing.longitude ?? e.property?.longitude ?? null;
         let distanceKm: number | null = null;
-        if (useDistance && lat != null && lng != null) {
-          distanceKm = haversineKm(origin!.lat, origin!.lng, Number(lat), Number(lng));
+        if ((useDistance || f.strategy === "distance") && origin && lat != null && lng != null) {
+          distanceKm = haversineKm(origin.lat, origin.lng, Number(lat), Number(lng));
         }
         return {
           e,
@@ -133,15 +128,12 @@ function DealHunter() {
         };
       })
       .filter(({ e, cf, distanceKm }) => {
-        // Distance filter from address / place
         if (useDistance) {
-          if (distanceKm == null) return false; // no GPS → exclude when filtering by radius
+          if (distanceKm == null) return false;
           if (distanceKm > radiusKm!) return false;
         } else if (f.location.trim()) {
-          // Text-only city match when no radius
           if (!locationMatches(e.city, f.location)) return false;
         }
-
         if (f.type !== "all" && e.listing.property_type && e.listing.property_type !== f.type) return false;
         if (f.rooms && !roomsMatch(e.listing.rooms, f.rooms)) return false;
         const mp = num(f.maxPrice); if (mp != null && (e.listing.price ?? Infinity) > mp) return false;
@@ -151,44 +143,80 @@ function DealHunter() {
         return true;
       })
       .sort((a, b) => {
-        // When using distance, secondary sort by proximity
-        if (useDistance && a.distanceKm != null && b.distanceKm != null) {
-          if (f.strategy === "priority") {
-            const pd = b.e.priority - a.e.priority;
-            if (pd !== 0) return pd;
-            return a.distanceKm - b.distanceKm;
-          }
-        }
+        if (f.strategy === "distance") return (a.distanceKm ?? 1e9) - (b.distanceKm ?? 1e9);
         if (f.strategy === "cashflow") return (b.cf ?? -1e12) - (a.cf ?? -1e12);
         if (f.strategy === "yield") return (b.e.grossYieldBps ?? -1) - (a.e.grossYieldBps ?? -1);
         if (f.strategy === "discount") return (a.e.diffBps ?? 1e9) - (b.e.diffBps ?? 1e9);
-        return b.e.priority - a.e.priority;
+        const pd = b.e.priority - a.e.priority;
+        if (pd !== 0) return pd;
+        if (a.distanceKm != null && b.distanceKm != null) return a.distanceKm - b.distanceKm;
+        return 0;
       });
   }, [data, f, origin]);
 
+  const compareItems = useMemo(
+    () => compareIds.map((id) => data.find((x) => x.listing.id === id)).filter(Boolean) as EnrichedListing[],
+    [compareIds, data],
+  );
+
+  const onSelect = (id: string, next: boolean) => {
+    setCompareIds((prev) => {
+      if (next) return prev.includes(id) ? prev : prev.length >= 3 ? prev : [...prev, id];
+      return prev.filter((x) => x !== id);
+    });
+  };
+
+  const exportCsv = () => {
+    downloadCsv(
+      `deals-${new Date().toISOString().slice(0, 10)}.csv`,
+      results.map(({ e, distanceKm }) => ({
+        title: e.listing.title,
+        city: e.city,
+        price: e.listing.price,
+        area_m2: e.listing.area_m2,
+        rooms: e.listing.rooms,
+        price_per_m2: e.pricePerM2,
+        gross_yield_pct: e.grossYieldBps != null ? (e.grossYieldBps / 100).toFixed(2) : "",
+        cash_flow: e.monthlyCashFlow,
+        priority: e.priority,
+        distance_km: distanceKm != null ? distanceKm.toFixed(2) : "",
+        source_url: e.listing.source_url,
+      })),
+    );
+    toast.success("CSV staženo");
+  };
+
+  const savePreset = () => {
+    const name = presetName.trim() || `Filtr ${new Date().toLocaleDateString("cs-CZ")}`;
+    const next = saveFilterPreset(name, f);
+    setSaved(next);
+    setPresetName("");
+    toast.success("Filtr uložen");
+  };
+
+  const applyPreset = (p: SavedFilter) => {
+    setF({ ...p.filters, strategy: (p.filters.strategy as Strategy) || "priority" });
+    toast.message(`Načten filtr: ${p.name}`);
+  };
+
   return (
-    <div className="space-y-5">
-      <PageHeader title="Deal Hunter" sub="Nastavte kritéria. Každý výsledek ukazuje, proč se shoduje – i co mluví proti." />
+    <div className={`space-y-5 ${compareItems.length >= 2 ? "pb-56" : ""}`}>
+      <PageHeader
+        title="Deal Hunter"
+        sub="Nastavte kritéria. Každý výsledek ukazuje, proč se shoduje – i co mluví proti."
+        actions={
+          <Button size="sm" variant="outline" onClick={exportCsv} disabled={results.length === 0}>
+            <Download className="mr-1.5 h-4 w-4" />Export CSV
+          </Button>
+        }
+      />
 
       <WebAgentBox />
 
       <div className="grid grid-cols-2 gap-3 rounded-md border bg-card p-4 md:grid-cols-5">
-        <F label="Adresa / lokalita">
-          <Input
-            value={f.location}
-            onChange={set("location")}
-            placeholder="např. Pardubice, Zelené Předměstí"
-          />
-        </F>
+        <F label="Adresa / lokalita"><Input value={f.location} onChange={set("location")} placeholder="např. Pardubice, Zelené Předměstí" /></F>
         <F label="Vzdálenost (km)">
-          <Input
-            value={f.radius}
-            onChange={set("radius")}
-            inputMode="numeric"
-            placeholder="např. 15"
-            disabled={!f.location.trim()}
-            title={!f.location.trim() ? "Nejdřív zadejte adresu nebo město" : "Max. vzdálenost od zadané adresy"}
-          />
+          <Input value={f.radius} onChange={set("radius")} inputMode="numeric" placeholder="např. 15" disabled={!f.location.trim()} />
         </F>
         <F label="Typ">
           <Select value={f.type} onValueChange={(v) => setF({ ...f, type: v })}>
@@ -210,60 +238,80 @@ function DealHunter() {
               <SelectItem value="cashflow">Cash-flow</SelectItem>
               <SelectItem value="yield">Výnos</SelectItem>
               <SelectItem value="discount">Sleva vůči odhadu</SelectItem>
+              <SelectItem value="distance">Vzdálenost</SelectItem>
             </SelectContent>
           </Select>
         </F>
       </div>
 
-      {/* Geocode status */}
+      {/* Saved filters */}
+      <div className="flex flex-wrap items-end gap-2 rounded-md border bg-card p-3">
+        <div className="min-w-[160px] flex-1 space-y-1">
+          <Label className="text-xs text-muted-foreground">Uložit aktuální filtr jako</Label>
+          <Input value={presetName} onChange={(e) => setPresetName(e.target.value)} placeholder="např. Brno 2+kk do 5M" />
+        </div>
+        <Button size="sm" variant="secondary" onClick={savePreset}><Save className="mr-1.5 h-4 w-4" />Uložit</Button>
+        {saved.length > 0 && (
+          <div className="flex w-full flex-wrap gap-1.5 pt-1">
+            {saved.map((p) => (
+              <span key={p.id} className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs">
+                <button type="button" className="hover:text-primary" onClick={() => applyPreset(p)}>{p.name}</button>
+                <button type="button" className="text-muted-foreground hover:text-negative" aria-label="Smazat" onClick={() => setSaved(deleteFilterPreset(p.id))}>
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
       {f.location.trim() && num(f.radius) != null && num(f.radius)! > 0 && (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          {geoStatus === "loading" && (
-            <>
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Hledám polohu adresy…
-            </>
-          )}
+          {geoStatus === "loading" && <><Loader2 className="h-3.5 w-3.5 animate-spin" />Hledám polohu adresy…</>}
           {geoStatus === "ok" && origin && (
-            <>
-              <MapPin className="h-3.5 w-3.5 text-primary" />
-              Střed: <span className="font-medium text-foreground">{origin.displayName}</span>
-              <span className="text-muted-foreground">({origin.lat.toFixed(4)}, {origin.lng.toFixed(4)})</span>
-              · do {num(f.radius)} km
-            </>
+            <><MapPin className="h-3.5 w-3.5 text-primary" />Střed: <span className="font-medium text-foreground">{origin.displayName}</span> · do {num(f.radius)} km</>
           )}
-          {geoStatus === "error" && (
-            <span className="text-negative">{geoError || "Adresu se nepodařilo najít."}</span>
-          )}
+          {geoStatus === "error" && <span className="text-negative">{geoError || "Adresu se nepodařilo najít."}</span>}
         </div>
       )}
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Potential deals</h2>
         <span className="num text-xs text-muted-foreground">({results.length})</span>
         <SampleBadge />
+        {compareIds.length > 0 && (
+          <span className="text-xs text-muted-foreground">Porovnání: {compareIds.length}/3</span>
+        )}
       </div>
-      {results.length === 0 ? <Empty>Kritériím neodpovídá žádná nabídka. Zkuste je uvolnit.</Empty> : (
+      {results.length === 0 ? (
+        <Empty>Kritériím neodpovídá žádná nabídka. Zkuste je uvolnit.</Empty>
+      ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {results.map(({ e, distanceKm }) => (
-            <div key={e.listing.id} className="space-y-1">
-              <ListingCard e={e} showReasons />
-              {distanceKm != null && (
-                <p className="px-1 text-[11px] text-muted-foreground">
-                  <MapPin className="mr-0.5 inline h-3 w-3" />
-                  {distanceKm < 1
-                    ? `${Math.round(distanceKm * 1000)} m od středu`
-                    : `${distanceKm.toFixed(1)} km od středu`}
-                </p>
-              )}
-            </div>
+            <ListingCard
+              key={e.listing.id}
+              e={e}
+              showReasons
+              selectable
+              selected={compareIds.includes(e.listing.id)}
+              onSelect={onSelect}
+              distanceKm={distanceKm}
+            />
           ))}
         </div>
       )}
       <p className="text-xs text-muted-foreground">
-        Deal Priority = sleva vůči odhadu (max 35) + hrubý výnos (30) + čerstvost (20) + ověřená dostupnost (10) + snížení ceny (5).
-        Při nastavené vzdálenosti se řadí i podle blízkosti. Inzeráty bez GPS se ve vzdálenostním filtru nezobrazí.
+        Deal Priority = sleva (35) + výnos (30) + čerstvost (20) + dostupnost (10) + snížení ceny (5).
+        Zaškrtněte až 3 nabídky pro porovnání. Export CSV exportuje aktuálně vyfiltrované výsledky.
       </p>
+
+      {compareItems.length >= 2 && (
+        <ComparePanel
+          items={compareItems}
+          onClose={() => setCompareIds([])}
+          onRemove={(id) => setCompareIds((p) => p.filter((x) => x !== id))}
+        />
+      )}
     </div>
   );
 }

@@ -1,24 +1,30 @@
-# Pixel Perfect
+# Reality Investor (pixel-perfect)
 
-Implement exactly the screenshot and nothing else
+Investiční inteligence pro české nemovitosti — Deal Hunter, portfolio, kalkulačka výnosů, AI analytik a mapa.
 
-This project was built with [Lovable](https://lovable.dev).
+Built with [Lovable](https://lovable.dev) · stack: TanStack Start, React 19, Supabase, Drizzle, Tailwind, MapLibre.
 
-## Build with Lovable
+## Hlavní funkce
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/9ec4accc-42fa-473d-b423-03251a087cef).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+- **Deal Hunter** – filtry (lokalita, vzdálenost od adresy, výnos, sleva…), uložené filtry, porovnání až 3 dealů, export CSV, AI Web Agent
+- **Deal Priority** – transparentní skóre (sleva, výnos, čerstvost, dostupnost, pokles ceny)
+- **Portfolio** – hodnota, equity, cash-flow, grafy
+- **Kalkulačka** – hypotéční předvolby, scénáře (optimistický / realistický / pesimistický), orientační daň z nájmu
+- **Watchlist & alerty** – historie cen, notifikace (vč. generování při poklesu ceny z Web Agentu)
+- **AI analýzy** – property / deal / risks / due diligence / market (čísla z výpočetního jádra)
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
 ```sh
 git clone <this-repository-url>
-cd <repository-name>
+cd pixel-perfect
+cp .env.example .env   # vyplň Supabase klíče
 npm i
 npm run dev
 ```
+
+Nikdy necommituj `.env`. Šablona je v `.env.example`.
+
+## Lovable
+
+Pokračuj v editoru: https://lovable.dev/projects/9ec4accc-42fa-473d-b423-03251a087cef
