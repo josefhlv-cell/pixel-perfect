@@ -1,7 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { PlugZap } from "lucide-react";
+import { ExternalLink, Loader2, Search } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { runWebAgent } from "@/lib/webagent.functions";
+import { Button } from "@/components/ui/button";
+import { formatCZK, formatNumber } from "@/lib/format";
 import { listingsQuery, profileQuery } from "@/lib/queries";
 import { calculateTotalReturn } from "@/lib/calculations";
 import { defaultInvestmentInput } from "@/lib/deals";
@@ -70,13 +75,7 @@ function DealHunter() {
     <div className="space-y-5">
       <PageHeader title="Deal Hunter" sub="Nastavte kritéria. Každý výsledek ukazuje, proč se shoduje – i co mluví proti." />
 
-      <div className="flex gap-3 rounded-md border border-warning/40 bg-warning/5 p-4">
-        <PlugZap className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
-        <div className="text-sm">
-          <div className="font-medium">Datový zdroj není připojen.</div>
-          <div className="text-muted-foreground">Deal Hunter je připravený na připojení veřejných webových zdrojů. Aktuálně používá pouze sample data.</div>
-        </div>
-      </div>
+      <WebAgentBox />
 
       <div className="grid grid-cols-2 gap-3 rounded-md border bg-card p-4 md:grid-cols-5">
         <F label="Lokalita"><Input value={f.location} onChange={set("location")} placeholder="např. Brno" /></F>
@@ -123,4 +122,68 @@ function DealHunter() {
 
 function F({ label, children }: { label: string; children: React.ReactNode }) {
   return <div className="space-y-1"><Label className="text-xs text-muted-foreground">{label}</Label>{children}</div>;
+}
+
+function ago(iso: string | null) {
+  if (!iso) return "neověřeno";
+  const m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  return m < 60 ? `Ověřeno před ${m} min.` : `Ověřeno před ${Math.round(m / 60)} h`;
+}
+
+function WebAgentBox() {
+  const run = useServerFn(runWebAgent);
+  const qc = useQueryClient();
+  const { data } = useSuspenseQuery(listingsQuery);
+  const [q, setQ] = useState("2+kk Pardubice do 5 000 000 Kč, výnos min. 5 %");
+  const [phase, setPhase] = useState<"idle" | "searching" | "done" | "error">("idle");
+  const [msg, setMsg] = useState("");
+  const [ids, setIds] = useState<string[]>([]);
+  const [failed, setFailed] = useState<{ url: string; reason: string }[]>([]);
+
+  const go = async () => {
+    setPhase("searching"); setMsg("Vyhledávám veřejné nabídky a analyzuji je…"); setIds([]); setFailed([]);
+    try {
+      const r = await run({ data: { query: q } });
+      if (!r.ok) { setPhase("error"); setMsg(r.error); return; }
+      await qc.invalidateQueries({ queryKey: ["listings"] });
+      setIds(r.listingIds); setFailed(r.failed); setPhase("done");
+      setMsg(`Našel jsem ${r.pagesFound} relevantních stránek, analyzoval ${r.analyzed}. Nalezeno ${r.listingIds.length} použitelných nabídek.`);
+    } catch {
+      setPhase("error"); setMsg("Webové vyhledávání není momentálně dostupné.");
+    }
+  };
+  const found = data.filter((e) => ids.includes(e.listing.id));
+
+  return (
+    <div className="space-y-3 rounded-md border bg-card p-4">
+      <Label className="text-xs text-muted-foreground">AI Web Agent – co hledáš?</Label>
+      <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); void go(); }}>
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="2+kk Pardubice do 5 000 000 Kč" />
+        <Button type="submit" disabled={phase === "searching" || q.trim().length < 3}>
+          {phase === "searching" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}<span className="ml-1.5">Hledat</span>
+        </Button>
+      </form>
+      {msg && <p className={phase === "error" ? "text-sm text-negative" : "text-sm text-muted-foreground"}>{msg}</p>}
+      {found.length > 0 && (
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {found.map((e) => (
+            <div key={e.listing.id} className="space-y-2">
+              <span className="inline-block rounded-sm border border-positive/50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-positive">Live data</span>
+              <ListingCard e={e} showReasons />
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>{ago(e.listing.last_verified_at)}{e.listing.area_m2 ? ` · ${formatNumber(Number(e.listing.area_m2))} m²` : ""} · {formatCZK(e.listing.price)}</span>
+                <Button asChild size="sm" variant="outline"><a href={e.listing.source_url} target="_blank" rel="noopener noreferrer"><ExternalLink className="mr-1 h-3.5 w-3.5" />Otevřít inzerát</a></Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {failed.length > 0 && (
+        <details className="text-xs text-muted-foreground">
+          <summary>Nezpracované stránky ({failed.length})</summary>
+          <ul className="mt-1 space-y-0.5">{failed.map((f) => <li key={f.url} className="truncate">{f.reason} – {f.url}</li>)}</ul>
+        </details>
+      )}
+    </div>
+  );
 }
