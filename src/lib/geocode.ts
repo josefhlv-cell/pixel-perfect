@@ -35,16 +35,17 @@ export async function geocodeAddress(query: string): Promise<GeoPoint | null> {
     });
     if (!res.ok) return null;
     const data = (await res.json()) as { lat: string; lon: string; display_name?: string }[];
-    if (!Array.isArray(data) || data.length === 0) return null;
-    const lat = Number(data[0].lat);
-    const lng = Number(data[0].lon);
+    const first = Array.isArray(data) ? data[0] : undefined;
+    if (!first) return null;
+    const lat = Number(first.lat);
+    const lng = Number(first.lon);
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
     // Sanity: roughly Czechia bounds
     if (lat < 48.5 || lat > 51.1 || lng < 12.0 || lng > 18.9) return null;
     return {
       lat,
       lng,
-      displayName: data[0].display_name ?? q,
+      displayName: first.display_name ?? q,
     };
   } catch {
     return null;
