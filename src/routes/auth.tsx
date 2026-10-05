@@ -56,6 +56,10 @@ function AuthPage() {
     if (!parsed.success) return void toast.error(parsed.error.issues[0]!.message);
     setBusy(true);
     try {
+      // Never let a misconfigured build silently "succeed" via the fallback client.
+      if (!import.meta.env["VITE_SUPABASE_URL"] || !import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"]) {
+        throw new Error("Missing Supabase configuration in this build");
+      }
       if (mode === "signin") {
         const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
         if (error) throw error;
