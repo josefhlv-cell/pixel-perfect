@@ -91,7 +91,7 @@ function createNoopSupabaseClient() {
         return { data: null, error: null };
       },
     },
-  } as ReturnType<typeof createClient<Database>>;
+  } as unknown as ReturnType<typeof createClient<Database>>;
 }
 
 function createSupabaseClient() {
