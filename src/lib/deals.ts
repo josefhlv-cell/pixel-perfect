@@ -71,7 +71,8 @@ export function enrichListing(
 ): EnrichedListing {
   const city = property?.city ?? listing.location ?? null;
   const area = listing.area_m2 != null ? Number(listing.area_m2) : property?.area_m2 != null ? Number(property.area_m2) : null;
-  const stat = city ? stats.get(city) : undefined;
+  // Live listings often carry "City, District" (e.g. "Pardubice, Zelené Předměstí"); fall back to the base city.
+  const stat = city ? (stats.get(city) ?? stats.get(city.split(/[,–-]/)[0]!.trim())) : undefined;
   const estimate = estimateValue(area, stat);
   const rent = estimateRent(area, stat);
   const diffBps = priceDifferenceBps(listing.price, estimate?.estimatedValue ?? null);
