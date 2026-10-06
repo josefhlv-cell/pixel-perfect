@@ -30,3 +30,16 @@ describe("web agent helpers", () => {
     expect(parseQuery("2+kk Pardubice do 5 000 000 Kč, výnos 5 %")).toEqual({ rooms: "2+kk", maxPrice: 5_000_000, minYieldPct: 5 });
   });
 });
+
+import { detailLinksFrom } from "./webagent";
+describe("detailLinksFrom", () => {
+  it("keeps same-site detail links only", () => {
+    const r = detailLinksFrom("https://www.sreality.cz/hledani/prodej/byty/pardubice", [
+      "https://www.sreality.cz/detail/prodej/byt/2+kk/pardubice/123456789",
+      "https://www.sreality.cz/hledani/prodej/byty/praha",
+      "https://example.com/detail/1234567",
+    ]);
+    expect(r).toHaveLength(1);
+    expect(r[0]).toContain("/detail/");
+  });
+});

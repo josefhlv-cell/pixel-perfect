@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { Download, ExternalLink, Loader2, MapPin, Save, Search, Trash2 } from "lucide-react";
+import { BellRing, Download, ExternalLink, Loader2, MapPin, Save, Search, Trash2, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { runWebAgent } from "@/lib/webagent.functions";
+import { addWatch, listWatches, removeWatch } from "@/lib/watchdog.functions";
+import { useQuery } from "@tanstack/react-query";
 import { geocodePlace } from "@/lib/geocode.functions";
 import type { GeoPoint } from "@/lib/geocode";
 import { Button } from "@/components/ui/button";
@@ -349,6 +351,20 @@ function WebAgentBox() {
     }
   };
   const found = data.filter((e) => ids.includes(e.listing.id));
+  const listW = useServerFn(listWatches);
+  const addW = useServerFn(addWatch);
+  const remW = useServerFn(removeWatch);
+  const watches = useQuery({ queryKey: ["watches"], queryFn: () => listW() });
+  const watch = async () => {
+    const r = await addW({ data: { query: q } });
+    if (!r.ok) { toast.error(r.error); return; }
+    toast.success("Hledání se bude každý den opakovat. Nové nabídky a slevy uvidíte v Upozorněních.");
+    await qc.invalidateQueries({ queryKey: ["watches"] });
+  };
+  const unwatch = async (id: string) => {
+    await remW({ data: { id } });
+    await qc.invalidateQueries({ queryKey: ["watches"] });
+  };
 
   return (
     <div className="space-y-3 rounded-md border bg-card p-4">
@@ -358,7 +374,21 @@ function WebAgentBox() {
         <Button type="submit" disabled={phase === "searching" || q.trim().length < 3}>
           {phase === "searching" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}<span className="ml-1.5">Hledat</span>
         </Button>
+        <Button type="button" variant="outline" title="Hlídat denně" disabled={q.trim().length < 3} onClick={() => void watch()}>
+          <BellRing className="h-4 w-4" /><span className="ml-1.5 hidden sm:inline">Hlídat denně</span>
+        </Button>
       </form>
+      {(watches.data?.length ?? 0) > 0 && (
+        <div className="flex flex-wrap gap-2 text-xs">
+          <span className="text-muted-foreground">Hlídací pes:</span>
+          {watches.data!.map((w) => (
+            <span key={w.id} className="inline-flex items-center gap-1 rounded-sm border px-2 py-0.5">
+              {w.query}{w.last_run_at ? ` · ${new Date(w.last_run_at).toLocaleDateString("cs-CZ")}` : " · čeká"}
+              <button type="button" aria-label="Zrušit hlídání" onClick={() => void unwatch(w.id)}><X className="h-3 w-3" /></button>
+            </span>
+          ))}
+        </div>
+      )}
       {msg && <p className={phase === "error" ? "text-sm text-negative" : "text-sm text-muted-foreground"}>{msg}</p>}
       {found.length > 0 && (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
