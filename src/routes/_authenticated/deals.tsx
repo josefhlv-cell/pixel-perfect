@@ -337,13 +337,15 @@ function WebAgentBox() {
   const [msg, setMsg] = useState("");
   const [ids, setIds] = useState<string[]>([]);
   const [failed, setFailed] = useState<{ url: string; reason: string }[]>([]);
+  const [scope, setScope] = useState<"city" | "area">("city");
+  const fullQuery = () => `${q.trim()}${scope === "area" ? ", včetně okolních obcí do 25 km" : ", přímo ve městě"}`.slice(0, 300);
 
   const go = async () => {
-    setPhase("searching"); setMsg("Vyhledávám veřejné nabídky a analyzuji je…"); setIds([]); setFailed([]);
+    setPhase("searching"); setMsg("Prohledávám hlavní realitní portály a analyzuji nabídky… (obvykle 2–4 minuty)"); setIds([]); setFailed([]);
     try {
-      const r = await run({ data: { query: q } });
+      const r = await run({ data: { query: fullQuery() } });
       if (!r.ok) { setPhase("error"); setMsg(r.error); return; }
-      await qc.invalidateQueries({ queryKey: ["listings"] });
+      await qc.invalidateQueries();
       setIds(r.listingIds); setFailed(r.failed); setPhase("done");
       setMsg(`Našel jsem ${r.pagesFound} relevantních stránek, analyzoval ${r.analyzed}. Nalezeno ${r.listingIds.length} použitelných nabídek.`);
     } catch {
@@ -356,7 +358,7 @@ function WebAgentBox() {
   const remW = useServerFn(removeWatch);
   const watches = useQuery({ queryKey: ["watches"], queryFn: () => listW() });
   const watch = async () => {
-    const r = await addW({ data: { query: q } });
+    const r = await addW({ data: { query: fullQuery() } });
     if (!r.ok) { toast.error(r.error); return; }
     toast.success("Hledání se bude každý den opakovat. Nové nabídky a slevy uvidíte v Upozorněních.");
     await qc.invalidateQueries({ queryKey: ["watches"] });
@@ -378,6 +380,12 @@ function WebAgentBox() {
           <BellRing className="h-4 w-4" /><span className="ml-1.5 hidden sm:inline">Hlídat denně</span>
         </Button>
       </form>
+      <div className="flex gap-1 text-xs" role="group" aria-label="Rozsah hledání">
+        {([["city", "V městě"], ["area", "V okolí (25 km)"]] as const).map(([k, l]) => (
+          <Button key={k} type="button" size="sm" variant={scope === k ? "default" : "outline"} className="h-7 px-2.5 text-xs" onClick={() => setScope(k)}>{l}</Button>
+        ))}
+        <span className="ml-2 self-center text-muted-foreground">Výsledky se promítnou i do přehledu Trh.</span>
+      </div>
       {(watches.data?.length ?? 0) > 0 && (
         <div className="flex flex-wrap gap-2 text-xs">
           <span className="text-muted-foreground">Hlídací pes:</span>

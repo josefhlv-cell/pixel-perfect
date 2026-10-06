@@ -6,7 +6,8 @@ import { canonicalUrl, detailLinksFrom, isUsable, LIVE_SOURCE_TYPE } from "./web
 
 const MAX_PAGES = 8;
 const OPEN_RETRIES = 2;
-const MAX_TOTAL = 16;
+const MAX_TOTAL = 14;
+const BATCH = 4;
 
 async function openWithRetry(
   agent: { open: (url: string) => Promise<{ url: string; http: number; html: string | null; links?: string[] }> },
@@ -40,22 +41,39 @@ export async function runAgentPipeline(supabase: SupabaseClient<Database>, userI
     }
 
     if (urls.length === 0) {
-      return { ok: true as const, pagesFound: 0, analyzed: 0, listingIds: [], failed: [] };
+      return { ok: true as const, pagesFound: 0, analyzed: 0, listingIds: [], failed: [], newCount: 0 };
     }
 
-    const candidates = urls.slice(0, MAX_PAGES);
+    // Detail pages first; result lists are expanded into details later.
+    const isDetail = (u: string) => /(detail|nemovitost\/|\/inzerat\/|\d{6,})/i.test(u) && !/(hledani|vyhledavani|\/s\/|vypis)/i.test(u);
+    const candidates = [...urls.filter(isDetail), ...urls.filter((u) => !isDetail(u))].slice(0, MAX_PAGES);
     const seen = new Set(candidates);
     const expanded = new Set<string>();
     const failed: { url: string; reason: string }[] = [];
     const listingIds: string[] = [];
 
-    const { data: existingProps } = await supabase.from("properties").select("id,city,area_m2,disposition,latitude,longitude");
+    const { data: existingProps } = await supabase.from("properties").select("id,city,area_m2,disposition,latitude,longitude")
+      .or(`created_by.eq.${userId},is_sample.eq.true`);
+    let newCount = 0;
 
     // Process candidates sequentially. This prevents concurrent searches from
     // racing on duplicate detection / property creation and avoids firing many
     // extraction calls at once, which was the main source of rate-limit risk.
-    for (const url of candidates) {
-      const page = await openWithRetry(agent, url);
+    // Open + extract in small parallel batches (network/AI bound); DB writes stay sequential
+    // so duplicate detection and property creation never race.
+    const prepared = new Map<string, Promise<{ page: Awaited<ReturnType<typeof openWithRetry>>; ex: Awaited<ReturnType<typeof agent.extractListing>> | null }>>();
+    const prepare = (u: string) => {
+      if (!prepared.has(u)) prepared.set(u, (async () => {
+        const page = await openWithRetry(agent, u);
+        if (!page.html) return { page, ex: null };
+        try { return { page, ex: await agent.extractListing(u, agent.read(page)) }; } catch { return { page, ex: null }; }
+      })());
+      return prepared.get(u)!;
+    };
+    for (let ci = 0; ci < candidates.length; ci++) {
+      const url = candidates[ci]!;
+      for (let k = ci; k < Math.min(candidates.length, ci + BATCH); k++) void prepare(candidates[k]!);
+      const { page, ex: preEx } = await prepare(url);
       if (!page.html) {
         failed.push({
           url,
@@ -69,10 +87,8 @@ export async function runAgentPipeline(supabase: SupabaseClient<Database>, userI
         continue;
       }
 
-      let ex;
-      try {
-        ex = await agent.extractListing(url, agent.read(page));
-      } catch {
+      const ex = preEx;
+      if (!ex) {
         failed.push({ url, reason: "Extrakce selhala" });
         continue;
       }
@@ -86,7 +102,7 @@ export async function runAgentPipeline(supabase: SupabaseClient<Database>, userI
 
       const sourceUrl = canonicalUrl(url) ?? url;
       const now = new Date();
-      const { data: existing } = await supabase.from("listings").select("*").eq("source_url", sourceUrl).maybeSingle();
+      const { data: existing } = await supabase.from("listings").select("*").eq("source_url", sourceUrl).eq("created_by", userId).maybeSingle();
 
       const decision = decideAvailability({
         previousStatus: (existing?.availability_status as never) ?? "UNKNOWN",
@@ -152,6 +168,7 @@ export async function runAgentPipeline(supabase: SupabaseClient<Database>, userI
           continue;
         }
         listingId = ins.id;
+        newCount++;
       }
 
       await supabase.from("listing_freshness_events").insert(
@@ -193,5 +210,5 @@ export async function runAgentPipeline(supabase: SupabaseClient<Database>, userI
       listingIds.push(listingId);
     }
 
-    return { ok: true as const, pagesFound: urls.length, analyzed: candidates.length, listingIds: [...new Set(listingIds)], failed };
+    return { ok: true as const, pagesFound: urls.length, analyzed: candidates.length, listingIds: [...new Set(listingIds)], failed, newCount };
 }

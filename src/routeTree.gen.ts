@@ -26,6 +26,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedWatchlistRouteImport } from './routes/_authenticated/watchlist'
 import { Route as AuthenticatedPropertiesIndexRouteImport } from './routes/_authenticated/properties.index'
 import { Route as AuthenticatedPropertiesIdRouteImport } from './routes/_authenticated/properties.$id'
+import { Route as ApiPublicCronWatchdogRouteImport } from './routes/api/public/cron/watchdog'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -113,6 +114,11 @@ const AuthenticatedPropertiesIdRoute =
     path: '/properties/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicCronWatchdogRoute = ApiPublicCronWatchdogRouteImport.update({
+  id: '/api/public/cron/watchdog',
+  path: '/api/public/cron/watchdog',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/watchlist': typeof AuthenticatedWatchlistRoute
   '/properties/$id': typeof AuthenticatedPropertiesIdRoute
   '/properties/': typeof AuthenticatedPropertiesIndexRoute
+  '/api/public/cron/watchdog': typeof ApiPublicCronWatchdogRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -149,6 +156,7 @@ export interface FileRoutesByTo {
   '/watchlist': typeof AuthenticatedWatchlistRoute
   '/properties/$id': typeof AuthenticatedPropertiesIdRoute
   '/properties': typeof AuthenticatedPropertiesIndexRoute
+  '/api/public/cron/watchdog': typeof ApiPublicCronWatchdogRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   '/_authenticated/watchlist': typeof AuthenticatedWatchlistRoute
   '/_authenticated/properties/$id': typeof AuthenticatedPropertiesIdRoute
   '/_authenticated/properties/': typeof AuthenticatedPropertiesIndexRoute
+  '/api/public/cron/watchdog': typeof ApiPublicCronWatchdogRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -189,6 +198,7 @@ export interface FileRouteTypes {
     | '/watchlist'
     | '/properties/$id'
     | '/properties/'
+    | '/api/public/cron/watchdog'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/watchlist'
     | '/properties/$id'
     | '/properties'
+    | '/api/public/cron/watchdog'
   id:
     | '__root__'
     | '/'
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/_authenticated/watchlist'
     | '/_authenticated/properties/$id'
     | '/_authenticated/properties/'
+    | '/api/public/cron/watchdog'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -234,6 +246,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicCronWatchdogRoute: typeof ApiPublicCronWatchdogRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -357,6 +370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPropertiesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/cron/watchdog': {
+      id: '/api/public/cron/watchdog'
+      path: '/api/public/cron/watchdog'
+      fullPath: '/api/public/cron/watchdog'
+      preLoaderRoute: typeof ApiPublicCronWatchdogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -399,6 +419,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicCronWatchdogRoute: ApiPublicCronWatchdogRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

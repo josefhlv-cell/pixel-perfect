@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.schedule_watchdog_cron(text) TO sandbox_exec;

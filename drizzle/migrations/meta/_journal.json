@@ -22,6 +22,27 @@
       "when": 1791251669063,
       "tag": "0002_watchdog_last_run",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791262512603,
+      "tag": "0003_per_user_listing_isolation_and_cron",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791262666059,
+      "tag": "0004_watchdog_cron_scheduler_fn",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791262693835,
+      "tag": "0005_grant_watchdog_scheduler",
+      "breakpoints": true
     }
   ]
 }

@@ -12,6 +12,11 @@ import { wrapUntrusted } from "./prompts";
 
 const BASE = "https://ai.gateway.lovable.dev/v1";
 const MODEL = "openai/gpt-6-astra";
+/** Largest Czech real-estate portals and agency networks searched on every run. */
+export const MAJOR_PORTALS = [
+  "sreality.cz", "bezrealitky.cz", "reality.idnes.cz", "realitymix.cz", "reality.bazos.cz",
+  "remax-czech.cz", "century21.cz", "mmreality.cz", "realitycechy.cz", "ulovdomov.cz",
+];
 
 export class WebAgentUnavailableError extends Error {}
 export interface OpenedPage { url: string; http: number; html: string | null; links?: string[]; }
@@ -22,6 +27,7 @@ export class WebAgentProvider {
   private headers() { return { Authorization: `Bearer ${this.apiKey}`, "Content-Type": "application/json" }; }
 
   async search(query: string): Promise<string[]> {
+    const fcP = this.firecrawlSearch(query);
     const res = await fetch(`${BASE}/responses`, { method: "POST", headers: this.headers(), body: JSON.stringify({
       model: MODEL, tools: [{ type: "web_search" }], reasoning: { effort: "low" },
       input: `Vyhledej na veřejném webu AKTUÁLNÍ jednotlivé inzeráty nemovitostí k prodeji (detail jedné nabídky, ne výpis/kategorie) odpovídající zadání: "${query.slice(0, 300)}". Hledej na českých realitních portálech a webech realitních kanceláří. Vrať pouze seznam až 12 URL detailů inzerátů, jedna na řádek. Nic nevymýšlej.`,
@@ -30,18 +36,26 @@ export class WebAgentProvider {
     const j = await res.json() as { output?: { type: string; content?: { text?: string; annotations?: { type: string; url?: string }[] }[] }[] };
     let text = ""; const cites: string[] = [];
     for (const o of j.output ?? []) if (o.type === "message") for (const c of o.content ?? []) { text += `${c.text ?? ""}\n`; for (const a of c.annotations ?? []) if (a.url) cites.push(a.url); }
-    const fc = await this.firecrawlSearch(query);
-    return [...new Set([...collectUrls(text, cites), ...fc])].slice(0, 15);
+    const fc = await fcP;
+    const ai = collectUrls(text, cites);
+    const mixed: string[] = [];
+    for (let i = 0; i < Math.max(ai.length, fc.length); i++) { if (fc[i]) mixed.push(fc[i]!); if (ai[i]) mixed.push(ai[i]!); }
+    return [...new Set(mixed)].slice(0, 30);
   }
 
   /** Firecrawl renders JavaScript portals (Sreality, Bezrealitky…) that plain GET cannot read. */
-  private async firecrawlScrape(url: string): Promise<OpenedPage | null> {
+  private async firecrawlScrape(url: string, retried = false): Promise<OpenedPage | null> {
     const key = process.env["FIRECRAWL_API_KEY"];
     if (!key) return null;
     try {
       const res = await fetch("https://api.firecrawl.dev/v2/scrape", { method: "POST", signal: AbortSignal.timeout(45000),
         headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
         body: JSON.stringify({ url, formats: ["markdown", "links"], onlyMainContent: false, waitFor: 1500, location: { country: "CZ", languages: ["cs"] } }) });
+      if (res.status === 429 && !retried) {
+        const wait = Number(/retry after (\d+)s/.exec(await res.text())?.[1] ?? 10);
+        await new Promise((r) => setTimeout(r, Math.min(25, wait + 1) * 1000));
+        return this.firecrawlScrape(url, true);
+      }
       if (!res.ok) { console.error("[firecrawl] scrape", res.status, (await res.text()).slice(0, 300)); return null; }
       const j = await res.json() as { data?: { markdown?: string; links?: string[]; metadata?: { statusCode?: number } }; markdown?: string };
       const md = j.data?.markdown ?? j.markdown ?? "";
@@ -53,18 +67,36 @@ export class WebAgentProvider {
     } catch (e) { console.error("[firecrawl] scrape failed", e); return null; }
   }
 
+  /** Searches the major Czech portals in parallel (site-restricted) plus one open web search. */
   async firecrawlSearch(query: string): Promise<string[]> {
     const key = process.env["FIRECRAWL_API_KEY"];
     if (!key) return [];
-    try {
-      const res = await fetch("https://api.firecrawl.dev/v2/search", { method: "POST", signal: AbortSignal.timeout(30000),
-        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ query: `${query.slice(0, 200)} prodej inzerát`, limit: 10, lang: "cs", country: "cz" }) });
-      if (!res.ok) { console.error("[firecrawl] search", res.status); return []; }
-      const j = await res.json() as { data?: { web?: { url?: string }[] } | { url?: string }[] };
-      const rows = Array.isArray(j.data) ? j.data : (j.data?.web ?? []);
-      return collectUrls("", rows.map((r) => r.url ?? "").filter(Boolean));
-    } catch { return []; }
+    const q = query.slice(0, 200);
+    const one = async (qq: string, limit: number, retried = false): Promise<string[]> => {
+      try {
+        const res = await fetch("https://api.firecrawl.dev/v2/search", { method: "POST", signal: AbortSignal.timeout(30000),
+          headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ query: qq, limit, lang: "cs", country: "cz" }) });
+        if (res.status === 429 && !retried) {
+          // Firecrawl rate limit: wait the advertised reset (bounded) and retry once.
+          const wait = Number(/retry after (\d+)s/.exec(await res.text())?.[1] ?? 10);
+          await new Promise((r) => setTimeout(r, Math.min(25, wait + 1) * 1000));
+          return one(qq, limit, true);
+        }
+        if (!res.ok) { console.error("[firecrawl] search", res.status); return []; }
+        const j = await res.json() as { data?: { web?: { url?: string }[] } | { url?: string }[] };
+        const rows = Array.isArray(j.data) ? j.data : (j.data?.web ?? []);
+        return collectUrls("", rows.map((r) => r.url ?? "").filter(Boolean));
+      } catch { return []; }
+    };
+    // 3 requests total (stays inside Firecrawl's per-minute limit): open web + two OR-ed portal groups.
+    const half = Math.ceil(MAJOR_PORTALS.length / 2);
+    const groups = [MAJOR_PORTALS.slice(0, half), MAJOR_PORTALS.slice(half)];
+    const lists = await Promise.all([one(`${q} prodej inzerát`, 10), ...groups.map((g) => one(`${q} prodej (${g.map((d) => `site:${d}`).join(" OR ")})`, 12))]);
+    // Interleave so every portal gets a slot before any portal gets a second one.
+    const out: string[] = [];
+    for (let i = 0; i < 10; i++) for (const l of lists) if (l[i]) out.push(l[i]!);
+    return [...new Set(out)];
   }
 
   async open(url: string): Promise<OpenedPage> {

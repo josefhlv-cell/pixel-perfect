@@ -1075,7 +1075,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      schedule_watchdog_cron: { Args: { _secret: string }; Returns: undefined }
     }
     Enums: {
       alert_severity: "info" | "opportunity" | "warning"
