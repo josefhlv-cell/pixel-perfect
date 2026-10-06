@@ -1,4 +1,6 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { runDueWatches } from "@/lib/watchdog.functions";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -31,6 +33,16 @@ const MOBILE = ["/dashboard", "/deals", "/portfolio", "/watchlist"];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [more, setMore] = useState(false);
+  const runDue = useServerFn(runDueWatches);
+  const qcShell = useQueryClient();
+  useEffect(() => {
+    // Daily watchdog: re-runs saved searches older than ~20 h in the background.
+    const k = "ri-watchdog-check";
+    const last = Number(sessionStorage.getItem(k) ?? 0);
+    if (Date.now() - last < 30 * 60_000) return;
+    sessionStorage.setItem(k, String(Date.now()));
+    runDue().then((r) => { if (r.ran > 0) void qcShell.invalidateQueries(); }).catch(() => {});
+  }, [runDue, qcShell]);
   return (
     <div className="min-h-screen bg-background">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-56 flex-col border-r bg-sidebar lg:flex">
