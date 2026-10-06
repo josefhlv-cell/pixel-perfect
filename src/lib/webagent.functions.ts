@@ -12,5 +12,12 @@ export const runWebAgent = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ query: z.string().trim().min(3).max(300) }).parse(d))
   .handler(async ({ data, context }) => {
     const { runAgentPipeline } = await import("./webagent-core.server");
-    return runAgentPipeline(context.supabase, context.userId, data.query);
+    const result = await runAgentPipeline(context.supabase, context.userId, data.query);
+    if (result.ok && result.listingIds.length > 0) {
+      try {
+        const { refreshLiveMarketStats } = await import("./market-refresh.server");
+        await refreshLiveMarketStats();
+      } catch (e) { console.error("[webagent] market refresh", e); }
+    }
+    return result;
   });
