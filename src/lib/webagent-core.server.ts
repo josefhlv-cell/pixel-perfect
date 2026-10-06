@@ -6,6 +6,7 @@ import { canonicalUrl, detailLinksFrom, isUsable, LIVE_SOURCE_TYPE } from "./web
 
 const MAX_PAGES = 8;
 const OPEN_RETRIES = 2;
+const MAX_TOTAL = 16;
 
 async function openWithRetry(
   agent: { open: (url: string) => Promise<{ url: string; http: number; html: string | null; links?: string[] }> },
@@ -43,6 +44,8 @@ export async function runAgentPipeline(supabase: SupabaseClient<Database>, userI
     }
 
     const candidates = urls.slice(0, MAX_PAGES);
+    const seen = new Set(candidates);
+    const expanded = new Set<string>();
     const failed: { url: string; reason: string }[] = [];
     const listingIds: string[] = [];
 
@@ -74,7 +77,10 @@ export async function runAgentPipeline(supabase: SupabaseClient<Database>, userI
         continue;
       }
       if (!isUsable(ex)) {
-        failed.push({ url, reason: "Není detail inzerátu s cenou" });
+        // Search-results page: queue up to 4 individual ads from it (one level deep, bounded).
+        const more = expanded.has(url) ? [] : detailLinksFrom(url, page.links ?? []).filter((u) => !seen.has(u));
+        for (const u of more) if (candidates.length < MAX_TOTAL) { candidates.push(u); seen.add(u); expanded.add(u); }
+        failed.push({ url, reason: more.length ? `Výpis nabídek – otevírám ${more.length} detailů` : "Není detail inzerátu s cenou" });
         continue;
       }
 
