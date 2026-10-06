@@ -30,10 +30,46 @@ export class WebAgentProvider {
     const j = await res.json() as { output?: { type: string; content?: { text?: string; annotations?: { type: string; url?: string }[] }[] }[] };
     let text = ""; const cites: string[] = [];
     for (const o of j.output ?? []) if (o.type === "message") for (const c of o.content ?? []) { text += `${c.text ?? ""}\n`; for (const a of c.annotations ?? []) if (a.url) cites.push(a.url); }
-    return collectUrls(text, cites).slice(0, 15);
+    const fc = await this.firecrawlSearch(query);
+    return [...new Set([...collectUrls(text, cites), ...fc])].slice(0, 15);
+  }
+
+  /** Firecrawl renders JavaScript portals (Sreality, Bezrealitky…) that plain GET cannot read. */
+  private async firecrawlScrape(url: string): Promise<OpenedPage | null> {
+    const key = process.env["FIRECRAWL_API_KEY"];
+    if (!key) return null;
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v2/scrape", { method: "POST", signal: AbortSignal.timeout(45000),
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, waitFor: 1500, location: { country: "CZ", languages: ["cs"] } }) });
+      if (!res.ok) { console.error("[firecrawl] scrape", res.status, (await res.text()).slice(0, 300)); return null; }
+      const j = await res.json() as { data?: { markdown?: string; metadata?: { statusCode?: number } }; markdown?: string };
+      const md = j.data?.markdown ?? j.markdown ?? "";
+      const status = j.data?.metadata?.statusCode ?? 200;
+      if (status === 404 || status === 410) return { url, http: status, html: null };
+      if (md.trim().length < 120) return null;
+      const esc = md.slice(0, 200_000).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      return { url, http: status, html: `<main>${esc}</main>` };
+    } catch (e) { console.error("[firecrawl] scrape failed", e); return null; }
+  }
+
+  async firecrawlSearch(query: string): Promise<string[]> {
+    const key = process.env["FIRECRAWL_API_KEY"];
+    if (!key) return [];
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v2/search", { method: "POST", signal: AbortSignal.timeout(30000),
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ query: `${query.slice(0, 200)} prodej inzerát`, limit: 10, lang: "cs", country: "cz" }) });
+      if (!res.ok) { console.error("[firecrawl] search", res.status); return []; }
+      const j = await res.json() as { data?: { web?: { url?: string }[] } | { url?: string }[] };
+      const rows = Array.isArray(j.data) ? j.data : (j.data?.web ?? []);
+      return collectUrls("", rows.map((r) => r.url ?? "").filter(Boolean));
+    } catch { return []; }
   }
 
   async open(url: string): Promise<OpenedPage> {
+    const fc = await this.firecrawlScrape(url);
+    if (fc) return fc;
     try {
       const res = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(12000), headers: {
         "User-Agent": "Mozilla/5.0 (compatible; RealityInvestorBot/1.0; +https://lovable.app)", Accept: "text/html,application/xhtml+xml", "Accept-Language": "cs-CZ,cs;q=0.9",
