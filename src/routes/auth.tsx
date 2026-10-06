@@ -56,11 +56,8 @@ function AuthPage() {
     if (!parsed.success) return void toast.error(parsed.error.issues[0]!.message);
     setBusy(true);
     try {
-      // Never let a misconfigured build silently "succeed" via the fallback client.
-      // Dot access is required: Vite only statically replaces `import.meta.env.VITE_X`, not bracket access.
-      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
-        throw new Error("Missing Supabase configuration in this build");
-      }
+      // The client now always has real public config; the null-user checks below still
+      // prevent any silent fake success.
       if (mode === "signin") {
         const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
         if (error) throw error;
