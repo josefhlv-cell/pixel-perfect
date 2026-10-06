@@ -2,13 +2,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { computeFreshnessScore, computeFreshnessStatus, decideAvailability, isLikelyDuplicate } from "./freshness";
-import { canonicalUrl, isUsable, LIVE_SOURCE_TYPE } from "./webagent";
+import { canonicalUrl, detailLinksFrom, isUsable, LIVE_SOURCE_TYPE } from "./webagent";
 
 const MAX_PAGES = 8;
 const OPEN_RETRIES = 2;
 
 async function openWithRetry(
-  agent: { open: (url: string) => Promise<{ url: string; http: number; html: string | null }> },
+  agent: { open: (url: string) => Promise<{ url: string; http: number; html: string | null; links?: string[] }> },
   url: string,
 ) {
   let last = await agent.open(url);

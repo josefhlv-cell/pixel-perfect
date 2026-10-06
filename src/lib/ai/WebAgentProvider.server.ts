@@ -14,7 +14,7 @@ const BASE = "https://ai.gateway.lovable.dev/v1";
 const MODEL = "openai/gpt-6-astra";
 
 export class WebAgentUnavailableError extends Error {}
-export interface OpenedPage { url: string; http: number; html: string | null; }
+export interface OpenedPage { url: string; http: number; html: string | null; links?: string[]; }
 
 export class WebAgentProvider {
   readonly name = "lovable-web-search";
@@ -41,15 +41,15 @@ export class WebAgentProvider {
     try {
       const res = await fetch("https://api.firecrawl.dev/v2/scrape", { method: "POST", signal: AbortSignal.timeout(45000),
         headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, waitFor: 1500, location: { country: "CZ", languages: ["cs"] } }) });
+        body: JSON.stringify({ url, formats: ["markdown", "links"], onlyMainContent: false, waitFor: 1500, location: { country: "CZ", languages: ["cs"] } }) });
       if (!res.ok) { console.error("[firecrawl] scrape", res.status, (await res.text()).slice(0, 300)); return null; }
-      const j = await res.json() as { data?: { markdown?: string; metadata?: { statusCode?: number } }; markdown?: string };
+      const j = await res.json() as { data?: { markdown?: string; links?: string[]; metadata?: { statusCode?: number } }; markdown?: string };
       const md = j.data?.markdown ?? j.markdown ?? "";
       const status = j.data?.metadata?.statusCode ?? 200;
       if (status === 404 || status === 410) return { url, http: status, html: null };
       if (md.trim().length < 120) return null;
       const esc = md.slice(0, 200_000).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      return { url, http: status, html: `<main>${esc}</main>` };
+      return { url, http: status, html: `<main>${esc}</main>`, links: j.data?.links ?? [] };
     } catch (e) { console.error("[firecrawl] scrape failed", e); return null; }
   }
 
@@ -75,7 +75,7 @@ export class WebAgentProvider {
         "User-Agent": "Mozilla/5.0 (compatible; RealityInvestorBot/1.0; +https://lovable.app)", Accept: "text/html,application/xhtml+xml", "Accept-Language": "cs-CZ,cs;q=0.9",
       } });
       const html = res.ok ? (await res.text()).slice(0, 600_000) : null;
-      if (html && htmlToText(html).trim().length >= 120) return { url, http: res.status, html };
+      if (html && htmlToText(html).trim().length >= 120) return { url, http: res.status, html, links: [...html.matchAll(/href="([^"#]+)"/g)].map((m) => { try { return new URL(m[1]!, url).toString(); } catch { return ""; } }).filter(Boolean) };
       return await this.openViaWebSearch(url, res.status);
     } catch { return await this.openViaWebSearch(url, 0); }
   }

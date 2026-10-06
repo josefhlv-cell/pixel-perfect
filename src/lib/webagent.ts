@@ -255,3 +255,22 @@ export function cityCentroid(city: string | null | undefined): { lat: number; ln
   const key = normalizeLocation(city);
   return CITY_CENTROIDS[key] ?? null;
 }
+
+/** From a search-results page, pick links that look like single-listing detail pages on the same site. */
+export function detailLinksFrom(pageUrl: string, links: string[], max = 4): string[] {
+  let host: string;
+  try { host = new URL(pageUrl).hostname.replace(/^www\./, ""); } catch { return []; }
+  const out = new Set<string>();
+  for (const l of links) {
+    let u: URL;
+    try { u = new URL(l); } catch { continue; }
+    if (u.hostname.replace(/^www\./, "") !== host) continue;
+    const path = u.pathname.toLowerCase();
+    if (!/(detail|inzerat|nemovitost|nabidka|\/prodej-bytu|\/byt-)/.test(path) && !/\d{6,}/.test(path)) continue;
+    if (/(hledani|vyhledavani|\/s\/|search|prodane)/.test(path)) continue;
+    const c = canonicalUrl(u.toString());
+    if (c && c !== canonicalUrl(pageUrl)) out.add(c);
+    if (out.size >= max) break;
+  }
+  return [...out];
+}
