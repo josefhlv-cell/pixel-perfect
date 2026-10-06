@@ -55,6 +55,7 @@ export const runDueWatches = createServerFn({ method: "POST" })
       try {
         const r = await runAgentPipeline(supabase, userId, w.query);
         if (r.ok) found += r.listingIds.length;
+        if (r.ok && r.newCount > 0) await notifyWatch(supabase, userId, w.query, r.newCount);
       } catch (e) {
         console.error("[watchdog] run failed", e);
       }
@@ -65,3 +66,8 @@ export const runDueWatches = createServerFn({ method: "POST" })
     } catch (e) { console.error("[watchdog] market refresh", e); }
     return { ran: due.length, found };
   });
+
+async function notifyWatch(supabase: { from: (t: "alerts") => { insert: (v: never) => PromiseLike<unknown> } }, userId: string, query: string, n: number) {
+  await supabase.from("alerts").insert({ user_id: userId, kind: "new_deal", severity: "opportunity",
+    title: `Hlídací pes: ${n} ${n === 1 ? "nový inzerát" : n < 5 ? "nové inzeráty" : "nových inzerátů"}`, body: query } as never);
+}

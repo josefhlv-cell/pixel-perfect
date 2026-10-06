@@ -1,4 +1,5 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { runDueWatches } from "@/lib/watchdog.functions";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -103,7 +104,19 @@ export function AppShell({ children }: { children: ReactNode }) {
 function TopBar() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { data: alerts } = useQuery(alertsQuery);
+  const { data: alerts } = useQuery({ ...alertsQuery, refetchInterval: 5 * 60_000 });
+  // Toast when new alerts (e.g. from the daily watchdog) arrive while the app is open.
+  const seen = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    if (!alerts) return;
+    const fresh = alerts.filter((a) => !a.read_at);
+    if (seen.current) {
+      const added = fresh.filter((a) => !seen.current!.has(a.id));
+      if (added.length === 1) toast(added[0]!.title, { description: added[0]!.body ?? undefined, action: { label: "Otevřít", onClick: () => navigate({ to: "/alerts" }) } });
+      else if (added.length > 1) toast(`${added.length} nových upozornění`, { description: "Hlídací pes našel nové nabídky.", action: { label: "Otevřít", onClick: () => navigate({ to: "/alerts" }) } });
+    }
+    seen.current = new Set(alerts.map((a) => a.id));
+  }, [alerts, navigate]);
   const { data: profile } = useQuery(profileQuery);
   const unread = alerts?.filter((a) => !a.read_at) ?? [];
   const [theme, setT] = useState<"dark" | "light" | null>(null);
