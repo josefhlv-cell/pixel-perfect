@@ -1000,6 +1000,7 @@ export type Database = {
           generated_queries: string[] | null
           id: string
           investor_profile_id: string | null
+          last_run_at: string | null
           provider: string | null
           query: string
           status: string
@@ -1010,6 +1011,7 @@ export type Database = {
           generated_queries?: string[] | null
           id?: string
           investor_profile_id?: string | null
+          last_run_at?: string | null
           provider?: string | null
           query: string
           status?: string
@@ -1020,6 +1022,7 @@ export type Database = {
           generated_queries?: string[] | null
           id?: string
           investor_profile_id?: string | null
+          last_run_at?: string | null
           provider?: string | null
           query?: string
           status?: string

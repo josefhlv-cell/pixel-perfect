@@ -1,0 +1,1 @@
+ALTER TABLE public.searches ADD COLUMN IF NOT EXISTS last_run_at timestamptz;
