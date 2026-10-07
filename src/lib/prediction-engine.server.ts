@@ -10,6 +10,9 @@ import { buildFeatureSnapshot, scenarioMixture, mixtureExpectedGrowth, probabili
 import { DEFAULT_CAUSAL_GRAPH, locateMarketInCausalChain, propagateCausalShock } from "./prediction-causal";
 import { buildPredictionLineage } from "./prediction-lineage";
 import { judgeForecast, adversarialCritique, buildEvidenceGraph } from "./prediction-judge";
+import { assessEvidenceConflict } from "./evidence-conflict";
+import { simulateWorld } from "./market-world-model";
+import { detectRegimeChange } from "./regime-change-detector";
 
 const input = z.object({
   city: z.string().min(1).optional(),
@@ -131,6 +134,46 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
     const rankings = rankProperties(signals, market);
     const generatedAt = new Date().toISOString();
 
+    const evidenceConflict = assessEvidenceConflict([
+      { sourceId:"market_statistics", kind:"ASKING", value:Number(latest?.priceM2 ?? 0), weight:1, observedAt:Date.parse(String(latest?.date ?? generatedAt)), availableAt:Date.parse(String(latest?.date ?? generatedAt)), reliability:.75 },
+      ...(latest?.rentM2 != null ? [{ sourceId:"market_statistics_rent", kind:"RENT" as const, value:Number(latest.rentM2), weight:.65, observedAt:Date.parse(String(latest.date)), availableAt:Date.parse(String(latest.date)), reliability:.65 }] : []),
+      ...(snapshotRows.length ? [{ sourceId:"listing_snapshots", kind:"ASKING" as const, value:Number(snapshotRows.at(-1)?.price ?? 0), weight:.55, observedAt:Date.parse(String(snapshotRows.at(-1)?.observed_at ?? generatedAt)), availableAt:Date.parse(String(snapshotRows.at(-1)?.observed_at ?? generatedAt)), reliability:.60 }] : []),
+    ].filter(x => Number.isFinite(x.value) && x.value > 0), Date.now());
+
+    const world = simulateWorld({
+      priceGrowth: market.expectedGrowthBps / 10000,
+      rentGrowth: features.rentGrowthBps / 10000,
+      mortgageRate: (latest?.mortgageRateBps ?? 450) / 10000,
+      policyRate: (latest?.policyRateBps ?? 350) / 10000,
+      inflation: 0.025,
+      incomeGrowth: (latest?.wageGrowthBps ?? 300) / 10000,
+      unemployment: Math.max(0, (latest?.unemploymentBps ?? 400) / 10000),
+      inventoryGrowth: features.supplyPressureBps / 10000,
+      demandGrowth: features.demandPressureBps / 10000,
+      constructionGrowth: (latest?.completionsGrowthBps ?? 0) / 10000,
+      liquidity: Math.min(.95, Math.max(.05, .5 + features.liquidityBps / 10000)),
+    }, 10000, 20261007);
+
+    const regimeChange = detectRegimeChange({
+      currentMean: market.expectedGrowthBps,
+      baselineMean: fallbackStats.length > 12
+        ? fallbackStats.slice(-12,-1).reduce((s,x)=>s+x.priceM2,0)/Math.max(1,fallbackStats.slice(-12,-1).length)
+        : market.expectedGrowthBps,
+      currentVolatility: market.volatilityBps,
+      baselineVolatility: fallbackStats.length > 12
+        ? Math.abs((fallbackStats.at(-1)?.priceM2 ?? 0)-(fallbackStats.at(-2)?.priceM2 ?? 0))
+        : market.volatilityBps,
+      currentSlope: market.expectedGrowthBps / Math.max(1,data.horizonMonths),
+      baselineSlope: fallbackStats.length > 12
+        ? ((fallbackStats.at(-1)?.priceM2 ?? 0)-(fallbackStats.at(-12)?.priceM2 ?? 0))/11
+        : 0,
+      modelErrorCurrent: Math.max(1,market.volatilityBps),
+      modelErrorBaseline: Math.max(1,market.volatilityBps),
+      modelDisagreement: Math.max(0,1-market.confidence),
+      liquidityChange: features.liquidityBps/10000,
+      sampleSize: fallbackStats.length,
+    });
+
     const evidence = [
       { id:"market-statistics", kind:"ASKING" as const, observedAt:String(fallbackStats.at(-1)?.date ?? generatedAt), availableAt:String(fallbackStats.at(-1)?.date ?? generatedAt), quality:fallbackStats.length>=24?.85:fallbackStats.length>=12?.65:.40, direction:Math.sign(market.expectedGrowthBps), relevance:1 },
       ...(snapshotRows.length ? [{ id:"listing-snapshots", kind:"BEHAVIORAL" as const, observedAt:String(snapshotRows.at(-1)?.observed_at ?? generatedAt), availableAt:String(snapshotRows.at(-1)?.observed_at ?? generatedAt), quality:.75, direction:0, relevance:.8 }] : []),
@@ -164,7 +207,7 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
     const lineage = buildPredictionLineage({
       predictionId: `market:${city ?? "ALL"}:${data.horizonMonths}:${fallbackStats.at(-1)?.date ?? "unknown"}`,
       generatedAt,
-      modelVersion: "predictive-v6.0.0",
+      modelVersion: "predictive-v6.1.0",
       horizonMonths: data.horizonMonths,
       dataSources: [
         { source: "market_statistics", quality: fallbackStats.length >= 24 ? 0.85 : fallbackStats.length >= 12 ? 0.65 : 0.40, rowCount: fallbackStats.length, observedAt: fallbackStats.at(-1)?.date },
@@ -189,7 +232,7 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
     });
 
     return {
-      modelVersion: "predictive-v5.0.0",
+      modelVersion: "predictive-v6.1.0",
       generatedAt,
       city: city ?? null,
       market: { ...market, expectedGrowthBps: scenarioExpectedGrowthBps },
@@ -212,6 +255,9 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
         declineAtLeast5PctAnnualized: probabilityAbove(scenarios, -5000),
       },
       rankings,
+      worldModel: { ...world, calibrationStatus: "STRUCTURAL_UNCALIBRATED" as const },
+      regimeChange,
+      evidenceConflict,
       judge: {
         ...judge,
         adversarialCritique: adversarial,
