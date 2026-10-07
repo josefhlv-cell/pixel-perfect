@@ -164,8 +164,11 @@ function simulatePath(input:DealTwinInput,path:TwinPath):TwinOutcome{
   const exitProceeds=final.propertyValue*(1-input.saleCostRate)*exitLiquidity-final.debtBalance;
   const totalCashFlow=cumulative+exitProceeds;
   const multiple=invested>0?(totalCashFlow+invested)/invested:0;
-  const annual=Math.max(1,input.holdingYears);
-  const irr=Math.pow(Math.max(.0001,multiple),1/annual)-1;
+  const cashflows=[-invested,...years.map((y,i)=>y.cashFlowBeforeSale+(i===years.length-1?exitProceeds:0))];
+  const npv=(rate:number)=>cashflows.reduce((s,cf,t)=>s+cf/Math.pow(1+rate,t),0);
+  let lo=-.95,hi=3;
+  for(let i=0;i<80;i++){ const mid=(lo+hi)/2; if(npv(mid)>0)lo=mid; else hi=mid; }
+  const irr=(lo+hi)/2;
   return {pathId:path.id,totalCashFlow,totalEquity:final.equityValue,exitProceeds,
     investedEquity:invested,multiple,irr,maxDrawdown,breakEvenYear,survives:exitProceeds>=0,years};
 }
