@@ -18,6 +18,7 @@ import { marketStateMachine } from "./market-state-machine";
 import { futureStateLab } from "./future-state-lab";
 import { replayFutureLedger } from "./future-evidence-ledger";\nimport { buildFutureTrajectory } from "./future-trajectory";
 import { transitionHazard } from "./future-transition-hazard";
+import { marketPressure } from "./market-pressure-observatory";
 
 const input = z.object({
   city: z.string().min(1).optional(),
@@ -88,6 +89,20 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
       ? domDays[Math.floor(domDays.length/2)]!
       : null;
 
+    const marketPressureReport = marketPressure({
+      priceGrowth: market.expectedGrowthBps / 10000,
+      rentGrowth: previousMarket?.rentM2 && latestMarket?.rentM2 ? latestMarket.rentM2 / previousMarket.rentM2 - 1 : 0,
+      inventoryGrowth: latestMarket?.listings && previousMarket?.listings ? latestMarket.listings / previousMarket.listings - 1 : 0,
+      domGrowth: medianDom == null ? 0 : (medianDom - 60) / 60,
+      mortgageRateChange: latestMarket?.mortgageRateBps != null && previousMarket?.mortgageRateBps != null ? (latestMarket.mortgageRateBps - previousMarket.mortgageRateBps) / 10000 : 0,
+      creditGrowth: (latestMarket?.creditGrowthBps ?? 0) / 10000,
+      liquidity: Math.min(.95, Math.max(.05, .5 + features.liquidityBps / 10000)),
+      supplyGrowth: (latestMarket?.completionsGrowthBps ?? 0) / 10000,
+      wageGrowth: (latestMarket?.wageGrowthBps ?? 0) / 10000,
+      unemploymentChange: (latestMarket?.unemploymentBps ?? 0) / 10000,
+      priceDropGrowth: medianDom == null ? 0 : priceDrops / Math.max(1, activeListings.length),
+      transactionGrowth: 0,
+    });
     const futureStateInput = {
       horizonMonths: data.horizonMonths,
       priceGrowth: market.expectedGrowthBps / 10000,
