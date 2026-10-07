@@ -23,6 +23,9 @@ export interface LabForecast {
   predictedGrowthBps: number;
   lower90Bps: number;
   upper90Bps: number;
+  p10Bps: number;
+  p50Bps: number;
+  p90Bps: number;
   model: string;
 }
 
@@ -152,6 +155,9 @@ export function runModelLab(
     for(const model of names){
       const pred=predictions[model]!;
       const {lower90Bps,upper90Bps}=interval(rows,i,pred);
+      const scale=robustScale(historicalGrowths(rows,i,18));
+      const p10Bps=pred-1.2816*scale;
+      const p90Bps=pred+1.2816*scale;
       forecasts.push({
         origin:rows[i]!.date,
         targetDate:rows[i+horizon]!.date,
@@ -159,6 +165,9 @@ export function runModelLab(
         predictedGrowthBps:pred,
         lower90Bps,
         upper90Bps,
+        p10Bps,
+        p50Bps:pred,
+        p90Bps,
         model,
       });
     }
@@ -173,9 +182,9 @@ export function runModelLab(
     const rmse=Math.sqrt(mean(errors.map(x=>x*x)));
     const bias=mean(errors);
     const intervalAvg=mean(f.map(x=>intervalScore(x.actualGrowthBps,x.lower90Bps,x.upper90Bps)));
-    const p10=mean(f.map(x=>pinball(x.actualGrowthBps,x.predictedGrowthBps-1.2816*robustScale(f.map(y=>y.actualGrowthBps)),0.1)));
-    const p50=mean(f.map(x=>pinball(x.actualGrowthBps,x.predictedGrowthBps,0.5)));
-    const p90=mean(f.map(x=>pinball(x.actualGrowthBps,x.predictedGrowthBps+1.2816*robustScale(f.map(y=>y.actualGrowthBps)),0.9)));
+    const p10=mean(f.map(x=>pinball(x.actualGrowthBps,x.p10Bps,0.1)));
+    const p50=mean(f.map(x=>pinball(x.actualGrowthBps,x.p50Bps,0.5)));
+    const p90=mean(f.map(x=>pinball(x.actualGrowthBps,x.p90Bps,0.9)));
     // Lower is better. Composite is intentionally dominated by OOS error and
     // penalizes overconfident/poorly covered intervals.
     const coveragePenalty=Math.abs(coverage-0.90)*2000;
