@@ -142,7 +142,9 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
 
     const world = simulateWorld({
       priceGrowth: market.expectedGrowthBps / 10000,
-      rentGrowth: features.rentGrowthBps / 10000,
+      rentGrowth: fallbackStats.length > 1 && (fallbackStats.at(-2)?.rentM2 ?? 0) > 0
+        ? ((fallbackStats.at(-1)?.rentM2 ?? 0)/(fallbackStats.at(-2)?.rentM2 ?? 1)-1)
+        : 0,
       mortgageRate: (latest?.mortgageRateBps ?? 450) / 10000,
       policyRate: (latest?.policyRateBps ?? 350) / 10000,
       inflation: 0.025,
@@ -156,12 +158,16 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
 
     const regimeChange = detectRegimeChange({
       currentMean: market.expectedGrowthBps,
-      baselineMean: fallbackStats.length > 12
-        ? fallbackStats.slice(-12,-1).reduce((s,x)=>s+x.priceM2,0)/Math.max(1,fallbackStats.slice(-12,-1).length)
+      baselineMean: fallbackStats.length > 2
+        ? fallbackStats.slice(1,-1).reduce((s,x,i)=>s + ((x.priceM2/fallbackStats[i]!.priceM2)-1)*10000,0)/Math.max(1,fallbackStats.length-2)
         : market.expectedGrowthBps,
       currentVolatility: market.volatilityBps,
-      baselineVolatility: fallbackStats.length > 12
-        ? Math.abs((fallbackStats.at(-1)?.priceM2 ?? 0)-(fallbackStats.at(-2)?.priceM2 ?? 0))
+      baselineVolatility: fallbackStats.length > 3
+        ? Math.max(1, Math.sqrt(fallbackStats.slice(2).reduce((s,x,i)=>{
+            const g=((x.priceM2/fallbackStats[i+1]!.priceM2)-1)*10000;
+            const pg=((fallbackStats[i+1]!.priceM2/fallbackStats[i]!.priceM2)-1)*10000;
+            return s+(g-pg)*(g-pg);
+          },0)/Math.max(1,fallbackStats.length-2)))
         : market.volatilityBps,
       currentSlope: market.expectedGrowthBps / Math.max(1,data.horizonMonths),
       baselineSlope: fallbackStats.length > 12
