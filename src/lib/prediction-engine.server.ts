@@ -99,8 +99,8 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
       liquidity: Math.min(.95, Math.max(.05, .5 + features.liquidityBps / 10000)),
       supplyGrowth: (latestMarket?.completionsGrowthBps ?? 0) / 10000,
       wageGrowth: (latestMarket?.wageGrowthBps ?? 0) / 10000,
-      unemploymentChange: (latestMarket?.unemploymentBps ?? 0) / 10000,
-      priceDropGrowth: medianDom == null ? 0 : priceDrops / Math.max(1, activeListings.length),
+      unemploymentChange: 0,
+      priceDropGrowth: 0,
       transactionGrowth: 0,
     });
     const futureStateInput = {
