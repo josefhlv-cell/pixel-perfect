@@ -87,7 +87,7 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
       ? domDays[Math.floor(domDays.length/2)]!
       : null;
 
-    const futureStates = futureStateLab({
+    const futureStateInput = {
       horizonMonths: data.horizonMonths,
       priceGrowth: market.expectedGrowthBps / 10000,
       rentGrowth: previousMarket?.rentM2 && latestMarket?.rentM2 ? latestMarket.rentM2 / previousMarket.rentM2 - 1 : 0,
@@ -97,7 +97,8 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
       domChange: medianDom == null ? 0 : Math.max(-.5, Math.min(1, (medianDom - 60) / 120)),
       liquidity: Math.min(.95, Math.max(.05, .5 + features.liquidityBps / 10000)),
       supplyGrowth: (latestMarket?.completionsGrowthBps ?? 0) / 10000,
-    });
+    };
+    const futureStates = futureStateLab(futureStateInput);
     const marketState = marketStateMachine({
       priceGrowth: market.expectedGrowthBps / 10000,
       rentGrowth: previousMarket?.rentM2 && latestMarket?.rentM2
