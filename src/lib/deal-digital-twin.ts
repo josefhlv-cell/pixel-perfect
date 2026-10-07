@@ -215,6 +215,13 @@ export function dealDigitalTwin(
   const action=decision({irr:expectedIrr,probabilityPositive:positiveWeight,drawdown:drawdownP90});
 
   const breakpoints:{kind:TwinIntervention["kind"];threshold:number;resultingDecision:TwinDecision}[]=[];
+  const evaluateDecision=(x:DealTwinInput):TwinDecision=>{
+    const localOutcomes=weighted.map(p=>simulatePath(x,p));
+    const localIrr=localOutcomes.reduce((s,o,i)=>s+o.irr*weighted[i]!.probabilityWeight,0);
+    const localPositive=localOutcomes.reduce((s,o,i)=>s+(o.irr>0?weighted[i]!.probabilityWeight:0),0);
+    const localDrawdown=quantile(localOutcomes.map(o=>o.maxDrawdown),.90);
+    return decision({irr:localIrr,probabilityPositive:localPositive,drawdown:localDrawdown});
+  };
   const interventions:TwinIntervention[]=[
     {kind:"PRICE",delta:-.20},{kind:"PRICE",delta:.10},
     {kind:"RATE",delta:.03},{kind:"RENT",delta:-.15},
@@ -230,8 +237,7 @@ export function dealDigitalTwin(
     if(intervention.kind==="RENT")x.monthlyRent*=1+intervention.delta;
     if(intervention.kind==="VACANCY")x.vacancyRate+=intervention.delta;
     if(intervention.kind==="EXIT")x.saleCostRate+=Math.abs(intervention.delta);
-    const r=dealDigitalTwin(x,weighted);
-    breakpoints.push({kind:intervention.kind,threshold:intervention.delta,resultingDecision:r.decision});
+    breakpoints.push({kind:intervention.kind,threshold:intervention.delta,resultingDecision:evaluateDecision(x)});
   }
 
   const risks:string[]=[];
