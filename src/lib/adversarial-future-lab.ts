@@ -9,7 +9,7 @@ export interface AttackScenario{id:string;kind:AttackKind;severity:number;probab
 export interface AdversarialFutureResult{base:ForecastAnchor;attacks:AttackScenario[];survivalRate:number;worstCaseGrowth:number;mostDangerous:string;fragility:string[];nextTests:string[];}
 const clamp=(x:number,a:number,b:number)=>Math.min(b,Math.max(a,x));
 export function adversarialFutureLab(base:ForecastAnchor):AdversarialFutureResult{
- const defs:Array<[AttackKind,number,string[],string[],string[]]>=>
+ const defs:Array<[AttackKind,number,string[],string[],string[]]>=
  [
   ["RATE_SHOCK",.82,["financing cost jumps","refinancing capacity falls"],["mortgage rates","approvals","refinancing spreads"],["rapid rate cuts","stable credit"]],
   ["CREDIT_FREEZE",.9,["banks tighten underwriting","transaction chain breaks"],["mortgage approvals","LTV","failed transactions"],["credit growth recovery"]],
