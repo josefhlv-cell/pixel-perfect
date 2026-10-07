@@ -15,6 +15,7 @@ import { simulateWorld } from "./market-world-model";
 import { detectRegimeChange } from "./regime-change-detector";
 import { decisionCertificate } from "./decision-certificate";
 import { marketStateMachine } from "./market-state-machine";
+import { futureStateLab } from "./future-state-lab";
 
 const input = z.object({
   city: z.string().min(1).optional(),
@@ -85,6 +86,17 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
       ? domDays[Math.floor(domDays.length/2)]!
       : null;
 
+    const futureStates = futureStateLab({
+      horizonMonths: data.horizonMonths,
+      priceGrowth: market.expectedGrowthBps / 10000,
+      rentGrowth: previousMarket?.rentM2 && latestMarket?.rentM2 ? latestMarket.rentM2 / previousMarket.rentM2 - 1 : 0,
+      inventoryGrowth: latestMarket?.listings && previousMarket?.listings ? latestMarket.listings / previousMarket.listings - 1 : 0,
+      mortgageRateChange: latestMarket?.mortgageRateBps != null && previousMarket?.mortgageRateBps != null ? (latestMarket.mortgageRateBps - previousMarket.mortgageRateBps) / 10000 : 0,
+      creditGrowth: (latestMarket?.creditGrowthBps ?? 0) / 10000,
+      domChange: medianDom == null ? 0 : Math.max(-.5, Math.min(1, (medianDom - 60) / 120)),
+      liquidity: Math.min(.95, Math.max(.05, .5 + features.liquidityBps / 10000)),
+      supplyGrowth: (latestMarket?.completionsGrowthBps ?? 0) / 10000,
+    });
     const marketState = marketStateMachine({
       priceGrowth: market.expectedGrowthBps / 10000,
       rentGrowth: previousMarket?.rentM2 && latestMarket?.rentM2
@@ -276,6 +288,7 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
       city: city ?? null,
       market: { ...market, expectedGrowthBps: scenarioExpectedGrowthBps },
       marketState,
+      futureStates,
       features,
       scenarios,
       causal: {
