@@ -1,0 +1,3 @@
+import {describe,expect,it} from "vitest";
+import {calculateModelRiskBudget} from "./model-risk-budget";
+describe("model risk budget",()=>{it("rejects a deal with no valuation margin",()=>{const r=calculateModelRiskBudget({purchasePrice:100,fairValue:100,probabilityLoss:.5,cvar10:-.2,evidenceConflict:.5,regimeRisk:.5,driftRisk:.5,modelDisagreement:.5,transactionCost:.03,requiredMargin:.1});expect(r.status).toBe("UNUSABLE");});it("recognises a wide safety margin",()=>{const r=calculateModelRiskBudget({purchasePrice:70,fairValue:100,probabilityLoss:.05,cvar10:-.03,evidenceConflict:.05,regimeRisk:.05,driftRisk:.05,modelDisagreement:.05,transactionCost:.03,requiredMargin:.05});expect(r.status).toBe("SAFE");expect(r.maxSafePurchasePrice).toBeGreaterThan(0);});});
