@@ -19,6 +19,7 @@ import { futureStateLab } from "./future-state-lab";
 import { replayFutureLedger } from "./future-evidence-ledger";\nimport { buildFutureTrajectory } from "./future-trajectory";
 import { transitionHazard } from "./future-transition-hazard";
 import { marketPressure } from "./market-pressure-observatory";
+import { attributeTransitionPressure } from "./forecast-signal-attribution";
 
 const input = z.object({
   city: z.string().min(1).optional(),
