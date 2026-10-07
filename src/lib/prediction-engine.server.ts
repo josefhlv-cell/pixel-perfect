@@ -20,6 +20,7 @@ import { replayFutureLedger } from "./future-evidence-ledger";\nimport { buildFu
 import { transitionHazard } from "./future-transition-hazard";
 import { marketPressure } from "./market-pressure-observatory";
 import { attributeTransitionPressure } from "./forecast-signal-attribution";
+import { askTransactionGap } from "./ask-transaction-gap";
 
 const input = z.object({
   city: z.string().min(1).optional(),
@@ -222,6 +223,16 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
       negotiationEdge: Math.max(0, Math.min(1, (r.fairValue - (signals.find((p) => p.id === r.propertyId)?.price ?? r.fairValue)) / Math.max(1, r.fairValue))),
     }));
     const generatedAt = new Date().toISOString();
+
+    const askTransactionGapReport = askTransactionGap(
+      fallbackStats.map((x, index) => ({
+        period: String(x.date),
+        askingIndex: Number(x.priceM2 ?? 0),
+        realizedIndex: Number(x.realizedPriceM2 ?? x.priceM2 ?? 0),
+        sourceQuality: 0.75,
+        availableAt: String(x.date),
+      }))
+    );
 
     const evidenceConflict = assessEvidenceConflict([
       { sourceId:"market_statistics", kind:"ASKING", value:Number(latest?.priceM2 ?? 0), weight:1, observedAt:Date.parse(String(latest?.date ?? generatedAt)), availableAt:Date.parse(String(latest?.date ?? generatedAt)), reliability:.75 },
