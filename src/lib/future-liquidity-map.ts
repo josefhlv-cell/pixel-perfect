@@ -1,0 +1,4 @@
+export interface LiquidityCell{id:string;days:number;withdrawalRate:number;transactionRate:number;confidence:number;}
+export interface LiquidityForecast{id:string;exitProbability90d:number;exitProbability180d:number;liquidityRisk:number;}
+const clamp=(x:number,a:number,b:number)=>Math.min(b,Math.max(a,x));
+export function forecastLiquidity(cells:LiquidityCell[]):LiquidityForecast[]{return cells.map(c=>{const hazard=clamp(c.transactionRate*(1-c.withdrawalRate),.001,.5);return{id:c.id,exitProbability90d:1-Math.exp(-hazard*90/Math.max(1,c.days)),exitProbability180d:1-Math.exp(-hazard*180/Math.max(1,c.days)),liquidityRisk:1-c.confidence*hazard};});}
