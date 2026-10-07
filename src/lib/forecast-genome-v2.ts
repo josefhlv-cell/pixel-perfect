@@ -30,7 +30,7 @@ export interface SkillCell {
   status:"CHAMPION_ZONE"|"CORE_ZONE"|"LEARNING_ZONE"|"INSUFFICIENT_DATA";
 }
 
-export interface ForecastGenomeV2 {
+export interface LearningTarget { context:string; priority:number; reason:string; }\n\nexport interface ForecastGenomeV2 {
   cells:SkillCell[];
   bestByContext:Record<string,string>;
   fragileContexts:string[];
@@ -91,5 +91,5 @@ export function buildForecastGenomeV2(
     .filter(c=>c.status==="LEARNING_ZONE"&&c.cases>=Math.max(5,Math.floor(minCases/2)))
     .map(c=>[c.model,c.submarket,c.regime,c.horizonMonths].join("|"));
 
-  return {cells,bestByContext,fragileContexts};
+  const learningTargets=cells\n    .filter(c=>c.status==="INSUFFICIENT_DATA"||c.status==="LEARNING_ZONE")\n    .map(c=>({\n      context:[c.submarket,c.regime,c.horizonMonths].join("|"),\n      priority:clamp((1-c.trust)*.6+(1-c.calibrationRate)*.2+(1-c.directionalAccuracy)*.2,0,1),\n      reason:c.status==="INSUFFICIENT_DATA"?"Need more OOS outcomes":"Observed contextual weakness",\n    }))\n    .sort((a,b)=>b.priority-a.priority)\n    .slice(0,12);\n\n  return {cells,bestByContext,fragileContexts,learningTargets};
 }
