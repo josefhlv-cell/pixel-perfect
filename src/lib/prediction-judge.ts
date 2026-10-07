@@ -58,6 +58,26 @@ export interface ForecastJudgeInput {
   transactionShare: number;  // 0..1
 }
 
+export interface EvidenceGraph {
+  nodes: string[];
+  edges: Array<{from:string;to:string;weight:number;reason:string}>;
+}
+
+export function buildEvidenceGraph(items: EvidenceItem[]): EvidenceGraph {
+  const nodes=[...new Set(items.map(x=>x.kind))];
+  const edges:Array<{from:string;to:string;weight:number;reason:string}>=[];
+  for(const a of items){
+    for(const b of items){
+      if(a.id===b.id || a.kind===b.kind) continue;
+      const weight=clamp(a.quality*a.relevance*b.quality*b.relevance,0,1);
+      if(weight>=0.35){
+        edges.push({from:a.kind,to:b.kind,weight,reason:"independent evidence streams are jointly informative"});
+      }
+    }
+  }
+  return {nodes,edges};
+}
+
 export interface ForecastJudge {
   status: JudgeStatus;
   trustScore: number;
