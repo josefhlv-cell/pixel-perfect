@@ -81,14 +81,14 @@ ALTER TABLE public.prediction_feature_snapshots ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.prediction_scenarios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.prediction_calibration ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "macro_observations_read_authenticated"
-  ON public.macro_observations FOR SELECT TO authenticated USING (true);
-CREATE POLICY IF NOT EXISTS "prediction_features_read_authenticated"
-  ON public.prediction_feature_snapshots FOR SELECT TO authenticated USING (true);
-CREATE POLICY IF NOT EXISTS "prediction_scenarios_read_authenticated"
-  ON public.prediction_scenarios FOR SELECT TO authenticated USING (true);
-CREATE POLICY IF NOT EXISTS "prediction_calibration_read_authenticated"
-  ON public.prediction_calibration FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "macro_observations_read_authenticated" ON public.macro_observations;
+CREATE POLICY "macro_observations_read_authenticated" ON public.macro_observations FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "prediction_features_read_authenticated" ON public.prediction_feature_snapshots;
+CREATE POLICY "prediction_features_read_authenticated" ON public.prediction_feature_snapshots FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "prediction_scenarios_read_authenticated" ON public.prediction_scenarios;
+CREATE POLICY "prediction_scenarios_read_authenticated" ON public.prediction_scenarios FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "prediction_calibration_read_authenticated" ON public.prediction_calibration;
+CREATE POLICY "prediction_calibration_read_authenticated" ON public.prediction_calibration FOR SELECT TO authenticated USING (true);
 
 GRANT SELECT ON public.macro_observations TO authenticated;
 GRANT SELECT ON public.prediction_feature_snapshots TO authenticated;
