@@ -1,0 +1,3 @@
+export interface FalsifierRule{metric:string;operator:"GT"|"LT"|"ABS_GT";threshold:number;message:string;}
+export interface FalsifierResult{invalidated:boolean;violations:string[];severity:number;}
+export function falsify(rules:FalsifierRule[],values:Record<string,number>):FalsifierResult{const violations=rules.filter(r=>{const v=values[r.metric];if(!Number.isFinite(v))return false;return r.operator==="GT"?v>r.threshold:r.operator==="LT"?v<r.threshold:Math.abs(v)>r.threshold;}).map(r=>r.message);return{invalidated:violations.length>0,violations,severity:Math.min(1,violations.length/Math.max(1,rules.length))};}
