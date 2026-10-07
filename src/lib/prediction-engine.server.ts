@@ -14,6 +14,7 @@ import { assessEvidenceConflict } from "./evidence-conflict";
 import { simulateWorld } from "./market-world-model";
 import { detectRegimeChange } from "./regime-change-detector";
 import { decisionCertificate } from "./decision-certificate";
+import { marketStateMachine } from "./market-state-machine";
 
 const input = z.object({
   city: z.string().min(1).optional(),
@@ -62,6 +63,24 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
 
     const market = forecastMarket(fallbackStats, data.horizonMonths);
     const features = buildFeatureSnapshot(fallbackStats);
+    const latestMarket = fallbackStats.at(-1);
+    const previousMarket = fallbackStats.length > 1 ? fallbackStats.at(-2) : undefined;
+    const marketState = marketStateMachine({
+      priceGrowth: market.expectedGrowthBps / 10000,
+      rentGrowth: previousMarket?.rentM2 && latestMarket?.rentM2
+        ? latestMarket.rentM2 / previousMarket.rentM2 - 1 : 0,
+      inventoryGrowth: latestMarket?.listings && previousMarket?.listings
+        ? latestMarket.listings / previousMarket.listings - 1 : 0,
+      domGrowth: medianDom == null ? 0 : Math.max(-.5, Math.min(1, (medianDom - 60) / 120)),
+      liquidity: Math.min(.95, Math.max(.05, .5 + features.liquidityBps / 10000)),
+      volatility: Math.max(.01, market.volatilityBps / 10000),
+      transactionDensity: Math.min(1, fallbackStats.length / 36),
+      mortgageRateChange: latestMarket?.mortgageRateBps != null && previousMarket?.mortgageRateBps != null
+        ? (latestMarket.mortgageRateBps - previousMarket.mortgageRateBps) / 10000 : 0,
+      creditGrowth: (latestMarket?.creditGrowthBps ?? 0) / 10000,
+      supplyGrowth: (latestMarket?.completionsGrowthBps ?? 0) / 10000,
+      evidenceQuality: fallbackStats.length >= 24 ? .85 : fallbackStats.length >= 12 ? .65 : .40,
+    });
     const scenarios = scenarioMixture(features.priceM2, data.horizonMonths, features, market.expectedGrowthBps);
     const scenarioExpectedGrowthBps = mixtureExpectedGrowth(scenarios);
 
@@ -255,6 +274,7 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
       generatedAt,
       city: city ?? null,
       market: { ...market, expectedGrowthBps: scenarioExpectedGrowthBps },
+      marketState,
       features,
       scenarios,
       causal: {
