@@ -86,19 +86,6 @@ function normalize(xs:number[]):number[]{
   return xs.map(x=>x/total);
 }
 
-function quantiles(values:number[]):{p10:number;p25:number;p50:number;p75:number;p90:number}{
-  const sorted=[...values].sort((a,b)=>a-b);
-  const q=(p:number)=>{
-    const index=(sorted.length-1)*p;
-    const lo=Math.floor(index);
-    const hi=Math.ceil(index);
-    if(lo===hi)return sorted[lo]??0;
-    const w=index-lo;
-    return (sorted[lo]??0)*(1-w)+(sorted[hi]??0)*w;
-  };
-  return {p10:q(.10),p25:q(.25),p50:q(.50),p75:q(.75),p90:q(.90)};
-}
-
 /**
  * Builds a transparent multi-horizon trajectory from competing hypotheses.
  *
@@ -162,7 +149,7 @@ export function buildFutureTrajectory(
     },0);
 
     const transitionRisk=clamp(
-      state.mortgageRateChange*2+
+      Math.abs(state.mortgageRateChange)*2+
       Math.max(0,state.inventoryGrowth)*1.1+
       Math.max(0,state.domChange)*.8+
       Math.abs(state.creditGrowth)*.6,
