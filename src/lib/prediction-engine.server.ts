@@ -7,6 +7,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { forecastMarket, rankProperties, type MarketObservation, type PropertySignal } from "./prediction-engine";
+import { buildFeatureSnapshot, scenarioMixture, mixtureExpectedGrowth, probabilityAbove } from "./predictive-v2";
 
 const input = z.object({
   city: z.string().min(1).optional(),
@@ -50,6 +51,9 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
     })).filter((r) => r.priceM2 > 0) as MarketObservation[];
 
     const market = forecastMarket(fallbackStats, data.horizonMonths);
+    const features = buildFeatureSnapshot(fallbackStats);
+    const scenarios = scenarioMixture(features.priceM2, data.horizonMonths, features, market.expectedGrowthBps);
+    const scenarioExpectedGrowthBps = mixtureExpectedGrowth(scenarios);
 
     const propertiesById = new Map((propertyRes.data ?? []).map((p) => [p.id, p]));
     const signals: PropertySignal[] = (listingRes.data ?? [])
@@ -76,10 +80,17 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
 
     const rankings = rankProperties(signals, market);
     return {
-      modelVersion: "predictive-v1.0.0",
+      modelVersion: "predictive-v2.0.0",
       generatedAt: new Date().toISOString(),
       city: city ?? null,
-      market,
+      market: { ...market, expectedGrowthBps: scenarioExpectedGrowthBps },
+      features,
+      scenarios,
+      probabilities: {
+        gainAbove0: probabilityAbove(scenarios, 0),
+        gainAbove5PctAnnualized: probabilityAbove(scenarios, 500),
+        declineAtLeast5PctAnnualized: probabilityAbove(scenarios, -5000),
+      },
       rankings,
       dataQuality: {
         marketObservations: fallbackStats.length,
