@@ -16,7 +16,7 @@ import { detectRegimeChange } from "./regime-change-detector";
 import { decisionCertificate } from "./decision-certificate";
 import { marketStateMachine } from "./market-state-machine";
 import { futureStateLab } from "./future-state-lab";
-import { replayFutureLedger } from "./future-evidence-ledger";
+import { replayFutureLedger } from "./future-evidence-ledger";\nimport { buildFutureTrajectory } from "./future-trajectory";
 
 const input = z.object({
   city: z.string().min(1).optional(),
@@ -114,7 +114,7 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
       supplyGrowth: (latestMarket?.completionsGrowthBps ?? 0) / 10000,
       evidenceQuality: fallbackStats.length >= 24 ? .85 : fallbackStats.length >= 12 ? .65 : .40,
     });
-    const futureLedger = replayFutureLedger(
+    const futureTrajectory = buildFutureTrajectory(futureStates, futureStates.hypotheses);\n    const futureLedger = replayFutureLedger(
       futureStates.hypotheses.map((h) => ({
         id: h.id,
         prior: h.probability,
