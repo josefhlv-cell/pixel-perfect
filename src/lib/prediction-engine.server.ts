@@ -16,6 +16,7 @@ import { detectRegimeChange } from "./regime-change-detector";
 import { decisionCertificate } from "./decision-certificate";
 import { marketStateMachine } from "./market-state-machine";
 import { futureStateLab } from "./future-state-lab";
+import { replayFutureLedger } from "./future-evidence-ledger";
 
 const input = z.object({
   city: z.string().min(1).optional(),
@@ -113,6 +114,31 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
       supplyGrowth: (latestMarket?.completionsGrowthBps ?? 0) / 10000,
       evidenceQuality: fallbackStats.length >= 24 ? .85 : fallbackStats.length >= 12 ? .65 : .40,
     });
+    const futureLedger = replayFutureLedger(
+      futureStates.hypotheses.map((h) => ({
+        id: h.id,
+        prior: h.probability,
+        posterior: h.probability,
+        support: 0,
+        contradiction: 0,
+        status: "COMPETING" as const,
+      })),
+      [{
+        id: "current-state",
+        observedAt: new Date().toISOString(),
+        feature: "market-state",
+        value: market.expectedGrowthBps,
+        sourceQuality: marketState.stateConfidence,
+        reliability: marketState.stateConfidence,
+        likelihoods: Object.fromEntries(
+          futureStates.hypotheses.map((h) => [
+            h.id,
+            h.id === futureStates.winner ? 1.15 : .98,
+          ])
+        ),
+        note: "Initial structural evidence; not an empirical probability update.",
+      }]
+    );
     const snapshotRows = snapshotRes.data ?? [];
     const priceDrops = snapshotRows.reduce((count, s, i) => {
       const prev = i > 0 ? snapshotRows[i-1] : null;
@@ -289,6 +315,7 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
       market: { ...market, expectedGrowthBps: scenarioExpectedGrowthBps },
       marketState,
       futureStates,
+      futureLedger,
       features,
       scenarios,
       causal: {
