@@ -1,0 +1,22 @@
+import {describe,it,expect} from "vitest";
+import {adversarialFutureLab} from "./adversarial-future-lab";
+import {buildFutureScenarioStack} from "./future-scenario-stack";
+import {defaultFutureTriggers,evaluateTriggers} from "./future-trigger-engine";
+import {findCausalPaths} from "./causal-market-graph";
+import {groupIndependentEvidence} from "./evidence-independence";
+import {pointInTimeRows,scoreReplay} from "./time-machine-replay";
+import {measureLeadTime} from "./forecast-lead-time";
+import {evaluateDecisionRobustness} from "./future-decision-robustness";
+import {buildFutureRadar} from "./future-radar";
+describe("Future Intelligence Stack",()=>{
+ it("attacks rather than blindly confirms a forecast",()=>{const r=adversarialFutureLab({priceGrowth:.04,rentGrowth:.03,liquidity:.7,confidence:.7,modelRisk:.25});expect(r.attacks).toHaveLength(7);expect(r.worstCaseGrowth).toBeLessThan(.04);});
+ it("builds five competing future paths",()=>expect(buildFutureScenarioStack({growth:.04,rentGrowth:.03,liquidity:.7,inventory:.02,rateChange:0,confidence:.7})).toHaveLength(5));
+ it("fires measurable early warning triggers",()=>{const t=defaultFutureTriggers();const r=evaluateTriggers(t,[{metric:"domChange",value:.2,previous:.05,observedAt:"2026-10-07"}]);expect(r.find(x=>x.triggerId==="DOM_BREAK")?.fired).toBe(true);});
+ it("finds causal mechanisms",()=>expect(findCausalPaths("POLICY_RATE","TRANSACTION_PRICE").length).toBeGreaterThan(0));
+ it("discounts duplicated evidence",()=>{const g=groupIndependentEvidence([{id:"a",source:"A",metric:"x",publishedAt:"2026-01-01",weight:1},{id:"b",source:"A-copy",parentSource:"A",metric:"x",publishedAt:"2026-01-02",weight:1,similarity:.9}]);expect(g[0]!.effectiveWeight).toBeLessThan(2);});
+ it("enforces point-in-time cutoff",()=>{const r=pointInTimeRows([{id:"past",eventTime:"2026-01-01",availableAt:"2026-01-02",value:1},{id:"future",eventTime:"2026-01-10",availableAt:"2026-01-11",value:2}],"2026-01-05");expect(r.map(x=>x.id)).toEqual(["past"]);});
+ it("scores intervals and direction",()=>{const r=scoreReplay({cutoff:"2026-01-01",horizonMonths:6,predicted:10,lower:8,upper:12,modelVersion:"v1"},11,9);expect(r.covered).toBe(true);expect(r.directionCorrect).toBe(true);});
+ it("measures useful lead time",()=>expect(measureLeadTime([{date:"2026-01-01",strength:.8,label:"x"}],[{date:"2026-02-01",label:"x"}])[0]!.leadDays).toBe(31));
+ it("penalizes action fragility",()=>{const r=evaluateDecisionRobustness([{scenario:"base",probability:.5,utility:{BUY:1,NEGOTIATE:.8,WAIT:.2,PASS:0}},{scenario:"stress",probability:.5,utility:{BUY:-1,NEGOTIATE:-.2,WAIT:.3,PASS:0}}]);expect(r.fragility).toBeGreaterThan(0);});
+ it("builds a radar state",()=>expect(buildFutureRadar({priceGrowth:.04,rentGrowth:.03,liquidity:.7,inventory:.02,rateChange:0,creditGrowth:.04,domChange:0,confidence:.7,modelRisk:.25})).toHaveProperty("state"));
+});
