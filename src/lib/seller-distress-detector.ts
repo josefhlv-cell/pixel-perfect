@@ -1,0 +1,3 @@
+export interface SellerSignal{dom:number;priceCuts:number;withdrawals:number;discount:number;urgency:number;}
+export interface DistressResult{score:number;level:"LOW"|"MEDIUM"|"HIGH"|"EXTREME";signals:string[];}
+export function detectSellerDistress(x:SellerSignal):DistressResult{const score=Math.min(1,.25*Math.min(1,x.dom/180)+.25*Math.min(1,x.priceCuts/3)+.2*Math.min(1,x.withdrawals/2)+.15*Math.min(1,x.discount/.15)+.15*Math.min(1,x.urgency));const level=score>.8?"EXTREME":score>.6?"HIGH":score>.35?"MEDIUM":"LOW";return{score,level,signals:[x.dom>90?"long time on market":"normal DOM",x.priceCuts>0?"price reduction history":"no reduction history",x.discount>.1?"large discount":"limited discount"]};}
