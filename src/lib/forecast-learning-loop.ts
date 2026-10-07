@@ -45,6 +45,7 @@ export function runForecastLearningLoop(
   cases:LearningCase[],
   minCases=20,
 ):LearningLoopResult{
+  const currentMs=Math.max(...cases.map(c=>Date.parse(c.currentTime)).filter(Number.isFinite),Date.now());
   const eligible=cases.filter(c=>
     Date.parse(c.outcomeAvailableAt)<=Date.parse(c.currentTime)&&
     c.outcomeQuality>=.6
@@ -63,7 +64,7 @@ export function runForecastLearningLoop(
 
     // Exponential recency weighting: recent outcomes matter more, while
     // the exact half-life remains a governance parameter rather than a claim.
-    const now=Date.parse("2026-01-01T00:00:00Z");
+    const now=currentMs;
     let scoreNumerator=0,calNumerator=0,weightSum=0;
     for(const c of group){
       const ageDays=Math.max(0,(now-Date.parse(c.outcomeAvailableAt))/86400000);
