@@ -139,8 +139,8 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
     const evidenceGraph = buildEvidenceGraph(evidence);
     const judge = judgeForecast({
       models: [
-        { model:"structural-momentum", oosScore:.50, calibration:.50, coverage:.90, drift:.20, spatialValidity:.40, sampleSize:fallbackStats.length },
-        { model:"scenario-mixture", oosScore:.50, calibration:.50, coverage:.90, drift:.20, spatialValidity:.40, sampleSize:fallbackStats.length },
+        { model:"structural-momentum", oosScore:0, calibration:0, coverage:0, drift:1, spatialValidity:0, sampleSize:0 },
+        { model:"scenario-mixture", oosScore:0, calibration:0, coverage:0, drift:1, spatialValidity:0, sampleSize:0 },
       ],
       evidence,
       modelAgreement: market.confidence,
@@ -151,8 +151,8 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
     });
     const adversarial = adversarialCritique({
       models: [
-        { model:"structural-momentum", oosScore:.50, calibration:.50, coverage:.90, drift:.20, spatialValidity:.40, sampleSize:fallbackStats.length },
-        { model:"scenario-mixture", oosScore:.50, calibration:.50, coverage:.90, drift:.20, spatialValidity:.40, sampleSize:fallbackStats.length },
+        { model:"structural-momentum", oosScore:0, calibration:0, coverage:0, drift:1, spatialValidity:0, sampleSize:0 },
+        { model:"scenario-mixture", oosScore:0, calibration:0, coverage:0, drift:1, spatialValidity:0, sampleSize:0 },
       ],
       evidence,
       modelAgreement: market.confidence,
