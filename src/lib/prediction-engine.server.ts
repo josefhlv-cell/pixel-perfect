@@ -17,6 +17,7 @@ import { decisionCertificate } from "./decision-certificate";
 import { marketStateMachine } from "./market-state-machine";
 import { futureStateLab } from "./future-state-lab";
 import { replayFutureLedger } from "./future-evidence-ledger";\nimport { buildFutureTrajectory } from "./future-trajectory";
+import { transitionHazard } from "./future-transition-hazard";
 
 const input = z.object({
   city: z.string().min(1).optional(),
