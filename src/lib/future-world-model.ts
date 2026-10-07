@@ -11,7 +11,7 @@
  */
 import {futureStateLab,type FutureStateVector,type FutureLabResult} from "./future-state-lab";
 import {findCausalPaths,type NodeId} from "./causal-market-graph";
-import {buildFutureScenarioStack,type ScenarioStackResult} from "./future-scenario-stack";
+import {buildFutureScenarioStack,type ScenarioCase} from "./future-scenario-stack";
 import {buildPropertyFutureTwin,type PropertyFutureTwin} from "./property-future-twin";
 import {calculateFutureScore,type FutureScore} from "./future-score";
 
@@ -49,7 +49,7 @@ export interface FutureSignal {
 export interface FutureWorldModelOutput {
   version:"future-world-v1";
   market:FutureLabResult;
-  scenarios:ScenarioStackResult;
+  scenarios:ScenarioCase[];
   causalPath:{nodes:NodeId[];effect:number;lagMonths:number;mechanisms:string[]}|null;
   signals:FutureSignal[];
   property:PropertyFutureTwin|null;
