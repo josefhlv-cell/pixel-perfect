@@ -13,6 +13,7 @@ import { judgeForecast, adversarialCritique, buildEvidenceGraph } from "./predic
 import { assessEvidenceConflict } from "./evidence-conflict";
 import { simulateWorld } from "./market-world-model";
 import { detectRegimeChange } from "./regime-change-detector";
+import { decisionCertificate } from "./decision-certificate";
 
 const input = z.object({
   city: z.string().min(1).optional(),
@@ -132,6 +133,18 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
       });
 
     const rankings = rankProperties(signals, market);
+    const decisionCertificates = rankings.map((r) => decisionCertificate({
+      purchasePrice: signals.find((p) => p.id === r.propertyId)?.price ?? 0,
+      fairValue: r.fairValue,
+      expectedReturn: r.expectedReturnBps / 10000,
+      downsideCvar: r.fairValue > 0 ? (r.fairValueDistribution.p10 / r.fairValue) - 1 : -0.25,
+      probabilityPositive: r.probabilityGain,
+      confidence: r.confidence,
+      liquidity: r.liquidity.sold180d,
+      modelRisk: Math.max(0, Math.min(1, r.riskScore / 100)),
+      evidenceQuality: Math.max(0, Math.min(1, r.confidence)),
+      negotiationEdge: Math.max(0, Math.min(1, (r.fairValue - (signals.find((p) => p.id === r.propertyId)?.price ?? r.fairValue)) / Math.max(1, r.fairValue))),
+    }));
     const generatedAt = new Date().toISOString();
 
     const evidenceConflict = assessEvidenceConflict([
@@ -261,6 +274,7 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
         declineAtLeast5PctAnnualized: probabilityAbove(scenarios, -5000),
       },
       rankings,
+      decisionCertificates,
       worldModel: { ...world, calibrationStatus: "STRUCTURAL_UNCALIBRATED" as const },
       regimeChange,
       evidenceConflict,
