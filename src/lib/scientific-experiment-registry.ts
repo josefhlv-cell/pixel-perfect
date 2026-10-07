@@ -24,6 +24,8 @@ export interface Experiment {
 
 export interface ExperimentResult {
   experimentId:string;
+  modelVersion?:string;
+  datasetVersion?:string;
   baselineScore:number;
   treatmentScore:number;
   delta:number;
@@ -39,6 +41,8 @@ export function judgeExperiment(
   result:Omit<ExperimentResult,"experimentId"|"verdict">,
 ):ExperimentResult{
   const notes:string[]=[];
+  if(!result.modelVersion)notes.push("model version is not recorded");
+  if(!result.datasetVersion)notes.push("dataset version is not recorded");
   if(!result.leakageFree)notes.push("rejected because temporal/spatial leakage was detected");
   if(result.sampleSize<50)notes.push("sample size is too small for a strong conclusion");
   if(result.delta<=0)notes.push("treatment did not beat the baseline out-of-sample");
