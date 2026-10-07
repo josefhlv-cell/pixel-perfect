@@ -20,6 +20,7 @@ import { replayFutureLedger } from "./future-evidence-ledger";\nimport { buildFu
 import { transitionHazard } from "./future-transition-hazard";
 import { marketPressure } from "./market-pressure-observatory";
 import { attributeTransitionPressure } from "./forecast-signal-attribution";
+import { updateFuturePosterior } from "./bayesian-future-update";
 import { askTransactionGap } from "./ask-transaction-gap";
 
 const input = z.object({
@@ -388,4 +389,8 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
       },
       lineage,
     };
-  });
+  });    const futurePrior=Object.fromEntries(
+      futureStates.hypotheses.map(h=>[h.id,h.probability])
+    );
+    const futureEvidenceUpdate=updateFuturePosterior(futurePrior,[]);
+
