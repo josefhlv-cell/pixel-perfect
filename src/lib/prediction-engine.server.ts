@@ -224,15 +224,21 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
     }));
     const generatedAt = new Date().toISOString();
 
-    const askTransactionGapReport = askTransactionGap(
-      fallbackStats.map((x, index) => ({
-        period: String(x.date),
-        askingIndex: Number(x.priceM2 ?? 0),
-        realizedIndex: Number(x.realizedPriceM2 ?? x.priceM2 ?? 0),
-        sourceQuality: 0.75,
-        availableAt: String(x.date),
-      }))
-    );
+    const realizedLayer = fallbackStats
+      .map((x) => {
+        const realizedPriceM2 = Number((x as { realizedPriceM2?: number }).realizedPriceM2);
+        if (!Number.isFinite(realizedPriceM2) || realizedPriceM2 <= 0) return null;
+        return {
+          period: String(x.date),
+          askingIndex: Number(x.priceM2 ?? 0),
+          realizedIndex: realizedPriceM2,
+          sourceQuality: 0.85,
+          availableAt: String(x.date),
+        };
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null);
+
+    const askTransactionGapReport = askTransactionGap(realizedLayer);
 
     const evidenceConflict = assessEvidenceConflict([
       { sourceId:"market_statistics", kind:"ASKING", value:Number(latest?.priceM2 ?? 0), weight:1, observedAt:Date.parse(String(latest?.date ?? generatedAt)), availableAt:Date.parse(String(latest?.date ?? generatedAt)), reliability:.75 },
