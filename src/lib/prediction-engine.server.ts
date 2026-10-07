@@ -9,6 +9,7 @@ import { forecastMarket, rankProperties, type MarketObservation, type PropertySi
 import { buildFeatureSnapshot, scenarioMixture, mixtureExpectedGrowth, probabilityAbove } from "./predictive-v2";
 import { DEFAULT_CAUSAL_GRAPH, locateMarketInCausalChain, propagateCausalShock } from "./prediction-causal";
 import { buildPredictionLineage } from "./prediction-lineage";
+import { judgeForecast, adversarialCritique, buildEvidenceGraph } from "./prediction-judge";
 
 const input = z.object({
   city: z.string().min(1).optional(),
@@ -129,6 +130,37 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
 
     const rankings = rankProperties(signals, market);
     const generatedAt = new Date().toISOString();
+
+    const evidence = [
+      { id:"market-statistics", kind:"ASKING" as const, observedAt:String(fallbackStats.at(-1)?.date ?? generatedAt), availableAt:String(fallbackStats.at(-1)?.date ?? generatedAt), quality:fallbackStats.length>=24?.85:fallbackStats.length>=12?.65:.40, direction:Math.sign(market.expectedGrowthBps), relevance:1 },
+      ...(snapshotRows.length ? [{ id:"listing-snapshots", kind:"BEHAVIORAL" as const, observedAt:String(snapshotRows.at(-1)?.observed_at ?? generatedAt), availableAt:String(snapshotRows.at(-1)?.observed_at ?? generatedAt), quality:.75, direction:0, relevance:.8 }] : []),
+      ...(latest?.rentM2 ? [{ id:"rent-signal", kind:"RENT" as const, observedAt:String(latest.date), availableAt:String(latest.date), quality:.55, direction:Math.sign(features.priceGrowthBps), relevance:.65 }] : []),
+    ];
+    const evidenceGraph = buildEvidenceGraph(evidence);
+    const judge = judgeForecast({
+      models: [
+        { model:"structural-momentum", oosScore:.50, calibration:.50, coverage:.90, drift:.20, spatialValidity:.40, sampleSize:fallbackStats.length },
+        { model:"scenario-mixture", oosScore:.50, calibration:.50, coverage:.90, drift:.20, spatialValidity:.40, sampleSize:fallbackStats.length },
+      ],
+      evidence,
+      modelAgreement: market.confidence,
+      regimeConfidence: market.confidence,
+      dataFreshness: fallbackStats.length ? .70 : .20,
+      leakageDetected: false,
+      transactionShare: 0,
+    });
+    const adversarial = adversarialCritique({
+      models: [
+        { model:"structural-momentum", oosScore:.50, calibration:.50, coverage:.90, drift:.20, spatialValidity:.40, sampleSize:fallbackStats.length },
+        { model:"scenario-mixture", oosScore:.50, calibration:.50, coverage:.90, drift:.20, spatialValidity:.40, sampleSize:fallbackStats.length },
+      ],
+      evidence,
+      modelAgreement: market.confidence,
+      regimeConfidence: market.confidence,
+      dataFreshness: fallbackStats.length ? .70 : .20,
+      leakageDetected:false,
+      transactionShare:0,
+    });
     const lineage = buildPredictionLineage({
       predictionId: `market:${city ?? "ALL"}:${data.horizonMonths}:${fallbackStats.at(-1)?.date ?? "unknown"}`,
       generatedAt,
@@ -180,6 +212,11 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
         declineAtLeast5PctAnnualized: probabilityAbove(scenarios, -5000),
       },
       rankings,
+      judge: {
+        ...judge,
+        adversarialCritique: adversarial,
+        evidenceGraph,
+      },
       dataQuality: {
         marketObservations: fallbackStats.length,
         candidateProperties: signals.length,
