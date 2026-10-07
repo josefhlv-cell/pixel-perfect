@@ -32,6 +32,70 @@ function PredictionsPage(){
     </section>
 
     <section className="rounded-xl border p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="font-semibold">Future Radar</h2>
+          <p className="text-xs text-muted-foreground">Časová trajektorie více možných budoucností. Rozpětí roste s nejistotou a rizikem změny režimu.</p>
+        </div>
+        <div className="rounded-full border px-3 py-1 text-xs font-semibold">{d.futureTrajectory.calibrationStatus}</div>
+      </div>
+      <div className="mt-4 grid gap-3 md:grid-cols-6">
+        {d.futureTrajectory.points.map(p=><div key={p.month} className="rounded-lg bg-muted/40 p-3">
+          <div className="text-xs text-muted-foreground">{p.month}M</div>
+          <div className="mt-1 text-sm font-semibold">{p.dominantRegime}</div>
+          <div className="mt-1 text-lg font-bold">{pct(p.p50PriceGrowth*10000)}</div>
+          <div className="text-xs text-muted-foreground">P10 {pct(p.p10PriceGrowth*10000)} · P90 {pct(p.p90PriceGrowth*10000)}</div>
+          <div className="mt-2 text-xs">transition {Math.round(p.transitionRisk*100)} %</div>
+        </div>)}
+      </div>
+      <div className="mt-4 grid gap-3 md:grid-cols-4 text-sm">
+        <div>Dominantní cesta: <b>{d.futureTrajectory.dominantPath}</b></div>
+        <div>Nejistota: <b>{Math.round(d.futureTrajectory.pathEntropy*100)} %</b></div>
+        <div>Turning point: <b>{d.futureTrajectory.turningPointMonth ? `${d.futureTrajectory.turningPointMonth}M` : "zatím ne"}</b></div>
+        <div>Další důkaz: <b>{d.futureTrajectory.nextBestObservation}</b></div>
+      </div>
+    </section>
+
+    <section className="rounded-xl border p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="font-semibold">Market Pressure Observatory</h2>
+          <p className="text-xs text-muted-foreground">Předstihové síly, které mohou změnit směr trhu dříve než samotná cena.</p>
+        </div>
+        <div className="rounded-full border px-3 py-1 text-xs font-semibold">{d.marketPressure.earlyWarning ?? "NO BROAD WARNING"}</div>
+      </div>
+      <div className="mt-3 grid gap-3 md:grid-cols-4 text-sm">
+        <div>Kompozitní tlak: <b>{Math.round(d.marketPressure.composite*100)} %</b></div>
+        <div>Bullish: <b>{d.marketPressure.bullishPressure.toFixed(3)}</b></div>
+        <div>Bearish: <b>{d.marketPressure.bearishPressure.toFixed(3)}</b></div>
+        <div>Konflikt: <b>{Math.round(d.marketPressure.conflict*100)} %</b></div>
+      </div>
+      <div className="mt-4 grid gap-2 md:grid-cols-3">
+        {d.marketPressure.signals.filter(s=>s.direction!=="NEUTRAL").slice(0,6).map(s=><div key={s.id} className="rounded-lg border p-3">
+          <div className="flex justify-between gap-2"><span className="text-sm font-medium">{s.id}</span><span className="text-xs">{s.direction}</span></div>
+          <div className="mt-1 text-xs text-muted-foreground">lead {s.leadMonths}M · reliability {Math.round(s.reliability*100)} %</div>
+        </div>)}
+      </div>
+    </section>
+
+    <section className="rounded-xl border p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="font-semibold">Future Transition Radar</h2>
+          <p className="text-xs text-muted-foreground">Nejen „co bude“, ale kam se může současný režim přepnout.</p>
+        </div>
+        <div className="rounded-full border px-3 py-1 text-xs">{d.transitionHazard.calibrationStatus}</div>
+      </div>
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        {d.transitionHazard.edges.slice(0,3).map(e=><div key={e.to} className="rounded-lg bg-muted/40 p-3">
+          <div className="flex justify-between"><span className="font-semibold">{e.to}</span><span>{Math.round(e.hazard*100)} %</span></div>
+          <div className="mt-2 text-xs">Trigger: {e.trigger}</div>
+          <div className="mt-1 text-xs text-muted-foreground">Invalidátor: {e.invalidator}</div>
+        </div>)}
+      </div>
+    </section>
+
+    <section className="rounded-xl border p-4">
       <div className="mb-3"><h2 className="font-semibold">Kde se trh právě nachází</h2><p className="text-xs text-muted-foreground">Kauzální mapa sleduje cestu financování → dostupnost → poptávka → nabídka → likvidita → cena.</p></div>
       <div className="flex flex-wrap gap-2">
         {["FINANCING","DEMAND","SUPPLY","LIQUIDITY","PRICE_DISCOVERY","BALANCED"].map(x=><span key={x} className={x===d.causal.phase?"rounded-full border px-3 py-1 text-sm font-semibold":"rounded-full border px-3 py-1 text-sm text-muted-foreground"}>{x}</span>)}
