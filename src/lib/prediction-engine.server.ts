@@ -41,8 +41,8 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
         priceM2: Number(r.avg_asking_price_m2 ?? 0),
         rentM2: r.avg_rent_m2 == null ? null : Number(r.avg_rent_m2),
         listings: r.listings_count,
-        daysOnMarket: r.median_days_on_market ?? null,
-        priceDrops: r.price_drop_count ?? null,
+        daysOnMarket: null,
+        priceDrops: null,
       }))
       .filter((r) => r.priceM2 > 0) as MarketObservation[];
 
@@ -51,8 +51,8 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
       priceM2: Number(r.avg_asking_price_m2 ?? 0),
       rentM2: r.avg_rent_m2 == null ? null : Number(r.avg_rent_m2),
       listings: r.listings_count,
-      daysOnMarket: r.median_days_on_market ?? null,
-      priceDrops: r.price_drop_count ?? null,
+      daysOnMarket: null,
+      priceDrops: null,
     })).filter((r) => r.priceM2 > 0) as MarketObservation[];
 
     const market = forecastMarket(fallbackStats, data.horizonMonths);
@@ -60,6 +60,27 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
     const scenarios = scenarioMixture(features.priceM2, data.horizonMonths, features, market.expectedGrowthBps);
     const scenarioExpectedGrowthBps = mixtureExpectedGrowth(scenarios);
 
+    // Derive listing microstructure from the existing schema instead of assuming
+    // non-existent market_statistics columns. This keeps the prediction endpoint
+    // compatible with the current production migration.
+    const activeListings = (listingRes.data ?? []).filter((l) =>
+      l.price && l.area_m2 && !["SOLD", "REMOVED", "EXPIRED"].includes(l.availability_status)
+    );
+    const domDays = activeListings
+      .map((l) => {
+        const first = Date.parse(String(l.first_seen_at ?? l.created_at ?? ""));
+        return Number.isFinite(first) ? Math.max(0,(Date.now()-first)/86400000) : null;
+      })
+      .filter((x): x is number => x != null)
+      .sort((a,b)=>a-b);
+    const medianDom = domDays.length
+      ? domDays[Math.floor(domDays.length/2)]!
+      : null;
+    const snapshotRows = snapshotRes.data ?? [];
+    const priceDrops = snapshotRows.reduce((count, s, i) => {
+      const prev = i > 0 ? snapshotRows[i-1] : null;
+      return count + (prev && prev.listing_id === s.listing_id && Number(s.price ?? 0) < Number(prev.price ?? 0) ? 1 : 0);
+    }, 0);
     const latest = fallbackStats.at(-1);
     const causalBaseline = {
       POLICY_RATE: latest?.policyRateBps ?? 0,
@@ -70,7 +91,7 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
       EMPLOYMENT: latest?.unemploymentBps != null ? -latest.unemploymentBps : 0,
       DEMAND: features.demandPressureBps,
       INVENTORY: features.supplyPressureBps,
-      DOM: latest?.daysOnMarket != null ? (latest.daysOnMarket - 60) * 100 : 0,
+      DOM: medianDom != null ? (medianDom - 60) * 100 : 0,
       PRICE: features.priceGrowthBps,
       TRANSACTIONS: 0,
       RENT: latest?.rentM2 != null ? features.priceM2 > 0 ? (latest.rentM2 / features.priceM2) * 10000 : 0 : 0,
@@ -111,7 +132,7 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
     const lineage = buildPredictionLineage({
       predictionId: `market:${city ?? "ALL"}:${data.horizonMonths}:${fallbackStats.at(-1)?.date ?? "unknown"}`,
       generatedAt,
-      modelVersion: "predictive-v5.0.0",
+      modelVersion: "predictive-v6.0.0",
       horizonMonths: data.horizonMonths,
       dataSources: [
         { source: "market_statistics", quality: fallbackStats.length >= 24 ? 0.85 : fallbackStats.length >= 12 ? 0.65 : 0.40, rowCount: fallbackStats.length, observedAt: fallbackStats.at(-1)?.date },
@@ -162,7 +183,9 @@ export const getPredictiveIntelligence = createServerFn({ method: "POST" })
       dataQuality: {
         marketObservations: fallbackStats.length,
         candidateProperties: signals.length,
-        hasHistoricalSnapshots: (snapshotRes.data ?? []).length > 0,
+        hasHistoricalSnapshots: snapshotRows.length > 0,
+        medianDaysOnMarket: medianDom,
+        priceDropEvents: priceDrops,
       },
       lineage,
     };
