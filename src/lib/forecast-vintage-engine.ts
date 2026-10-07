@@ -1,0 +1,3 @@
+export interface Vintage{version:string;cutoff:string;sourceHash:string;createdAt:string;}
+export interface ForecastIdentity{modelVersion:string;datasetVersion:string;featureVersion:string;vintageVersion:string;reproducibilityKey:string;}
+export function createForecastIdentity(modelVersion:string,datasetVersion:string,featureVersion:string,vintage:Vintage):ForecastIdentity{return{modelVersion,datasetVersion,featureVersion,vintageVersion:vintage.version,reproducibilityKey:[modelVersion,datasetVersion,featureVersion,vintage.version,vintage.sourceHash].join(":")};}
