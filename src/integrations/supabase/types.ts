@@ -715,6 +715,24 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["reality_model_champions"]["Insert"]>
         Relationships: []
       }
+      reality_hypotheses: {
+        Row: { id:string; hypothesis_key:string; statement:string; mechanism:string; target_key:string; prior_confidence:number; current_confidence:number; trust_cap:number; status:"ACTIVE"|"CONTESTED"|"FALSIFIED"|"RETIRED"; model_version:string; created_at:string }
+        Insert: { id?:string; hypothesis_key:string; statement:string; mechanism:string; target_key:string; prior_confidence?:number; current_confidence?:number; trust_cap?:number; status?:"ACTIVE"|"CONTESTED"|"FALSIFIED"|"RETIRED"; model_version:string; created_at?:string }
+        Update: Partial<Database["public"]["Tables"]["reality_hypotheses"]["Insert"]>
+        Relationships: []
+      }
+      reality_falsification_tests: {
+        Row: { id:string; hypothesis_id:string; test_key:string; metric_key:string; operator:"LT"|"LTE"|"GT"|"GTE"|"ABS_GT"|"ABS_GTE"; threshold:number; evaluation_window_days:number; required_sample_count:number; severity:number; created_at:string }
+        Insert: { id?:string; hypothesis_id:string; test_key:string; metric_key:string; operator:"LT"|"LTE"|"GT"|"GTE"|"ABS_GT"|"ABS_GTE"; threshold:number; evaluation_window_days:number; required_sample_count?:number; severity?:number; created_at?:string }
+        Update: Partial<Database["public"]["Tables"]["reality_falsification_tests"]["Insert"]>
+        Relationships: []
+      }
+      reality_falsification_results: {
+        Row: { id:string; test_id:string; evaluated_at:string; sample_count:number; observed_value:number|null; passed:boolean; evidence_ids:Json; confidence_delta:number; trust_cap_delta:number; explanation:Json; created_at:string }
+        Insert: { id?:string; test_id:string; evaluated_at:string; sample_count?:number; observed_value?:number|null; passed:boolean; evidence_ids?:Json; confidence_delta?:number; trust_cap_delta?:number; explanation?:Json; created_at?:string }
+        Update: Partial<Database["public"]["Tables"]["reality_falsification_results"]["Insert"]>
+        Relationships: []
+      }
       market_statistics: {
         Row: {
           avg_asking_price_m2: number | null
