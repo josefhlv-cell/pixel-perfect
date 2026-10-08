@@ -1,8 +1,18 @@
 import type { ExperimentConfig } from "./experiment-config";
 import { hashExperimentConfig } from "./experiment-integrity";
-import { PREREGISTERED_TRAJECTORY_GRAPH_HASH } from "./trajectory-graph";
-import { assertPredictionRecordComplete, type PredictionRecord, type PredictionJournal } from "./prediction-journal";
-import { assertRevealState, type RunnerState, transitionRunner } from "./runner-state";
+import {
+  PREREGISTERED_TRAJECTORY_GRAPH_HASH,
+} from "./trajectory-graph";
+import {
+  assertPredictionRecordComplete,
+  type PredictionRecord,
+  type PredictionJournal,
+} from "./prediction-journal";
+import {
+  assertRevealState,
+  type RunnerState,
+  transitionRunner,
+} from "./runner-state";
 
 export type WalkForwardCase = {
   experimentId: string;
@@ -14,17 +24,12 @@ export type WalkForwardCase = {
   bottleneckEdgeId: string | null;
   bottleneckStatus: "IDENTIFIED" | "NO_BOTTLENECK";
   scenarioScore: number;
-  realization: {
-    value: number;
-    direction: -1 | 0 | 1;
-  };
+  realization?: never;
 };
 
-export type WalkForwardResult = {
-  cases: number;
-  committedPredictions: number;
-  revealedRealizations: number;
-  state: RunnerState;
+export type Realization = {
+  value: number;
+  direction: -1 | 0 | 1;
 };
 
 export type WalkForwardRunnerDeps = {
@@ -35,7 +40,14 @@ export type WalkForwardRunnerDeps = {
   seed: number;
   journal: PredictionJournal;
   buildCases: () => readonly WalkForwardCase[];
-  loadRealization: (item: WalkForwardCase) => Promise<WalkForwardCase["realization"]>;
+  loadRealization: (item: WalkForwardCase) => Promise<Realization>;
+};
+
+export type WalkForwardResult = {
+  cases: number;
+  committedPredictions: number;
+  revealedRealizations: number;
+  state: RunnerState;
 };
 
 export async function runWalkForward(
@@ -43,10 +55,16 @@ export async function runWalkForward(
 ): Promise<WalkForwardResult> {
   const cases = deps.buildCases();
   const configHash = await hashExperimentConfig(deps.config);
-  if (deps.config.trajectoryGraphHash !== PREREGISTERED_TRAJECTORY_GRAPH_HASH) throw new Error("Trajectory graph hash mismatch.");
-  let state: RunnerState = "INIT";
+
+  if (
+    deps.config.trajectoryGraphHash !== PREREGISTERED_TRAJECTORY_GRAPH_HASH
+  ) {
+    throw new Error("Trajectory graph hash mismatch.");
+  }
 
   for (const item of cases) {
+    let state: RunnerState = "INIT";
+
     state = transitionRunner(state, "FIT_COMPLETE");
     state = transitionRunner(state, "PREDICTION_CREATED");
 
@@ -68,28 +86,30 @@ export async function runWalkForward(
     };
 
     assertPredictionRecordComplete(prediction);
-    await deps.journal.appendPrediction(prediction);
+    const predictionRecordHash = await deps.journal.appendPrediction(prediction);
     state = transitionRunner(state, "PREDICTION_COMMITTED");
 
     assertRevealState(state);
     state = transitionRunner(state, "REALIZATION_REVEALED");
+
+    // Physical reveal boundary: this callback is not invoked until after
+    // appendPrediction has committed the immutable prediction record.
     const realization = await deps.loadRealization(item);
+
     await deps.journal.appendRealization({
       experimentId: item.experimentId,
-      predictionRecordHash: [
-        item.experimentId,
-        item.region,
-        item.origin,
-        item.asOf,
-        item.scenarioId,
-        item.bottleneckEdgeId ?? "NO_BOTTLENECK",
-      ].join("|"),
+      predictionRecordHash,
       realizedAt: item.horizonEnd,
       targetValue: realization.value,
       targetDirection: realization.direction,
     });
+
     state = transitionRunner(state, "SCORE_COMPLETE");
-    state = "INIT";
+    state = transitionRunner(state, "SCORE_COMPLETE");
+
+    if (state !== "COMPLETE") {
+      throw new Error("Walk-forward case did not reach COMPLETE state.");
+    }
   }
 
   return {
