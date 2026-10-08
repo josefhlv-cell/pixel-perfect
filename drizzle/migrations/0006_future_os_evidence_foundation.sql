@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS public.reality_evidence (
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now(),
   CHECK (published_at IS NULL OR published_at <= available_at),
-  CHECK (retrieved_at <= available_at OR available_at = retrieved_at),
+  CHECK (available_at <= retrieved_at),
   UNIQUE (source_id, geography_type, geography_key, entity_type, entity_key, revision, content_hash)
 );
 
