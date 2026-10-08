@@ -133,7 +133,7 @@ export async function syncCnbArad(
     const period = parsePeriod(row.period);
     const numeric = numericValue(row.value);
     // Do not invent a period or coerce non-numeric values into measurements.
-    if (numeric == null) return [];
+    if (numeric == null || period == null) return [];
     const indicatorKey = row.indicator.normalize("NFKC").trim().slice(0, 180) || `row-${index + 1}`;
     const content = JSON.stringify({ indicator: indicatorKey, period: row.period, value: numeric, fields: row.fields });
     const hash = createHash("sha256").update(content).digest("hex");
@@ -170,16 +170,18 @@ export async function syncCnbArad(
   }
 
   let inserted = 0;
-  // Small batches limit payload size and make failure boundaries explicit.
-  for (let i = 0; i < observations.length; i += 100) {
-    const batch = observations.slice(i, i + 100);
-    const { data, error } = await supabase.from("reality_evidence").upsert(batch, {
-      onConflict: "source_id,geography_type,geography_key,entity_type,entity_key,revision,content_hash",
-      ignoreDuplicates: true,
-    }).select("id");
+  let skipped = rows.length - observations.length;
+  // The schema uses an expression-based identity index, so inserts are made
+  // individually and duplicate-key conflicts are counted as idempotent skips.
+  for (const observation of observations) {
+    const { error } = await supabase.from("reality_evidence").insert(observation);
+    if (error?.code === "23505") {
+      skipped += 1;
+      continue;
+    }
     if (error) throw error;
-    inserted += data?.length ?? 0;
+    inserted += 1;
   }
 
-  return { fetched: rows.length, inserted, skipped: rows.length - inserted, retrievedAt, setIds };
+  return { fetched: rows.length, inserted, skipped, retrievedAt, setIds };
 }
