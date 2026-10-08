@@ -92,6 +92,7 @@ export class InMemoryPredictionJournal implements PredictionJournal {
   readonly predictions: PredictionRecord[] = [];
   readonly realizations: RealizationRecord[] = [];
   private readonly hashes = new Map<string, string>();
+  private readonly committedHashes = new Set<string>();
 
   async appendPrediction(record: PredictionRecord): Promise<string> {
     assertPredictionRecordComplete(record);
@@ -102,11 +103,12 @@ export class InMemoryPredictionJournal implements PredictionJournal {
     const hash = await hashRecord(record);
     this.predictions.push(structuredClone(record));
     this.hashes.set(key, hash);
+    this.committedHashes.add(hash);
     return hash;
   }
 
   async appendRealization(record: RealizationRecord): Promise<void> {
-    if (!this.hashes.has(record.predictionRecordHash)) {
+    if (!this.committedHashes.has(record.predictionRecordHash)) {
       throw new Error("Realization references an unknown prediction hash.");
     }
     if (!Number.isFinite(record.targetValue)) {
