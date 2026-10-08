@@ -1,109 +1,113 @@
-export type DataTier = "OBSERVED" | "ASSUMED";
-export type NodeTransform =
-  | "LEVEL"
-  | "YOY_CHANGE"
-  | "MOM_CHANGE"
-  | "STANDARDIZED"
-  | "INDEX";
+import type { PreregisteredTrajectoryGraph } from "./trajectory-graph";
+import {
+  PREREGISTERED_TRAJECTORY_GRAPH,
+} from "./trajectory-graph";
 
-export type NodeSpec = {
-  id: string;
-  label: string;
-  sourceId: string;
-  seriesId: string;
-  transform: NodeTransform;
-  publicationLagDays: number;
-  dataTier: DataTier;
-  thresholdLow: number;
-  thresholdHigh: number;
-  unit: string;
-};
+export const PRIMARY_H2_GRAPH_VERSION = "housing-primary-h2-v0.1" as const;
 
-export type EdgeSpec = {
-  id: string;
-  from: string;
-  to: string;
-  direction: -1 | 1;
-  lagMonthsMin: number;
-  lagMonthsMax: number;
-  primaryForH2: boolean;
-  literatureSupport: "SUPPORTED" | "HYPOTHESIS";
-};
+export const PRIMARY_H2_NODE_SPECS = [
+  {
+    id: "MONETARY_CONDITIONS",
+    label: "Monetary conditions",
+    sourceId: "CNB_ARAD",
+    seriesId: "CNB_POLICY_RATE",
+    transform: "LEVEL",
+    publicationLagDays: 1,
+    dataTier: "OBSERVED",
+    thresholdLow: -1,
+    thresholdHigh: 1,
+    unit: "percentage_points_vs_training_baseline",
+  },
+  {
+    id: "MORTGAGE_CREDIT",
+    label: "Mortgage rate / housing credit conditions",
+    sourceId: "CNB_ARAD",
+    seriesId: "HOUSE_PURCHASE_LOAN_RATE",
+    transform: "LEVEL",
+    publicationLagDays: 45,
+    dataTier: "OBSERVED",
+    thresholdLow: -1,
+    thresholdHigh: 1,
+    unit: "percentage_points_vs_training_baseline",
+  },
+  {
+    id: "BUYER_DEMAND",
+    label: "Demand for housing loans",
+    sourceId: "CNB_BLS",
+    seriesId: "HOUSEHOLD_HOUSING_LOAN_DEMAND",
+    transform: "INDEX",
+    publicationLagDays: 60,
+    dataTier: "OBSERVED",
+    thresholdLow: -1,
+    thresholdHigh: 1,
+    unit: "standardized_training_index",
+  },
+  {
+    id: "TRANSACTIONS",
+    label: "Housing transaction activity",
+    sourceId: "CZSO",
+    seriesId: "HOUSING_TRANSACTIONS",
+    transform: "YOY_CHANGE",
+    publicationLagDays: 60,
+    dataTier: "OBSERVED",
+    thresholdLow: -1,
+    thresholdHigh: 1,
+    unit: "standardized_training_change",
+  },
+] as const;
 
-export type BottleneckRule = {
-  aggregation: "GEOMETRIC_MEAN";
-  edgeRobustness: "SURVIVAL_X_EVIDENCE_ASSOCIATION";
-  tieBreak: "LEXICOGRAPHIC_EDGE_ID";
-  minimumSeparation: number;
-};
+export const PRIMARY_H2_EDGE_SPECS = [
+  {
+    id: "MONETARY_TO_MORTGAGE",
+    from: "MONETARY_CONDITIONS",
+    to: "MORTGAGE_CREDIT",
+    direction: -1,
+    lagMonthsMin: 1,
+    lagMonthsMax: 6,
+    primaryForH2: true,
+    literatureSupport: "SUPPORTED",
+  },
+  {
+    id: "MORTGAGE_TO_BUYER_DEMAND",
+    from: "MORTGAGE_CREDIT",
+    to: "BUYER_DEMAND",
+    direction: -1,
+    lagMonthsMin: 1,
+    lagMonthsMax: 6,
+    primaryForH2: true,
+    literatureSupport: "SUPPORTED",
+  },
+  {
+    id: "BUYER_DEMAND_TO_TRANSACTIONS",
+    from: "BUYER_DEMAND",
+    to: "TRANSACTIONS",
+    direction: 1,
+    lagMonthsMin: 1,
+    lagMonthsMax: 6,
+    primaryForH2: true,
+    literatureSupport: "HYPOTHESIS",
+  },
+] as const;
 
-export type PreregisteredTrajectorySpecification = {
-  version: "housing-spec-v0.1";
-  nodes: readonly NodeSpec[];
-  edges: readonly EdgeSpec[];
-  primaryH2EdgeIds: readonly string[];
-  bottleneckRule: BottleneckRule;
-};
+export const PRIMARY_H2_SPEC = {
+  version: PRIMARY_H2_GRAPH_VERSION,
+  nodes: PRIMARY_H2_NODE_SPECS,
+  edges: PRIMARY_H2_EDGE_SPECS,
+  primaryH2EdgeIds: PRIMARY_H2_EDGE_SPECS.map((edge) => edge.id),
+  bottleneckRule: {
+    aggregation: "GEOMETRIC_MEAN",
+    edgeRobustness: "SURVIVAL_X_EVIDENCE_ASSOCIATION",
+    tieBreak: "LEXICOGRAPHIC_EDGE_ID",
+    minimumSeparation: 0.05,
+  },
+} as const;
 
-function assertFinite(value: number, field: string): void {
-  if (!Number.isFinite(value)) throw new Error(`${field} must be finite.`);
-}
-
-export function validateNodeSpec(node: NodeSpec): void {
-  if (!node.id || !node.label || !node.sourceId || !node.seriesId || !node.unit) {
-    throw new Error(`Node ${node.id || "<unknown>"} is missing required metadata.`);
+export function assertPrimaryGraphMatchesPreregistration(): void {
+  if (PRIMARY_H2_SPEC.primaryH2EdgeIds.length !== 3) {
+    throw new Error("Primary H2 must contain exactly three edges.");
   }
-  if (node.publicationLagDays < 0 || !Number.isInteger(node.publicationLagDays)) {
-    throw new Error(`Node ${node.id} has invalid publicationLagDays.`);
+  const expected = PREREGISTERED_TRAJECTORY_GRAPH.primaryH2EdgeIds;
+  if (JSON.stringify(expected) !== JSON.stringify(PRIMARY_H2_SPEC.primaryH2EdgeIds)) {
+    throw new Error("Primary H2 graph differs from preregistered graph identity.");
   }
-  assertFinite(node.thresholdLow, `${node.id}.thresholdLow`);
-  assertFinite(node.thresholdHigh, `${node.id}.thresholdHigh`);
-  if (node.thresholdLow >= node.thresholdHigh) {
-    throw new Error(`Node ${node.id} requires thresholdLow < thresholdHigh.`);
-  }
-}
-
-export function validateTrajectorySpecification(
-  spec: PreregisteredTrajectorySpecification,
-): void {
-  if (!spec.nodes.length) throw new Error("Trajectory specification needs nodes.");
-  const nodeIds = new Set<string>();
-  for (const node of spec.nodes) {
-    validateNodeSpec(node);
-    if (nodeIds.has(node.id)) throw new Error(`Duplicate node id: ${node.id}`);
-    nodeIds.add(node.id);
-  }
-
-  const edgeIds = new Set<string>();
-  for (const edge of spec.edges) {
-    if (edgeIds.has(edge.id)) throw new Error(`Duplicate edge id: ${edge.id}`);
-    edgeIds.add(edge.id);
-    if (!nodeIds.has(edge.from) || !nodeIds.has(edge.to)) {
-      throw new Error(`Edge ${edge.id} references an unknown node.`);
-    }
-    if (edge.lagMonthsMin < 0 || edge.lagMonthsMax < edge.lagMonthsMin) {
-      throw new Error(`Edge ${edge.id} has invalid lag range.`);
-    }
-  }
-
-  for (const edgeId of spec.primaryH2EdgeIds) {
-    if (!edgeIds.has(edgeId)) throw new Error(`Primary H2 edge is unknown: ${edgeId}`);
-  }
-  if (spec.bottleneckRule.minimumSeparation <= 0) {
-    throw new Error("Bottleneck minimum separation must be > 0.");
-  }
-}
-
-export function selectBottleneckEdge(
-  scores: readonly { edgeId: string; robustness: number }[],
-  rule: BottleneckRule,
-): string | null {
-  if (!scores.length) return null;
-  const sorted = [...scores].sort(
-    (a, b) => a.robustness - b.robustness || a.edgeId.localeCompare(b.edgeId),
-  );
-  if (sorted.length > 1 && sorted[1].robustness - sorted[0].robustness < rule.minimumSeparation) {
-    return null;
-  }
-  return sorted[0].edgeId;
 }
