@@ -34,6 +34,7 @@ export type ExperimentConfig = {
   noBottleneckSeparation: 0.05;
   noBottleneckUnresolvedShare: 0.5;
   trajectory: PreregisteredTrajectoryGraph;
+  trajectoryGraphHash: string;
   ablations: readonly AblationId[];
 };
 
@@ -72,5 +73,6 @@ export const DEFAULT_EXPERIMENT_CONFIG: ExperimentConfig = {
   noBottleneckSeparation: 0.05,
   noBottleneckUnresolvedShare: 0.5,
   trajectory: PREREGISTERED_TRAJECTORY_GRAPH,
+  trajectoryGraphHash: "6e672f913ace3313fff75b5c720d7ec782c87242eb3aa99837caa23eb81ad9e9",
   ablations: PREREGISTERED_ABLATIONS,
 };
