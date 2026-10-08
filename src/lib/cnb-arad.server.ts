@@ -137,7 +137,6 @@ export async function syncCnbArad(
     const indicatorKey = row.indicator.normalize("NFKC").trim().slice(0, 180) || `row-${index + 1}`;
     const content = JSON.stringify({ indicator: indicatorKey, period: row.period, value: numeric, fields: row.fields });
     const hash = createHash("sha256").update(content).digest("hex");
-    const effectiveAt = period ?? retrievedAt;
     return [{
       source_id: source.id,
       source_url: url.origin + url.pathname,
