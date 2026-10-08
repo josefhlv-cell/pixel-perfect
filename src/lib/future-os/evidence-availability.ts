@@ -9,5 +9,7 @@ export function getAvailabilityMode(row: { publishedAt: string | null; metadata?
 
 export function isBacktestSafe(row: { publishedAt: string | null; metadata?: Record<string, unknown> }): boolean {
   const mode = getAvailabilityMode(row);
-  return mode !== "RETRIEVAL_CUTOFF" && mode !== "CURRENT_SNAPSHOT";
+  // Strict backtests must reject unknown provenance: without a known vintage or
+  // publication timestamp we cannot prove the observation was knowable then.
+  return mode === "VINTAGE" || mode === "PUBLISHED_AT";
 }
