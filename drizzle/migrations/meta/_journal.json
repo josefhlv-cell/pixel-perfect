@@ -50,6 +50,20 @@
       "when": 1791444447695,
       "tag": "0006_future_os_evidence_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791446500000,
+      "tag": "0007_future_os_causal_signal_forecast",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791446800000,
+      "tag": "0008_future_os_source_intelligence",
+      "breakpoints": true
     }
   ]
 }
