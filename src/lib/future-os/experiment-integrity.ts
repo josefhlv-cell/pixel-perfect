@@ -34,9 +34,11 @@ export function canonicalizeConfig(config: ExperimentConfig): string {
     informationScaleSource: config.informationScaleSource,
     vintagePolicy: config.vintagePolicy,
     trajectory: {
+      version: config.trajectory.version,
       nodeIds: [...config.trajectory.nodeIds],
       edgeIds: [...config.trajectory.edgeIds],
       pathSurvivalAggregation: config.trajectory.pathSurvivalAggregation,
+      bottleneckRule: config.trajectory.bottleneckRule,
     },
   });
 }
