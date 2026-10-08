@@ -35,6 +35,27 @@ describe("walk-forward runner", () => {
     expect(journal.realizations).toHaveLength(200);
   });
 
+  it("rejects a runner/config graph hash mismatch before prediction", async () => {
+    const journal = new InMemoryPredictionJournal();
+    const fixture = buildDeterministicWalkForwardFixture(1, 1);
+    await expect(
+      runWalkForward({
+        config: {
+          ...DEFAULT_EXPERIMENT_CONFIG,
+          trajectoryGraphHash: "0".repeat(64),
+        },
+        codeSha: "fixture-code",
+        dependencyLockHash: "fixture-lock",
+        vintageSnapshotHash: "fixture-vintage",
+        seed: 42,
+        journal,
+        buildCases: () => fixture.cases,
+        loadRealization: fixture.loadRealization,
+      }),
+    ).rejects.toThrow(/Trajectory graph hash mismatch/);
+    expect(journal.predictions).toHaveLength(0);
+  });
+
   it("runs with zero cases without inventing a result", async () => {
     const journal = new InMemoryPredictionJournal();
     const fixture = buildDeterministicWalkForwardFixture(0, 0);
