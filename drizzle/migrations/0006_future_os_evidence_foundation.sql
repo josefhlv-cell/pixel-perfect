@@ -139,9 +139,12 @@ CREATE POLICY "authenticated read world state snapshots"
   ON public.reality_world_state_snapshots FOR SELECT TO authenticated USING (true);
 
 -- Only the trusted server/service role can ingest immutable evidence.
-REVOKE INSERT, UPDATE, DELETE ON public.reality_evidence FROM authenticated;
-REVOKE INSERT, UPDATE, DELETE ON public.reality_evidence_sources FROM authenticated;
-REVOKE INSERT, UPDATE, DELETE ON public.reality_world_state_snapshots FROM authenticated;
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE, TRIGGER, REFERENCES ON public.reality_evidence FROM authenticated;
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE, TRIGGER, REFERENCES ON public.reality_evidence_sources FROM authenticated;
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE, TRIGGER, REFERENCES ON public.reality_world_state_snapshots FROM authenticated;
+REVOKE UPDATE, DELETE, TRUNCATE ON public.reality_evidence FROM service_role;
+REVOKE UPDATE, DELETE, TRUNCATE ON public.reality_evidence_sources FROM service_role;
+REVOKE UPDATE, DELETE, TRUNCATE ON public.reality_world_state_snapshots FROM service_role;
 
 -- Latest revision known by a historical cutoff. The cutoff is INFORMATION-AVAILABILITY time.
 CREATE OR REPLACE FUNCTION public.get_reality_evidence_available_at(
