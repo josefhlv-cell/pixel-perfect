@@ -64,11 +64,16 @@ export function buildFutureRadar(
   }
 
   const medians = forecasts.map((forecast) => forecast.p50);
-  const mean = medians.length ? medians.reduce((sum, value) => sum + value, 0) / medians.length : null;
+  const sorted = [...medians].sort((a, b) => a - b);
+  const centralEstimate = sorted.length
+    ? sorted.length % 2 === 1
+      ? sorted[Math.floor(sorted.length / 2)]
+      : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
+    : null;
   const spread = medians.length > 1
     ? Math.max(...medians) - Math.min(...medians)
     : 0;
-  const scale = mean == null ? 1 : Math.max(1, Math.abs(mean));
+  const scale = centralEstimate == null ? 1 : Math.max(1, Math.abs(centralEstimate));
   const disagreement = Math.min(1, spread / scale);
   const falsified = hypotheses.filter((hypothesis) => hypothesis.falsified).map((hypothesis) => hypothesis.key);
   const survivingConfidence = hypotheses.length
@@ -81,7 +86,7 @@ export function buildFutureRadar(
     ...foundation,
     modelAgreement: {
       forecastCount: forecasts.length,
-      median: mean,
+      centralEstimate,
       disagreement,
       survivingHypothesisConfidence: survivingConfidence,
     },
