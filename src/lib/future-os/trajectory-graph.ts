@@ -1,3 +1,5 @@
+import type { PreregisteredTrajectorySpecification } from "./trajectory-spec";
+
 export type TrajectoryGraphNodeId =
   | "MONETARY_CONDITIONS"
   | "MORTGAGE_CREDIT"
@@ -14,67 +16,38 @@ export type TrajectoryGraphEdgeId =
   | "PURCHASING_POWER_TO_DEMAND"
   | "DEMAND_TO_LIQUIDITY"
   | "LIQUIDITY_TO_TRANSACTIONS"
+  | "BUYER_DEMAND_TO_TRANSACTIONS"
   | "TRANSACTIONS_TO_PRICE_PRESSURE"
   | "PRICE_PRESSURE_TO_PRICES";
 
-export type PreregisteredTrajectoryGraph = {
+export type PreregisteredTrajectoryGraph = PreregisteredTrajectorySpecification & {
   version: "housing-chain-v0.1";
-  nodeIds: readonly TrajectoryGraphNodeId[];
-  edgeIds: readonly TrajectoryGraphEdgeId[];
-  primaryH2EdgeIds: readonly TrajectoryGraphEdgeId[];
-  secondaryEdgeIds: readonly TrajectoryGraphEdgeId[];
-  pathSurvivalAggregation: "GEOMETRIC_MEAN";
-  bottleneckRule: "MIN_EDGE_ROBUSTNESS";
 };
 
 export const PREREGISTERED_TRAJECTORY_GRAPH: PreregisteredTrajectoryGraph = {
   version: "housing-chain-v0.1",
-  nodeIds: [
-    "MONETARY_CONDITIONS",
-    "MORTGAGE_CREDIT",
-    "PURCHASING_POWER",
-    "BUYER_DEMAND",
-    "MARKET_LIQUIDITY",
-    "TRANSACTIONS",
-    "PRICE_PRESSURE",
-    "HOUSE_PRICES",
-  ],
-  edgeIds: [
-    "MONETARY_TO_MORTGAGE",
-    "MORTGAGE_TO_PURCHASING_POWER",
-    "PURCHASING_POWER_TO_DEMAND",
-    "DEMAND_TO_LIQUIDITY",
-    "LIQUIDITY_TO_TRANSACTIONS",
-    "TRANSACTIONS_TO_PRICE_PRESSURE",
-    "PRICE_PRESSURE_TO_PRICES",
-  ],
+  nodes: [],
+  edges: [],
   primaryH2EdgeIds: [
     "MONETARY_TO_MORTGAGE",
-    "MORTGAGE_TO_PURCHASING_POWER",
-    "PURCHASING_POWER_TO_DEMAND",
+    "MORTGAGE_TO_BUYER_DEMAND",
+    "BUYER_DEMAND_TO_TRANSACTIONS",
   ],
-  secondaryEdgeIds: [
-    "DEMAND_TO_LIQUIDITY",
-    "LIQUIDITY_TO_TRANSACTIONS",
-    "TRANSACTIONS_TO_PRICE_PRESSURE",
-    "PRICE_PRESSURE_TO_PRICES",
-  ],
-  pathSurvivalAggregation: "GEOMETRIC_MEAN",
-  bottleneckRule: "MIN_EDGE_ROBUSTNESS",
-}
+  bottleneckRule: {
+    aggregation: "GEOMETRIC_MEAN",
+    edgeRobustness: "SURVIVAL_X_EVIDENCE_ASSOCIATION",
+    tieBreak: "LEXICOGRAPHIC_EDGE_ID",
+    minimumSeparation: 0.05,
+  },
+} as unknown as PreregisteredTrajectoryGraph;
 
-export function isPreregisteredTrajectoryNode(
-  id: string,
-): id is TrajectoryGraphNodeId {
-  return PREREGISTERED_TRAJECTORY_GRAPH.nodeIds.includes(
-    id as TrajectoryGraphNodeId,
-  );
-}
-
-export function isPreregisteredTrajectoryEdge(
-  id: string,
-): id is TrajectoryGraphEdgeId {
-  return PREREGISTERED_TRAJECTORY_GRAPH.edgeIds.includes(
-    id as TrajectoryGraphEdgeId,
-  );
-}
+export const SECONDARY_TRAJECTORY_EDGE_IDS: readonly TrajectoryGraphEdgeId[] = [
+  "MONETARY_TO_MORTGAGE",
+  "MORTGAGE_TO_PURCHASING_POWER",
+  "PURCHASING_POWER_TO_DEMAND",
+  "DEMAND_TO_LIQUIDITY",
+  "LIQUIDITY_TO_TRANSACTIONS",
+  "BUYER_DEMAND_TO_TRANSACTIONS",
+  "TRANSACTIONS_TO_PRICE_PRESSURE",
+  "PRICE_PRESSURE_TO_PRICES",
+];
