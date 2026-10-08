@@ -34,3 +34,65 @@ export function buildFutureRadarFoundation(
     },
   };
 }
+
+
+export type RadarForecast = {
+  modelId: string;
+  p10: number;
+  p50: number;
+  p90: number;
+  probabilityPositive: number;
+  confidence: number;
+};
+
+export type RadarHypothesis = {
+  key: string;
+  confidence: number;
+  falsified: boolean;
+};
+
+export function buildFutureRadar(
+  rows: EvidenceObservation[],
+  asOf: Date | string,
+  forecasts: RadarForecast[],
+  hypotheses: RadarHypothesis[],
+  requiredFields: string[] = [],
+) {
+  const foundation = buildFutureRadarFoundation(rows, asOf, requiredFields);
+  if (foundation.status === "DATA_STARVED") {
+    return { ...foundation, modelAgreement: null, contested: false };
+  }
+
+  const medians = forecasts.map((forecast) => forecast.p50);
+  const mean = medians.length ? medians.reduce((sum, value) => sum + value, 0) / medians.length : null;
+  const spread = medians.length > 1
+    ? Math.max(...medians) - Math.min(...medians)
+    : 0;
+  const scale = mean == null ? 1 : Math.max(1, Math.abs(mean));
+  const disagreement = Math.min(1, spread / scale);
+  const falsified = hypotheses.filter((hypothesis) => hypothesis.falsified).map((hypothesis) => hypothesis.key);
+  const survivingConfidence = hypotheses.length
+    ? hypotheses.filter((hypothesis) => !hypothesis.falsified).reduce((sum, hypothesis) => sum + hypothesis.confidence, 0) /
+      Math.max(1, hypotheses.filter((hypothesis) => !hypothesis.falsified).length)
+    : null;
+
+  const contested = forecasts.length > 1 && disagreement >= 0.35;
+  return {
+    ...foundation,
+    modelAgreement: {
+      forecastCount: forecasts.length,
+      median: mean,
+      disagreement,
+      survivingHypothesisConfidence: survivingConfidence,
+    },
+    contested,
+    status: contested ? "CONTESTED" as const : foundation.status,
+    falsifiedHypotheses: falsified,
+    nextBestObservation: {
+      required: foundation.nextBestObservation.required || contested,
+      reason: contested
+        ? "Modely se významně rozcházejí. Nejvyšší hodnota dalšího pozorování je v datech, která dokážou odlišit konkurenční mechanismy."
+        : foundation.nextBestObservation.reason,
+    },
+  };
+}
