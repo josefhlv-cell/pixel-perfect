@@ -11,10 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
+      - name: Install pinned Bun
+        run: npm install --global bun@1.3.14 2>&1 | tee ci-bun-install.log
         continue-on-error: true
-        with:
-          bun-version: 1.3.5
       - name: Runtime diagnostics
         run: |
           {
@@ -36,6 +35,7 @@ jobs:
         with:
           name: future-os-ci-${{ github.run_id }}
           path: |
+            ci-bun-install.log
             ci-runtime.log
             ci-install.log
             ci-lint.log
