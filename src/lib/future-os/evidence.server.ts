@@ -33,7 +33,7 @@ function mapRow(row: Database["public"]["Tables"]["reality_evidence"]["Row"]): E
     contentHash: row.content_hash,
     isRevision: row.is_revision,
     supersedesId: row.supersedes_id,
-    metadata: row.metadata ?? {},
+    metadata: (row.metadata ?? {}) as Record<string, unknown>,
     createdAt: row.created_at,
   };
 }
