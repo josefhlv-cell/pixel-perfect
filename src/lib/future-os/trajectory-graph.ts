@@ -12,6 +12,7 @@ export type TrajectoryGraphNodeId =
 
 export type TrajectoryGraphEdgeId =
   | "MONETARY_TO_MORTGAGE"
+  | "MORTGAGE_TO_BUYER_DEMAND"
   | "MORTGAGE_TO_PURCHASING_POWER"
   | "PURCHASING_POWER_TO_DEMAND"
   | "DEMAND_TO_LIQUIDITY"
@@ -20,9 +21,10 @@ export type TrajectoryGraphEdgeId =
   | "TRANSACTIONS_TO_PRICE_PRESSURE"
   | "PRICE_PRESSURE_TO_PRICES";
 
-export type PreregisteredTrajectoryGraph = PreregisteredTrajectorySpecification & {
-  version: "housing-chain-v0.1";
-};
+export type PreregisteredTrajectoryGraph =
+  PreregisteredTrajectorySpecification & {
+    version: "housing-chain-v0.1";
+  };
 
 export const PREREGISTERED_TRAJECTORY_GRAPH: PreregisteredTrajectoryGraph = {
   version: "housing-chain-v0.1",
