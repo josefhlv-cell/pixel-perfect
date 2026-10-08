@@ -1,7 +1,5 @@
-import {
-  PREREGISTERED_TRAJECTORY_GRAPH,
-  type PreregisteredTrajectoryGraph,
-} from "./trajectory-graph";
+import { PREREGISTERED_TRAJECTORY_GRAPH } from "./trajectory-graph";
+import type { PreregisteredTrajectoryGraph } from "./trajectory-graph";
 
 export type AttackId =
   | "A1_LEAVE_OUT_TOP_K"
@@ -11,7 +9,13 @@ export type AttackId =
   | "A5_DATA_DEGRADATION"
   | "A6_PLAUSIBLE_SHOCKS";
 
-export type PathSurvivalAggregation = "GEOMETRIC_MEAN";
+export type AblationId =
+  | "BASELINE"
+  | "INFORMATION_ONLY"
+  | "SURVIVAL_ONLY"
+  | "SURVIVAL_INFORMATION"
+  | "SURVIVAL_INFORMATION_TRAJECTORY"
+  | "SECONDARY_TRAJECTORY_EXPLORATORY";
 
 export type ExperimentConfig = {
   version: "0.1";
@@ -21,13 +25,16 @@ export type ExperimentConfig = {
   delta: number;
   attacks: readonly AttackId[];
   minimumRegions: 10;
-  minimumWalkForwardWindows: number;
+  minimumWalkForwardWindows: 20;
   blockBootstrapMonths: 12;
-  scoreAlpha: number;
-  scoreBeta: number;
+  scoreAlpha: 1;
+  scoreBeta: 1;
   informationScaleSource: "TRAINING_ONLY";
   vintagePolicy: "STRICT" | "ASSUMED_LAGS_ALLOWED";
+  noBottleneckSeparation: 0.05;
+  noBottleneckUnresolvedShare: 0.5;
   trajectory: PreregisteredTrajectoryGraph;
+  ablations: readonly AblationId[];
 };
 
 export const PREREGISTERED_ATTACKS: readonly AttackId[] = [
@@ -37,6 +44,15 @@ export const PREREGISTERED_ATTACKS: readonly AttackId[] = [
   "A4_REGIME_REWRITE",
   "A5_DATA_DEGRADATION",
   "A6_PLAUSIBLE_SHOCKS",
+] as const;
+
+export const PREREGISTERED_ABLATIONS: readonly AblationId[] = [
+  "BASELINE",
+  "INFORMATION_ONLY",
+  "SURVIVAL_ONLY",
+  "SURVIVAL_INFORMATION",
+  "SURVIVAL_INFORMATION_TRAJECTORY",
+  "SECONDARY_TRAJECTORY_EXPLORATORY",
 ] as const;
 
 export const DEFAULT_EXPERIMENT_CONFIG: ExperimentConfig = {
@@ -53,5 +69,8 @@ export const DEFAULT_EXPERIMENT_CONFIG: ExperimentConfig = {
   scoreBeta: 1,
   informationScaleSource: "TRAINING_ONLY",
   vintagePolicy: "STRICT",
+  noBottleneckSeparation: 0.05,
+  noBottleneckUnresolvedShare: 0.5,
   trajectory: PREREGISTERED_TRAJECTORY_GRAPH,
+  ablations: PREREGISTERED_ABLATIONS,
 };
