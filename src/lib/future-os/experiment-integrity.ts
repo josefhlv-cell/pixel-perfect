@@ -34,6 +34,14 @@ export function canonicalizeConfig(config: ExperimentConfig): string {
     informationScaleSource: config.informationScaleSource,
     vintagePolicy: config.vintagePolicy,
     trajectoryGraphHash: config.trajectoryGraphHash,
+    pilotSplit: {
+      frequency: config.pilotSplit.frequency,
+      trainingStart: config.pilotSplit.trainingStart,
+      trainingEnd: config.pilotSplit.trainingEnd,
+      holdoutStart: config.pilotSplit.holdoutStart,
+      holdoutEnd: config.pilotSplit.holdoutEnd,
+      regions: [...config.pilotSplit.regions],
+    },
     trajectory: {
       version: config.trajectory.version,
       nodeIds: [...config.trajectory.nodeIds],
