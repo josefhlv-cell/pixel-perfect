@@ -12,9 +12,11 @@ export function buildFutureRadarFoundation(
 
   const status = quality.status === "DATA_STARVED"
     ? "DATA_STARVED"
-    : leadingSignals.length === 0
+    : quality.status === "LIMITED"
       ? "CONTESTED"
-      : "CLEAR";
+      : leadingSignals.length === 0
+        ? "CONTESTED"
+        : "CLEAR";
 
   return {
     currentState: Object.fromEntries(
