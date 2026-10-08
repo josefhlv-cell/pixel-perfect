@@ -697,6 +697,24 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["reality_data_coverage"]["Insert"]>
         Relationships: []
       }
+      reality_model_candidates: {
+        Row: { id:string; model_key:string; model_family:string; version:string; description:string|null; feature_contract:Json; hyperparameters:Json; active:boolean; created_at:string }
+        Insert: { id?:string; model_key:string; model_family:string; version:string; description?:string|null; feature_contract?:Json; hyperparameters?:Json; active?:boolean; created_at?:string }
+        Update: Partial<Database["public"]["Tables"]["reality_model_candidates"]["Insert"]>
+        Relationships: []
+      }
+      reality_model_evaluations: {
+        Row: { id:string; model_id:string; geography_type:string; geography_key:string; horizon_days:number; regime:string|null; evaluation_cutoff:string; sample_count:number; mae:number|null; rmse:number|null; directional_accuracy:number|null; interval_coverage:number|null; brier_score:number|null; log_score:number|null; lead_time_days:number|null; decision_utility:number|null; regret:number|null; calibration_error:number|null; drift_penalty:number|null; robustness_score:number|null; data_quality:Json; evaluation_method:string; created_at:string }
+        Insert: { id?:string; model_id:string; geography_type:string; geography_key:string; horizon_days:number; regime?:string|null; evaluation_cutoff:string; sample_count?:number; mae?:number|null; rmse?:number|null; directional_accuracy?:number|null; interval_coverage?:number|null; brier_score?:number|null; log_score?:number|null; lead_time_days?:number|null; decision_utility?:number|null; regret?:number|null; calibration_error?:number|null; drift_penalty?:number|null; robustness_score?:number|null; data_quality?:Json; evaluation_method:string; created_at?:string }
+        Update: Partial<Database["public"]["Tables"]["reality_model_evaluations"]["Insert"]>
+        Relationships: []
+      }
+      reality_model_champions: {
+        Row: { id:string; geography_type:string; geography_key:string; horizon_days:number; regime:string|null; target_key:string; model_id:string; score:number; confidence:number|null; selected_at:string; selection_reason:Json; supersedes_id:string|null }
+        Insert: { id?:string; geography_type:string; geography_key:string; horizon_days:number; regime?:string|null; target_key:string; model_id:string; score:number; confidence?:number|null; selected_at?:string; selection_reason?:Json; supersedes_id?:string|null }
+        Update: Partial<Database["public"]["Tables"]["reality_model_champions"]["Insert"]>
+        Relationships: []
+      }
       market_statistics: {
         Row: {
           avg_asking_price_m2: number | null
