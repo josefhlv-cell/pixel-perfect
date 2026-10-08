@@ -4,6 +4,7 @@ import { buildFutureField, buildMechanismState, type MechanismObservation, type 
 import { collapseFutures, scoreFutureSurvival, type EscapeRoute, type Falsifier } from "./mechanism-field/future-collapse";
 import { selectNextBestObservation, type ObservationCandidate } from "./mechanism-field/next-best-observation";
 import type { FutureField, FutureAttractor, MechanismRegime } from "./mechanism-field/types";
+import type { FutureMarketTwin } from "./future-market-twin";
 
 export type FutureEngineInput = {
   asOf: string;
@@ -21,6 +22,7 @@ export type FutureEngineInput = {
   escapeRoutes: readonly EscapeRoute[];
   nextObservations: readonly ObservationCandidate[];
   superposition?: FutureSuperposition | null;
+  marketTwin?: FutureMarketTwin | null;
 };
 
 export type FutureEngineOutput = {
@@ -29,14 +31,16 @@ export type FutureEngineOutput = {
   survivingFutures: readonly FutureAttractor[];
   nextBestObservation: ReturnType<typeof selectNextBestObservation>;
   falsifiersTriggered: Record<string, string[]>;
+  marketTwin: FutureMarketTwin | null;
 };
 
 /**
  * End-to-end orchestration of the Future OS research loop.
  *
- * This is intentionally an orchestration layer, not a new forecasting model.
- * It connects existing transition/turning-point/superposition machinery to
- * the Future Causal Field and makes falsification an explicit state transition.
+ * The market twin is intentionally observational/contextual. It can explain
+ * where a mechanism is propagating, but it cannot silently rewrite the
+ * preregistered forecasting score. Spatial propagation belongs to an explicit
+ * ablation/feature family when evaluated out of sample.
  */
 export function runFutureEngine(input: FutureEngineInput): FutureEngineOutput {
   const mechanism = buildMechanismState(
@@ -57,7 +61,6 @@ export function runFutureEngine(input: FutureEngineInput): FutureEngineOutput {
   );
 
   const survivingFutures = collapseFutures(field.attractors, survivalResults);
-
   const nextBestObservation = selectNextBestObservation(field, input.nextObservations);
 
   const falsifiersTriggered = Object.fromEntries(
@@ -70,13 +73,14 @@ export function runFutureEngine(input: FutureEngineInput): FutureEngineOutput {
     survivingFutures,
     nextBestObservation,
     falsifiersTriggered,
+    marketTwin: input.marketTwin ?? null,
   };
 }
 
 /**
  * Optional bridge from the existing convergence/turning-point stack.
- * The bridge is deliberately separate so existing probability semantics are
- * preserved and can be evaluated as an independent ablation.
+ * The bridge is deliberately separate so existing probability semantics
+ * are preserved and can be evaluated as an independent ablation.
  */
 export function buildEngineSuperposition(input: Parameters<typeof buildFutureSuperposition>[0]) {
   return buildFutureSuperposition(input);
