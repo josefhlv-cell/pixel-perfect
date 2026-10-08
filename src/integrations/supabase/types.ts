@@ -1269,6 +1269,132 @@ export type Database = {
         ]
       }
     }
+      reality_market_dna: {
+        Row: {
+          id: string
+          geography_type: string
+          geography_key: string
+          as_of: string
+          horizon_days: number
+          parameter_key: string
+          value: number | null
+          low_value: number | null
+          high_value: number | null
+          sample_count: number
+          confidence: number | null
+          method_version: string
+          evidence_ids: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          geography_type: string
+          geography_key: string
+          as_of: string
+          horizon_days: number
+          parameter_key: string
+          value?: number | null
+          low_value?: number | null
+          high_value?: number | null
+          sample_count?: number
+          confidence?: number | null
+          method_version: string
+          evidence_ids?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          geography_type?: string
+          geography_key?: string
+          as_of?: string
+          horizon_days?: number
+          parameter_key?: string
+          value?: number | null
+          low_value?: number | null
+          high_value?: number | null
+          sample_count?: number
+          confidence?: number | null
+          method_version?: string
+          evidence_ids?: Json
+          created_at?: string
+        }
+        Relationships: []
+      }
+      reality_signal_lead_tests: {
+        Row: {
+          id: string
+          geography_type: string
+          geography_key: string
+          signal_key: string
+          target_key: string
+          lag_days: number
+          window_days: number
+          evaluation_cutoff: string
+          sample_count: number
+          correlation: number | null
+          rank_correlation: number | null
+          directional_accuracy: number | null
+          mutual_information: number | null
+          stability: number | null
+          false_alarm_rate: number | null
+          lead_score: number | null
+          independence_adjusted_score: number | null
+          p_value: number | null
+          method_version: string
+          status: string
+          evidence_ids: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          geography_type: string
+          geography_key: string
+          signal_key: string
+          target_key: string
+          lag_days: number
+          window_days: number
+          evaluation_cutoff: string
+          sample_count?: number
+          correlation?: number | null
+          rank_correlation?: number | null
+          directional_accuracy?: number | null
+          mutual_information?: number | null
+          stability?: number | null
+          false_alarm_rate?: number | null
+          lead_score?: number | null
+          independence_adjusted_score?: number | null
+          p_value?: number | null
+          method_version: string
+          status?: string
+          evidence_ids?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          geography_type?: string
+          geography_key?: string
+          signal_key?: string
+          target_key?: string
+          lag_days?: number
+          window_days?: number
+          evaluation_cutoff?: string
+          sample_count?: number
+          correlation?: number | null
+          rank_correlation?: number | null
+          directional_accuracy?: number | null
+          mutual_information?: number | null
+          stability?: number | null
+          false_alarm_rate?: number | null
+          lead_score?: number | null
+          independence_adjusted_score?: number | null
+          p_value?: number | null
+          method_version?: string
+          status?: string
+          evidence_ids?: Json
+          created_at?: string
+        }
+        Relationships: []
+      }
     Views: {
       [_ in never]: never
     }
