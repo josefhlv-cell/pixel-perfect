@@ -1,5 +1,5 @@
 -- Future OS v1.7: fix time-series identity for point-in-time reconstruction.
-DROP INDEX IF EXISTS public.reality_evidence_source_id_geography_type_geography_key_ent_key;
+ALTER TABLE public.reality_evidence DROP CONSTRAINT IF EXISTS reality_evidence_source_id_geography_type_geography_key_ent_key;
 
 CREATE UNIQUE INDEX IF NOT EXISTS reality_evidence_observation_identity_idx
   ON public.reality_evidence (
