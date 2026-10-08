@@ -7,6 +7,9 @@ import { buildDeterministicWalkForwardFixture } from "./walk-forward-fixture";
 describe("walk-forward runner", () => {
   it("commits every prediction before revealing its realization", async () => {
     const journal = new InMemoryPredictionJournal();
+    const fixture = buildDeterministicWalkForwardFixture(10, 20);
+    let predictionCountAtFirstReveal = -1;
+
     const result = await runWalkForward({
       config: DEFAULT_EXPERIMENT_CONFIG,
       codeSha: "fixture-code",
@@ -14,18 +17,27 @@ describe("walk-forward runner", () => {
       vintageSnapshotHash: "fixture-vintage",
       seed: 42,
       journal,
-      buildCases: () => buildDeterministicWalkForwardFixture(10, 20),
+      buildCases: () => fixture.cases,
+      loadRealization: async (item) => {
+        predictionCountAtFirstReveal =
+          predictionCountAtFirstReveal === -1
+            ? journal.predictions.length
+            : predictionCountAtFirstReveal;
+        return fixture.loadRealization(item);
+      },
     });
 
     expect(result.cases).toBe(200);
     expect(result.committedPredictions).toBe(200);
     expect(result.revealedRealizations).toBe(200);
+    expect(predictionCountAtFirstReveal).toBe(1);
     expect(journal.predictions).toHaveLength(200);
     expect(journal.realizations).toHaveLength(200);
   });
 
   it("runs with zero cases without inventing a result", async () => {
     const journal = new InMemoryPredictionJournal();
+    const fixture = buildDeterministicWalkForwardFixture(0, 0);
     const result = await runWalkForward({
       config: DEFAULT_EXPERIMENT_CONFIG,
       codeSha: "fixture-code",
@@ -33,8 +45,10 @@ describe("walk-forward runner", () => {
       vintageSnapshotHash: "fixture-vintage",
       seed: 42,
       journal,
-      buildCases: () => [],
+      buildCases: () => fixture.cases,
+      loadRealization: fixture.loadRealization,
     });
+
     expect(result.cases).toBe(0);
     expect(journal.predictions).toHaveLength(0);
     expect(journal.realizations).toHaveLength(0);
