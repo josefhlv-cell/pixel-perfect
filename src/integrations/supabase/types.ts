@@ -661,6 +661,42 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["reality_world_state_snapshots"]["Insert"]>
         Relationships: []
       }
+      reality_causal_edges: {
+        Row: { id:string; edge_key:string; parent_entity_type:string; parent_entity_key:string; child_entity_type:string; child_entity_key:string; mechanism:string; expected_sign:number; lag_min_days:number; lag_max_days:number; strength:number|null; confidence:number|null; model_version:string; effective_from:string; effective_to:string|null; supersedes_id:string|null; metadata:Json; created_at:string }
+        Insert: { id?:string; edge_key:string; parent_entity_type:string; parent_entity_key:string; child_entity_type:string; child_entity_key:string; mechanism:string; expected_sign:number; lag_min_days?:number; lag_max_days?:number; strength?:number|null; confidence?:number|null; model_version:string; effective_from:string; effective_to?:string|null; supersedes_id?:string|null; metadata?:Json; created_at?:string }
+        Update: Partial<Database["public"]["Tables"]["reality_causal_edges"]["Insert"]>
+        Relationships: []
+      }
+      reality_signal_observations: {
+        Row: { id:string; signal_key:string; geography_type:string; geography_key:string; as_of:string; observed_at:string|null; value:number|null; value_json:Json|null; unit:string|null; direction:number|null; lead_class:"LEADING"|"COINCIDENT"|"LAGGING"|"UNKNOWN"; method_version:string; evidence_ids:Json; independence_groups:Json; data_quality:Json; created_at:string }
+        Insert: { id?:string; signal_key:string; geography_type:string; geography_key:string; as_of:string; observed_at?:string|null; value?:number|null; value_json?:Json|null; unit?:string|null; direction?:number|null; lead_class?:"LEADING"|"COINCIDENT"|"LAGGING"|"UNKNOWN"; method_version:string; evidence_ids?:Json; independence_groups?:Json; data_quality?:Json; created_at?:string }
+        Update: Partial<Database["public"]["Tables"]["reality_signal_observations"]["Insert"]>
+        Relationships: []
+      }
+      reality_forecast_runs: {
+        Row: { id:string; forecast_key:string; geography_type:string; geography_key:string; target_key:string; horizon_days:number; data_cutoff:string; forecast_created_at:string; model_version:string; baseline_version:string; p10:number|null; p50:number|null; p90:number|null; probability_positive:number|null; calibration_confidence:number|null; regime:string|null; status:"PENDING"|"ON_TRACK"|"VERIFIED"|"FAILED"|"INVALIDATED"; evidence_ids:Json; signal_ids:Json; falsifiers:Json; assumptions:Json; created_at:string }
+        Insert: { id?:string; forecast_key:string; geography_type:string; geography_key:string; target_key:string; horizon_days:number; data_cutoff:string; forecast_created_at?:string; model_version:string; baseline_version:string; p10?:number|null; p50?:number|null; p90?:number|null; probability_positive?:number|null; calibration_confidence?:number|null; regime?:string|null; status?:"PENDING"|"ON_TRACK"|"VERIFIED"|"FAILED"|"INVALIDATED"; evidence_ids?:Json; signal_ids?:Json; falsifiers?:Json; assumptions?:Json; created_at?:string }
+        Update: Partial<Database["public"]["Tables"]["reality_forecast_runs"]["Insert"]>
+        Relationships: []
+      }
+      reality_forecast_outcomes: {
+        Row: { id:string; forecast_id:string; outcome_as_of:string; realized_value:number|null; metrics:Json; inside_interval:boolean|null; absolute_error:number|null; directional_hit:boolean|null; brier_score:number|null; log_score:number|null; decision_regret:number|null; verified_at:string; }
+        Insert: { id?:string; forecast_id:string; outcome_as_of:string; realized_value?:number|null; metrics?:Json; inside_interval?:boolean|null; absolute_error?:number|null; directional_hit?:boolean|null; brier_score?:number|null; log_score?:number|null; decision_regret?:number|null; verified_at?:string }
+        Update: Partial<Database["public"]["Tables"]["reality_forecast_outcomes"]["Insert"]>
+        Relationships: []
+      }
+      reality_source_adapters: {
+        Row: { id:string; source_id:string|null; adapter_key:string; source_name:string; publisher:string|null; canonical_url:string|null; access_protocol:string; data_domains:Json; geography_scopes:Json; frequencies:Json; latency_class:"REALTIME"|"INTRADAY"|"DAILY"|"WEEKLY"|"MONTHLY"|"QUARTERLY"|"ANNUAL"|"UNKNOWN"; historical_start:string|null; revision_policy:string|null; publication_timestamp_available:boolean; retrieval_timestamp_recorded:boolean; point_in_time_safe:boolean; reliability:number|null; independence_group:string; status:"PLANNED"|"ACTIVE"|"DEGRADED"|"BLOCKED"|"RETIRED"; last_success_at:string|null; metadata:Json; created_at:string; updated_at:string }
+        Insert: { id?:string; source_id?:string|null; adapter_key:string; source_name:string; publisher?:string|null; canonical_url?:string|null; access_protocol:string; data_domains?:Json; geography_scopes?:Json; frequencies?:Json; latency_class?:"REALTIME"|"INTRADAY"|"DAILY"|"WEEKLY"|"MONTHLY"|"QUARTERLY"|"ANNUAL"|"UNKNOWN"; historical_start?:string|null; revision_policy?:string|null; publication_timestamp_available?:boolean; retrieval_timestamp_recorded?:boolean; point_in_time_safe?:boolean; reliability?:number|null; independence_group:string; status?:"PLANNED"|"ACTIVE"|"DEGRADED"|"BLOCKED"|"RETIRED"; last_success_at?:string|null; metadata?:Json; created_at?:string; updated_at?:string }
+        Update: Partial<Database["public"]["Tables"]["reality_source_adapters"]["Insert"]>
+        Relationships: []
+      }
+      reality_data_coverage: {
+        Row: { id:string; adapter_id:string; geography_type:string; geography_key:string; domain:string; period_start:string|null; period_end:string|null; availability_status:"AVAILABLE"|"PARTIAL"|"MISSING"|"UNKNOWN"; provenance_quality:number|null; last_checked_at:string; details:Json }
+        Insert: { id?:string; adapter_id:string; geography_type:string; geography_key:string; domain:string; period_start?:string|null; period_end?:string|null; availability_status:"AVAILABLE"|"PARTIAL"|"MISSING"|"UNKNOWN"; provenance_quality?:number|null; last_checked_at?:string; details?:Json }
+        Update: Partial<Database["public"]["Tables"]["reality_data_coverage"]["Insert"]>
+        Relationships: []
+      }
       market_statistics: {
         Row: {
           avg_asking_price_m2: number | null
