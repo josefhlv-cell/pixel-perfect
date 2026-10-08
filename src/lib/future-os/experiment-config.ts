@@ -1,3 +1,8 @@
+import {
+  PREREGISTERED_TRAJECTORY_GRAPH,
+  type PreregisteredTrajectoryGraph,
+} from "./trajectory-graph";
+
 export type AttackId =
   | "A1_LEAVE_OUT_TOP_K"
   | "A2_ALTERNATIVE_MODELS"
@@ -7,12 +12,6 @@ export type AttackId =
   | "A6_PLAUSIBLE_SHOCKS";
 
 export type PathSurvivalAggregation = "GEOMETRIC_MEAN";
-
-export type PreregisteredTrajectoryGraph = {
-  nodeIds: readonly string[];
-  edgeIds: readonly string[];
-  pathSurvivalAggregation: PathSurvivalAggregation;
-};
 
 export type ExperimentConfig = {
   version: "0.1";
@@ -39,18 +38,6 @@ export const PREREGISTERED_ATTACKS: readonly AttackId[] = [
   "A5_DATA_DEGRADATION",
   "A6_PLAUSIBLE_SHOCKS",
 ] as const;
-
-/**
- * Placeholder graph identity for the experiment kernel.
- * Production experiments must replace this with a fixed, versioned graph
- * before any walk-forward evaluation. An empty graph is intentionally not
- * treated as evidence for H2.
- */
-export const PREREGISTERED_TRAJECTORY_GRAPH: PreregisteredTrajectoryGraph = {
-  nodeIds: [],
-  edgeIds: [],
-  pathSurvivalAggregation: "GEOMETRIC_MEAN",
-};
 
 export const DEFAULT_EXPERIMENT_CONFIG: ExperimentConfig = {
   version: "0.1",
