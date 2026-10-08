@@ -80,6 +80,27 @@ export const PREREGISTERED_TRAJECTORY_GRAPH: PreregisteredTrajectoryGraph = {
   },
 } as const;
 
+export const PREREGISTERED_TRAJECTORY_GRAPH_HASH = "6e672f913ace3313fff75b5c720d7ec782c87242eb3aa99837caa23eb81ad9e9" as const;
+
+export function canonicalizeTrajectoryGraph(): string {
+  return JSON.stringify({
+    version: PREREGISTERED_TRAJECTORY_GRAPH.version,
+    nodeIds: [...PREREGISTERED_TRAJECTORY_GRAPH.nodeIds],
+    edgeIds: [...PREREGISTERED_TRAJECTORY_GRAPH.edgeIds],
+    pathSurvivalAggregation: PREREGISTERED_TRAJECTORY_GRAPH.pathSurvivalAggregation,
+    primaryH2EdgeIds: [...PREREGISTERED_TRAJECTORY_GRAPH.primaryH2EdgeIds],
+    bottleneckRule: PREREGISTERED_TRAJECTORY_GRAPH.bottleneckRule,
+  });
+}
+
+export async function hashPreregisteredTrajectoryGraph(): Promise<string> {
+  const bytes = new TextEncoder().encode(canonicalizeTrajectoryGraph());
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 export const SECONDARY_TRAJECTORY_EDGE_IDS: readonly TrajectoryGraphEdgeId[] = [
   "MONETARY_TO_MORTGAGE",
   "MORTGAGE_TO_PURCHASING_POWER",
