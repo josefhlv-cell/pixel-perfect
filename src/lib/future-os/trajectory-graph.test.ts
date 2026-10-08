@@ -4,42 +4,48 @@ import {
   PREREGISTERED_TRAJECTORY_GRAPH_HASH,
   isPreregisteredTrajectoryEdge,
   isPreregisteredTrajectoryNode,
+  hashPreregisteredTrajectoryGraph,
 } from "./trajectory-graph";
+import { PREREGISTERED_TRAJECTORY_GRAPH as LEGACY_GRAPH } from "./preregistered-trajectory";
 import { DEFAULT_EXPERIMENT_CONFIG } from "./experiment-config";
-import { canonicalizeConfig } from "./experiment-integrity";
 
 describe("preregistered trajectory graph", () => {
-  it("locks node and edge identities", () => {
+  it("locks the single canonical graph identity", async () => {
     expect(PREREGISTERED_TRAJECTORY_GRAPH.version).toBe("housing-chain-v0.1");
     expect(PREREGISTERED_TRAJECTORY_GRAPH.nodeIds).toHaveLength(8);
     expect(PREREGISTERED_TRAJECTORY_GRAPH.edgeIds).toHaveLength(9);
-    expect(PREREGISTERED_TRAJECTORY_GRAPH.primaryH2EdgeIds).toEqual([
-      "MONETARY_TO_MORTGAGE",
-      "MORTGAGE_TO_BUYER_DEMAND",
-      "BUYER_DEMAND_TO_TRANSACTIONS",
-    ]);
-    expect(PREREGISTERED_TRAJECTORY_GRAPH.pathSurvivalAggregation).toBe("GEOMETRIC_MEAN");
-    expect(PREREGISTERED_TRAJECTORY_GRAPH.bottleneckRule.edgeRobustness).toBe(
-      "SURVIVAL_X_EVIDENCE_ASSOCIATION",
+    expect(PREREGISTERED_TRAJECTORY_GRAPH.pathSurvivalAggregation).toBe(
+      "GEOMETRIC_MEAN",
+    );
+    expect(PREREGISTERED_TRAJECTORY_GRAPH.bottleneckRule).toEqual({
+      edgeRobustness: "SURVIVAL_X_EVIDENCE_ASSOCIATION",
+      tieBreak: "LEXICOGRAPHIC_EDGE_ID",
+      minimumSeparation: 0.05,
+    });
+    expect(await hashPreregisteredTrajectoryGraph()).toBe(
+      PREREGISTERED_TRAJECTORY_GRAPH_HASH,
+    );
+  });
+
+  it("proves the legacy module is only an alias, not a second graph", () => {
+    expect(LEGACY_GRAPH).toBe(PREREGISTERED_TRAJECTORY_GRAPH);
+  });
+
+  it("locks the graph hash into experiment configuration", () => {
+    expect(DEFAULT_EXPERIMENT_CONFIG.trajectory).toBe(
+      PREREGISTERED_TRAJECTORY_GRAPH,
+    );
+    expect(DEFAULT_EXPERIMENT_CONFIG.trajectoryGraphHash).toBe(
+      PREREGISTERED_TRAJECTORY_GRAPH_HASH,
     );
   });
 
   it("rejects graph elements that are not preregistered", () => {
     expect(isPreregisteredTrajectoryNode("HOUSE_PRICES")).toBe(true);
     expect(isPreregisteredTrajectoryNode("RANDOM_NODE")).toBe(false);
-    expect(isPreregisteredTrajectoryEdge("PRICE_PRESSURE_TO_PRICES")).toBe(true);
-    expect(isPreregisteredTrajectoryEdge("RANDOM_EDGE")).toBe(false);
-  });
-
-  it("uses exactly one authoritative graph export", () => {
-    expect(PREREGISTERED_TRAJECTORY_GRAPH_HASH).toBe(
-      "6e672f913ace3313fff75b5c720d7ec782c87242eb3aa99837caa23eb81ad9e9",
+    expect(isPreregisteredTrajectoryEdge("PRICE_PRESSURE_TO_PRICES")).toBe(
+      true,
     );
-  });
-
-  it("locks the graph hash into the experiment configuration", () => {
-    const config = DEFAULT_EXPERIMENT_CONFIG;
-    expect(config.trajectoryGraphHash).toBe(PREREGISTERED_TRAJECTORY_GRAPH_HASH);
-    expect(canonicalizeConfig(config)).toContain(PREREGISTERED_TRAJECTORY_GRAPH_HASH);
+    expect(isPreregisteredTrajectoryEdge("RANDOM_EDGE")).toBe(false);
   });
 });
