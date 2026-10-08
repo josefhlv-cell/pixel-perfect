@@ -59,6 +59,13 @@ describe("Future OS point-in-time integrity", () => {
     expect(getEvidenceAvailableAt([row], "2026-01-31T23:59:59Z")).toHaveLength(0);
   });
 
+  it("preserves multiple periods of the same series", () => {
+    const q1 = base({ id: "q1", effectiveFrom: "2026-01-01T00:00:00Z", availableAt: "2026-02-01T00:00:00Z", value: 100 });
+    const q2 = base({ id: "q2", effectiveFrom: "2026-04-01T00:00:00Z", availableAt: "2026-05-01T00:00:00Z", value: 110 });
+    const rows = getEvidenceAvailableAt([q1, q2], "2026-06-01T00:00:00Z");
+    expect(rows.map((row) => row.value)).toEqual([100, 110]);
+  });
+
   it("keeps the latest revision known by the cutoff", () => {
     const original = base({ id: "r1", revision: 1, availableAt: "2026-02-01T00:00:00Z", value: 100 });
     const revision = base({ id: "r2", revision: 2, availableAt: "2026-03-01T00:00:00Z", value: 110, isRevision: true, supersedesId: "r1" });
