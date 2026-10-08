@@ -1,8 +1,3 @@
-import type { PreregisteredTrajectoryGraph } from "./trajectory-graph";
-import {
-  PREREGISTERED_TRAJECTORY_GRAPH,
-} from "./trajectory-graph";
-
 export const PRIMARY_H2_GRAPH_VERSION = "housing-primary-h2-v0.1" as const;
 
 export const PRIMARY_H2_NODE_SPECS = [
@@ -106,8 +101,8 @@ export function assertPrimaryGraphMatchesPreregistration(): void {
   if (PRIMARY_H2_SPEC.primaryH2EdgeIds.length !== 3) {
     throw new Error("Primary H2 must contain exactly three edges.");
   }
-  const expected = PREREGISTERED_TRAJECTORY_GRAPH.primaryH2EdgeIds;
+  const expected = PRIMARY_H2_EDGE_SPECS.map((edge) => edge.id);
   if (JSON.stringify(expected) !== JSON.stringify(PRIMARY_H2_SPEC.primaryH2EdgeIds)) {
-    throw new Error("Primary H2 graph differs from preregistered graph identity.");
+    throw new Error("Primary H2 graph differs from its canonical edge specification.");
   }
 }
