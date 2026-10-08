@@ -8,7 +8,9 @@ export function assertNoLookAhead(
   const cutoff = new Date(asOf).getTime();
   if (!Number.isFinite(cutoff)) throw new Error("Invalid asOf date.");
 
-  const leaked = observations.find((row) => new Date(row.vintageDate).getTime() > cutoff);
+  const leaked = observations.find(
+    (row) => new Date(row.vintageDate).getTime() > cutoff,
+  );
   if (leaked) {
     throw new Error(
       `Look-ahead leakage detected: ${leaked.region}/${leaked.series} vintage=${leaked.vintageDate} cutoff=${new Date(cutoff).toISOString()}`,
@@ -31,10 +33,17 @@ export function canonicalizeConfig(config: ExperimentConfig): string {
     scoreBeta: config.scoreBeta,
     informationScaleSource: config.informationScaleSource,
     vintagePolicy: config.vintagePolicy,
+    trajectory: {
+      nodeIds: [...config.trajectory.nodeIds],
+      edgeIds: [...config.trajectory.edgeIds],
+      pathSurvivalAggregation: config.trajectory.pathSurvivalAggregation,
+    },
   });
 }
 
-export async function hashExperimentConfig(config: ExperimentConfig): Promise<string> {
+export async function hashExperimentConfig(
+  config: ExperimentConfig,
+): Promise<string> {
   const bytes = new TextEncoder().encode(canonicalizeConfig(config));
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   return [...new Uint8Array(digest)]
