@@ -905,6 +905,1040 @@ export type Database = {
           },
         ]
       }
+      reality_causal_edges: {
+        Row: {
+          child_entity_key: string
+          child_entity_type: string
+          confidence: number | null
+          created_at: string
+          edge_key: string
+          effective_from: string
+          effective_to: string | null
+          expected_sign: number
+          id: string
+          lag_max_days: number
+          lag_min_days: number
+          mechanism: string
+          metadata: Json
+          model_version: string
+          parent_entity_key: string
+          parent_entity_type: string
+          strength: number | null
+          supersedes_id: string | null
+        }
+        Insert: {
+          child_entity_key: string
+          child_entity_type: string
+          confidence?: number | null
+          created_at?: string
+          edge_key: string
+          effective_from: string
+          effective_to?: string | null
+          expected_sign: number
+          id?: string
+          lag_max_days?: number
+          lag_min_days?: number
+          mechanism: string
+          metadata?: Json
+          model_version: string
+          parent_entity_key: string
+          parent_entity_type: string
+          strength?: number | null
+          supersedes_id?: string | null
+        }
+        Update: {
+          child_entity_key?: string
+          child_entity_type?: string
+          confidence?: number | null
+          created_at?: string
+          edge_key?: string
+          effective_from?: string
+          effective_to?: string | null
+          expected_sign?: number
+          id?: string
+          lag_max_days?: number
+          lag_min_days?: number
+          mechanism?: string
+          metadata?: Json
+          model_version?: string
+          parent_entity_key?: string
+          parent_entity_type?: string
+          strength?: number | null
+          supersedes_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reality_causal_edges_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "reality_causal_edges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reality_data_coverage: {
+        Row: {
+          adapter_id: string
+          availability_status: string
+          details: Json
+          domain: string
+          geography_key: string
+          geography_type: string
+          id: string
+          last_checked_at: string
+          period_end: string | null
+          period_start: string | null
+          provenance_quality: number | null
+        }
+        Insert: {
+          adapter_id: string
+          availability_status: string
+          details?: Json
+          domain: string
+          geography_key: string
+          geography_type: string
+          id?: string
+          last_checked_at?: string
+          period_end?: string | null
+          period_start?: string | null
+          provenance_quality?: number | null
+        }
+        Update: {
+          adapter_id?: string
+          availability_status?: string
+          details?: Json
+          domain?: string
+          geography_key?: string
+          geography_type?: string
+          id?: string
+          last_checked_at?: string
+          period_end?: string | null
+          period_start?: string | null
+          provenance_quality?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reality_data_coverage_adapter_id_fkey"
+            columns: ["adapter_id"]
+            isOneToOne: false
+            referencedRelation: "reality_source_adapters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reality_evidence: {
+        Row: {
+          available_at: string
+          content_hash: string
+          created_at: string
+          effective_from: string | null
+          effective_to: string | null
+          entity_key: string
+          entity_type: string
+          frequency: string | null
+          geography_key: string
+          geography_type: string
+          id: string
+          independence_group: string
+          is_revision: boolean
+          lead_class: string
+          metadata: Json
+          observed_at: string | null
+          published_at: string | null
+          publisher: string | null
+          retrieved_at: string
+          revision: number
+          source_id: string
+          source_name: string
+          source_reliability: number
+          source_type: string
+          source_url: string | null
+          supersedes_id: string | null
+          unit: string | null
+          value: Json
+        }
+        Insert: {
+          available_at: string
+          content_hash: string
+          created_at?: string
+          effective_from?: string | null
+          effective_to?: string | null
+          entity_key: string
+          entity_type: string
+          frequency?: string | null
+          geography_key: string
+          geography_type: string
+          id?: string
+          independence_group: string
+          is_revision?: boolean
+          lead_class?: string
+          metadata?: Json
+          observed_at?: string | null
+          published_at?: string | null
+          publisher?: string | null
+          retrieved_at: string
+          revision?: number
+          source_id: string
+          source_name: string
+          source_reliability?: number
+          source_type: string
+          source_url?: string | null
+          supersedes_id?: string | null
+          unit?: string | null
+          value: Json
+        }
+        Update: {
+          available_at?: string
+          content_hash?: string
+          created_at?: string
+          effective_from?: string | null
+          effective_to?: string | null
+          entity_key?: string
+          entity_type?: string
+          frequency?: string | null
+          geography_key?: string
+          geography_type?: string
+          id?: string
+          independence_group?: string
+          is_revision?: boolean
+          lead_class?: string
+          metadata?: Json
+          observed_at?: string | null
+          published_at?: string | null
+          publisher?: string | null
+          retrieved_at?: string
+          revision?: number
+          source_id?: string
+          source_name?: string
+          source_reliability?: number
+          source_type?: string
+          source_url?: string | null
+          supersedes_id?: string | null
+          unit?: string | null
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reality_evidence_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "reality_evidence_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reality_evidence_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "reality_evidence"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reality_evidence_sources: {
+        Row: {
+          active: boolean
+          canonical_url: string | null
+          created_at: string
+          default_reliability: number
+          geography_scope: string | null
+          id: string
+          independence_group: string
+          metadata: Json
+          publisher: string | null
+          source_name: string
+          source_type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          canonical_url?: string | null
+          created_at?: string
+          default_reliability?: number
+          geography_scope?: string | null
+          id?: string
+          independence_group: string
+          metadata?: Json
+          publisher?: string | null
+          source_name: string
+          source_type: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          canonical_url?: string | null
+          created_at?: string
+          default_reliability?: number
+          geography_scope?: string | null
+          id?: string
+          independence_group?: string
+          metadata?: Json
+          publisher?: string | null
+          source_name?: string
+          source_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reality_falsification_results: {
+        Row: {
+          confidence_delta: number
+          created_at: string
+          evaluated_at: string
+          evidence_ids: Json
+          explanation: Json
+          id: string
+          observed_value: number | null
+          passed: boolean
+          sample_count: number
+          test_id: string
+          trust_cap_delta: number
+        }
+        Insert: {
+          confidence_delta?: number
+          created_at?: string
+          evaluated_at: string
+          evidence_ids?: Json
+          explanation?: Json
+          id?: string
+          observed_value?: number | null
+          passed: boolean
+          sample_count?: number
+          test_id: string
+          trust_cap_delta?: number
+        }
+        Update: {
+          confidence_delta?: number
+          created_at?: string
+          evaluated_at?: string
+          evidence_ids?: Json
+          explanation?: Json
+          id?: string
+          observed_value?: number | null
+          passed?: boolean
+          sample_count?: number
+          test_id?: string
+          trust_cap_delta?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reality_falsification_results_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "reality_falsification_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reality_falsification_tests: {
+        Row: {
+          created_at: string
+          evaluation_window_days: number
+          hypothesis_id: string
+          id: string
+          metric_key: string
+          operator: string
+          required_sample_count: number
+          severity: number
+          test_key: string
+          threshold: number
+        }
+        Insert: {
+          created_at?: string
+          evaluation_window_days: number
+          hypothesis_id: string
+          id?: string
+          metric_key: string
+          operator: string
+          required_sample_count?: number
+          severity?: number
+          test_key: string
+          threshold: number
+        }
+        Update: {
+          created_at?: string
+          evaluation_window_days?: number
+          hypothesis_id?: string
+          id?: string
+          metric_key?: string
+          operator?: string
+          required_sample_count?: number
+          severity?: number
+          test_key?: string
+          threshold?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reality_falsification_tests_hypothesis_id_fkey"
+            columns: ["hypothesis_id"]
+            isOneToOne: false
+            referencedRelation: "reality_hypotheses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reality_forecast_outcomes: {
+        Row: {
+          absolute_error: number | null
+          brier_score: number | null
+          decision_regret: number | null
+          directional_hit: boolean | null
+          forecast_id: string
+          id: string
+          inside_interval: boolean | null
+          log_score: number | null
+          metrics: Json
+          outcome_as_of: string
+          realized_value: number | null
+          verified_at: string
+        }
+        Insert: {
+          absolute_error?: number | null
+          brier_score?: number | null
+          decision_regret?: number | null
+          directional_hit?: boolean | null
+          forecast_id: string
+          id?: string
+          inside_interval?: boolean | null
+          log_score?: number | null
+          metrics?: Json
+          outcome_as_of: string
+          realized_value?: number | null
+          verified_at?: string
+        }
+        Update: {
+          absolute_error?: number | null
+          brier_score?: number | null
+          decision_regret?: number | null
+          directional_hit?: boolean | null
+          forecast_id?: string
+          id?: string
+          inside_interval?: boolean | null
+          log_score?: number | null
+          metrics?: Json
+          outcome_as_of?: string
+          realized_value?: number | null
+          verified_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reality_forecast_outcomes_forecast_id_fkey"
+            columns: ["forecast_id"]
+            isOneToOne: false
+            referencedRelation: "reality_forecast_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reality_forecast_runs: {
+        Row: {
+          assumptions: Json
+          baseline_version: string
+          calibration_confidence: number | null
+          created_at: string
+          data_cutoff: string
+          evidence_ids: Json
+          falsifiers: Json
+          forecast_created_at: string
+          forecast_key: string
+          geography_key: string
+          geography_type: string
+          horizon_days: number
+          id: string
+          model_version: string
+          p10: number | null
+          p50: number | null
+          p90: number | null
+          probability_positive: number | null
+          regime: string | null
+          signal_ids: Json
+          status: string
+          target_key: string
+        }
+        Insert: {
+          assumptions?: Json
+          baseline_version: string
+          calibration_confidence?: number | null
+          created_at?: string
+          data_cutoff: string
+          evidence_ids?: Json
+          falsifiers?: Json
+          forecast_created_at?: string
+          forecast_key: string
+          geography_key: string
+          geography_type: string
+          horizon_days: number
+          id?: string
+          model_version: string
+          p10?: number | null
+          p50?: number | null
+          p90?: number | null
+          probability_positive?: number | null
+          regime?: string | null
+          signal_ids?: Json
+          status?: string
+          target_key: string
+        }
+        Update: {
+          assumptions?: Json
+          baseline_version?: string
+          calibration_confidence?: number | null
+          created_at?: string
+          data_cutoff?: string
+          evidence_ids?: Json
+          falsifiers?: Json
+          forecast_created_at?: string
+          forecast_key?: string
+          geography_key?: string
+          geography_type?: string
+          horizon_days?: number
+          id?: string
+          model_version?: string
+          p10?: number | null
+          p50?: number | null
+          p90?: number | null
+          probability_positive?: number | null
+          regime?: string | null
+          signal_ids?: Json
+          status?: string
+          target_key?: string
+        }
+        Relationships: []
+      }
+      reality_hypotheses: {
+        Row: {
+          created_at: string
+          current_confidence: number
+          hypothesis_key: string
+          id: string
+          mechanism: string
+          model_version: string
+          prior_confidence: number
+          statement: string
+          status: string
+          target_key: string
+          trust_cap: number
+        }
+        Insert: {
+          created_at?: string
+          current_confidence?: number
+          hypothesis_key: string
+          id?: string
+          mechanism: string
+          model_version: string
+          prior_confidence?: number
+          statement: string
+          status?: string
+          target_key: string
+          trust_cap?: number
+        }
+        Update: {
+          created_at?: string
+          current_confidence?: number
+          hypothesis_key?: string
+          id?: string
+          mechanism?: string
+          model_version?: string
+          prior_confidence?: number
+          statement?: string
+          status?: string
+          target_key?: string
+          trust_cap?: number
+        }
+        Relationships: []
+      }
+      reality_market_dna: {
+        Row: {
+          as_of: string
+          confidence: number | null
+          created_at: string
+          evidence_ids: Json
+          geography_key: string
+          geography_type: string
+          high_value: number | null
+          horizon_days: number
+          id: string
+          low_value: number | null
+          method_version: string
+          parameter_key: string
+          sample_count: number
+          value: number | null
+        }
+        Insert: {
+          as_of: string
+          confidence?: number | null
+          created_at?: string
+          evidence_ids?: Json
+          geography_key: string
+          geography_type: string
+          high_value?: number | null
+          horizon_days: number
+          id?: string
+          low_value?: number | null
+          method_version: string
+          parameter_key: string
+          sample_count?: number
+          value?: number | null
+        }
+        Update: {
+          as_of?: string
+          confidence?: number | null
+          created_at?: string
+          evidence_ids?: Json
+          geography_key?: string
+          geography_type?: string
+          high_value?: number | null
+          horizon_days?: number
+          id?: string
+          low_value?: number | null
+          method_version?: string
+          parameter_key?: string
+          sample_count?: number
+          value?: number | null
+        }
+        Relationships: []
+      }
+      reality_model_candidates: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          feature_contract: Json
+          hyperparameters: Json
+          id: string
+          model_family: string
+          model_key: string
+          version: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          feature_contract?: Json
+          hyperparameters?: Json
+          id?: string
+          model_family: string
+          model_key: string
+          version: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          feature_contract?: Json
+          hyperparameters?: Json
+          id?: string
+          model_family?: string
+          model_key?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      reality_model_champions: {
+        Row: {
+          confidence: number | null
+          geography_key: string
+          geography_type: string
+          horizon_days: number
+          id: string
+          model_id: string
+          regime: string | null
+          score: number
+          selected_at: string
+          selection_reason: Json
+          supersedes_id: string | null
+          target_key: string
+        }
+        Insert: {
+          confidence?: number | null
+          geography_key: string
+          geography_type: string
+          horizon_days: number
+          id?: string
+          model_id: string
+          regime?: string | null
+          score: number
+          selected_at?: string
+          selection_reason?: Json
+          supersedes_id?: string | null
+          target_key: string
+        }
+        Update: {
+          confidence?: number | null
+          geography_key?: string
+          geography_type?: string
+          horizon_days?: number
+          id?: string
+          model_id?: string
+          regime?: string | null
+          score?: number
+          selected_at?: string
+          selection_reason?: Json
+          supersedes_id?: string | null
+          target_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reality_model_champions_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "reality_model_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reality_model_champions_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "reality_model_champions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reality_model_evaluations: {
+        Row: {
+          brier_score: number | null
+          calibration_error: number | null
+          created_at: string
+          data_quality: Json
+          decision_utility: number | null
+          directional_accuracy: number | null
+          drift_penalty: number | null
+          evaluation_cutoff: string
+          evaluation_method: string
+          geography_key: string
+          geography_type: string
+          horizon_days: number
+          id: string
+          interval_coverage: number | null
+          lead_time_days: number | null
+          log_score: number | null
+          mae: number | null
+          model_id: string
+          regime: string | null
+          regret: number | null
+          rmse: number | null
+          robustness_score: number | null
+          sample_count: number
+        }
+        Insert: {
+          brier_score?: number | null
+          calibration_error?: number | null
+          created_at?: string
+          data_quality?: Json
+          decision_utility?: number | null
+          directional_accuracy?: number | null
+          drift_penalty?: number | null
+          evaluation_cutoff: string
+          evaluation_method: string
+          geography_key: string
+          geography_type: string
+          horizon_days: number
+          id?: string
+          interval_coverage?: number | null
+          lead_time_days?: number | null
+          log_score?: number | null
+          mae?: number | null
+          model_id: string
+          regime?: string | null
+          regret?: number | null
+          rmse?: number | null
+          robustness_score?: number | null
+          sample_count?: number
+        }
+        Update: {
+          brier_score?: number | null
+          calibration_error?: number | null
+          created_at?: string
+          data_quality?: Json
+          decision_utility?: number | null
+          directional_accuracy?: number | null
+          drift_penalty?: number | null
+          evaluation_cutoff?: string
+          evaluation_method?: string
+          geography_key?: string
+          geography_type?: string
+          horizon_days?: number
+          id?: string
+          interval_coverage?: number | null
+          lead_time_days?: number | null
+          log_score?: number | null
+          mae?: number | null
+          model_id?: string
+          regime?: string | null
+          regret?: number | null
+          rmse?: number | null
+          robustness_score?: number | null
+          sample_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reality_model_evaluations_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "reality_model_candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reality_signal_lead_tests: {
+        Row: {
+          correlation: number | null
+          created_at: string
+          directional_accuracy: number | null
+          evaluation_cutoff: string
+          evidence_ids: Json
+          false_alarm_rate: number | null
+          geography_key: string
+          geography_type: string
+          id: string
+          independence_adjusted_score: number | null
+          lag_days: number
+          lead_score: number | null
+          method_version: string
+          mutual_information: number | null
+          p_value: number | null
+          rank_correlation: number | null
+          sample_count: number
+          signal_key: string
+          stability: number | null
+          status: string
+          target_key: string
+          window_days: number
+        }
+        Insert: {
+          correlation?: number | null
+          created_at?: string
+          directional_accuracy?: number | null
+          evaluation_cutoff: string
+          evidence_ids?: Json
+          false_alarm_rate?: number | null
+          geography_key: string
+          geography_type: string
+          id?: string
+          independence_adjusted_score?: number | null
+          lag_days: number
+          lead_score?: number | null
+          method_version: string
+          mutual_information?: number | null
+          p_value?: number | null
+          rank_correlation?: number | null
+          sample_count?: number
+          signal_key: string
+          stability?: number | null
+          status?: string
+          target_key: string
+          window_days: number
+        }
+        Update: {
+          correlation?: number | null
+          created_at?: string
+          directional_accuracy?: number | null
+          evaluation_cutoff?: string
+          evidence_ids?: Json
+          false_alarm_rate?: number | null
+          geography_key?: string
+          geography_type?: string
+          id?: string
+          independence_adjusted_score?: number | null
+          lag_days?: number
+          lead_score?: number | null
+          method_version?: string
+          mutual_information?: number | null
+          p_value?: number | null
+          rank_correlation?: number | null
+          sample_count?: number
+          signal_key?: string
+          stability?: number | null
+          status?: string
+          target_key?: string
+          window_days?: number
+        }
+        Relationships: []
+      }
+      reality_signal_observations: {
+        Row: {
+          as_of: string
+          created_at: string
+          data_quality: Json
+          direction: number | null
+          evidence_ids: Json
+          geography_key: string
+          geography_type: string
+          id: string
+          independence_groups: Json
+          lead_class: string
+          method_version: string
+          observed_at: string | null
+          signal_key: string
+          unit: string | null
+          value: number | null
+          value_json: Json | null
+        }
+        Insert: {
+          as_of: string
+          created_at?: string
+          data_quality?: Json
+          direction?: number | null
+          evidence_ids?: Json
+          geography_key: string
+          geography_type: string
+          id?: string
+          independence_groups?: Json
+          lead_class?: string
+          method_version: string
+          observed_at?: string | null
+          signal_key: string
+          unit?: string | null
+          value?: number | null
+          value_json?: Json | null
+        }
+        Update: {
+          as_of?: string
+          created_at?: string
+          data_quality?: Json
+          direction?: number | null
+          evidence_ids?: Json
+          geography_key?: string
+          geography_type?: string
+          id?: string
+          independence_groups?: Json
+          lead_class?: string
+          method_version?: string
+          observed_at?: string | null
+          signal_key?: string
+          unit?: string | null
+          value?: number | null
+          value_json?: Json | null
+        }
+        Relationships: []
+      }
+      reality_source_adapters: {
+        Row: {
+          access_protocol: string
+          adapter_key: string
+          canonical_url: string | null
+          created_at: string
+          data_domains: Json
+          frequencies: Json
+          geography_scopes: Json
+          historical_start: string | null
+          id: string
+          independence_group: string
+          last_success_at: string | null
+          latency_class: string
+          metadata: Json
+          point_in_time_safe: boolean
+          publication_timestamp_available: boolean
+          publisher: string | null
+          reliability: number | null
+          retrieval_timestamp_recorded: boolean
+          revision_policy: string | null
+          source_id: string | null
+          source_name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          access_protocol: string
+          adapter_key: string
+          canonical_url?: string | null
+          created_at?: string
+          data_domains?: Json
+          frequencies?: Json
+          geography_scopes?: Json
+          historical_start?: string | null
+          id?: string
+          independence_group: string
+          last_success_at?: string | null
+          latency_class?: string
+          metadata?: Json
+          point_in_time_safe?: boolean
+          publication_timestamp_available?: boolean
+          publisher?: string | null
+          reliability?: number | null
+          retrieval_timestamp_recorded?: boolean
+          revision_policy?: string | null
+          source_id?: string | null
+          source_name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          access_protocol?: string
+          adapter_key?: string
+          canonical_url?: string | null
+          created_at?: string
+          data_domains?: Json
+          frequencies?: Json
+          geography_scopes?: Json
+          historical_start?: string | null
+          id?: string
+          independence_group?: string
+          last_success_at?: string | null
+          latency_class?: string
+          metadata?: Json
+          point_in_time_safe?: boolean
+          publication_timestamp_available?: boolean
+          publisher?: string | null
+          reliability?: number | null
+          retrieval_timestamp_recorded?: boolean
+          revision_policy?: string | null
+          source_id?: string | null
+          source_name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reality_source_adapters_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "reality_evidence_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reality_world_state_snapshots: {
+        Row: {
+          as_of: string
+          confidence: number | null
+          created_at: string
+          evidence_count: number
+          evidence_ids: Json
+          geography_key: string
+          geography_type: string
+          id: string
+          missingness: Json
+          regime: string | null
+          state: Json
+        }
+        Insert: {
+          as_of: string
+          confidence?: number | null
+          created_at?: string
+          evidence_count?: number
+          evidence_ids?: Json
+          geography_key: string
+          geography_type: string
+          id?: string
+          missingness?: Json
+          regime?: string | null
+          state: Json
+        }
+        Update: {
+          as_of?: string
+          confidence?: number | null
+          created_at?: string
+          evidence_count?: number
+          evidence_ids?: Json
+          geography_key?: string
+          geography_type?: string
+          id?: string
+          missingness?: Json
+          regime?: string | null
+          state?: Json
+        }
+        Relationships: []
+      }
       rent_estimates: {
         Row: {
           confidence: string | null
@@ -1075,6 +2109,49 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_reality_evidence_available_at: {
+        Args: {
+          p_as_of: string
+          p_geography_key?: string
+          p_geography_type?: string
+        }
+        Returns: {
+          available_at: string
+          content_hash: string
+          created_at: string
+          effective_from: string | null
+          effective_to: string | null
+          entity_key: string
+          entity_type: string
+          frequency: string | null
+          geography_key: string
+          geography_type: string
+          id: string
+          independence_group: string
+          is_revision: boolean
+          lead_class: string
+          metadata: Json
+          observed_at: string | null
+          published_at: string | null
+          publisher: string | null
+          retrieved_at: string
+          revision: number
+          source_id: string
+          source_name: string
+          source_reliability: number
+          source_type: string
+          source_url: string | null
+          supersedes_id: string | null
+          unit: string | null
+          value: Json
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "reality_evidence"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       schedule_watchdog_cron: { Args: { _secret: string }; Returns: undefined }
     }
     Enums: {
