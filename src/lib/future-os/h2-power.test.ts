@@ -15,6 +15,21 @@ describe("H2 power planning", () => {
     expect(result.eligibleCases).toBe(400);
     expect(result.effectiveCases).toBe(100);
     expect(result.detectableEffect).toBeGreaterThan(0);
+    expect(result.decisionStatus).toBe("PLANNING_ONLY");
+  });
+
+  it("predeclares small effective samples as unresolved", () => {
+    const result = estimateH2Power({
+      origins: 12,
+      regions: 10,
+      identifiedBottleneckRate: 0.5,
+      alpha: 0.05,
+      minimumDetectableEffect: 0.1,
+      outcomeStdDev: 0.25,
+      designEffect: 2,
+    });
+    expect(result.effectiveCases).toBe(30);
+    expect(result.decisionStatus).toBe("UNRESOLVED_SMALL_SAMPLE");
   });
 
   it("rejects impossible identification rates", () => {
