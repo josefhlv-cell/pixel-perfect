@@ -31,9 +31,18 @@ export async function getWorldStateAt(
     ? snapshot.evidence_ids.filter((id): id is string => typeof id === "string")
     : [];
   if (evidenceIds.length) {
-    const allowed = new Set(evidence.rows.map((row) => row.id));
-    const futureIds = evidenceIds.filter((id) => !allowed.has(id));
-    if (futureIds.length) throw new Error(`World-state snapshot contains evidence unavailable at ${cutoff}: ${futureIds.join(",")}`);
+    const { data: referenced, error: referencedError } = await supabase
+      .from("reality_evidence")
+      .select("id,available_at")
+      .in("id", evidenceIds);
+    if (referencedError) throw referencedError;
+    const futureIds = (referenced ?? [])
+      .filter((row) => new Date(row.available_at).getTime() > new Date(asOf).getTime())
+      .map((row) => row.id);
+    const missingIds = evidenceIds.filter((id) => !(referenced ?? []).some((row) => row.id === id));
+    if (futureIds.length || missingIds.length) {
+      throw new Error(`World-state snapshot has invalid provenance at ${cutoff}: future=[${futureIds.join(",")}] missing=[${missingIds.join(",")}]`);
+    }
   }
   assertNoFutureEvidence(evidence.rows, asOf);
 
