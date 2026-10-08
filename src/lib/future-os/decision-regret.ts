@@ -6,16 +6,16 @@ export type DecisionScenario = {
   realizedUtility: number;
 };
 
-export function decisionRegret(scenario: DecisionScenario): number {
-  const bestRealized = scenario.realizedUtility;
-  return Math.max(0, bestRealized - scenario.expectedUtility);
+export function decisionRegret(chosen: DecisionScenario, alternatives: DecisionScenario[]): number {
+  const bestRealized = Math.max(chosen.realizedUtility, ...alternatives.map((scenario) => scenario.realizedUtility));
+  return Math.max(0, bestRealized - chosen.realizedUtility);
 }
 
 export function strategyRegret(
-  decisions: DecisionScenario[],
+  decisions: Array<{ chosen: DecisionScenario; alternatives: DecisionScenario[] }>,
 ) {
   if (!decisions.length) return { meanRegret: 0, maxRegret: 0, regretRate: 0 };
-  const regrets = decisions.map(decisionRegret);
+  const regrets = decisions.map(({ chosen, alternatives }) => decisionRegret(chosen, alternatives));
   return {
     meanRegret: regrets.reduce((s, x) => s + x, 0) / regrets.length,
     maxRegret: Math.max(...regrets),
