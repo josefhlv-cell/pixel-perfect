@@ -12,8 +12,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+        continue-on-error: true
         with:
           bun-version: 1.3.5
+      - name: Runtime diagnostics
+        run: |
+          {
+            echo "node=$(node --version)"
+            echo "bun=$(bun --version 2>&1 || true)"
+            echo "pwd=$(pwd)"
+          } | tee ci-runtime.log
       - run: bun install --frozen-lockfile 2>&1 | tee ci-install.log
       - run: bun run lint 2>&1 | tee ci-lint.log
       - run: bun run test 2>&1 | tee ci-test.log
@@ -24,6 +32,7 @@ jobs:
         with:
           name: future-os-ci-${{ github.run_id }}
           path: |
+            ci-runtime.log
             ci-install.log
             ci-lint.log
             ci-test.log
