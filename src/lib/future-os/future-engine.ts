@@ -5,6 +5,7 @@ import { collapseFutures, scoreFutureSurvival, type EscapeRoute, type Falsifier 
 import { selectNextBestObservation, type ObservationCandidate } from "./mechanism-field/next-best-observation";
 import type { FutureField, FutureAttractor, MechanismRegime } from "./mechanism-field/types";
 import type { FutureMarketTwin } from "./future-market-twin";
+import { buildFutureWavefront, type FutureWavefront } from "./future-wavefront";
 
 export type FutureEngineInput = {
   asOf: string;
@@ -23,6 +24,7 @@ export type FutureEngineInput = {
   nextObservations: readonly ObservationCandidate[];
   superposition?: FutureSuperposition | null;
   marketTwin?: FutureMarketTwin | null;
+  wavefrontInput?: Parameters<typeof buildFutureWavefront>[0];
 };
 
 export type FutureEngineOutput = {
@@ -32,6 +34,7 @@ export type FutureEngineOutput = {
   nextBestObservation: ReturnType<typeof selectNextBestObservation>;
   falsifiersTriggered: Record<string, string[]>;
   marketTwin: FutureMarketTwin | null;
+  wavefront: FutureWavefront | null;
 };
 
 /**
@@ -63,6 +66,8 @@ export function runFutureEngine(input: FutureEngineInput): FutureEngineOutput {
   const survivingFutures = collapseFutures(field.attractors, survivalResults);
   const nextBestObservation = selectNextBestObservation(field, input.nextObservations);
 
+  const wavefront = input.wavefrontInput ? buildFutureWavefront(input.wavefrontInput) : null;
+
   const falsifiersTriggered = Object.fromEntries(
     survivalResults.map((result) => [result.future, result.falsifiersTriggered]),
   );
@@ -74,6 +79,7 @@ export function runFutureEngine(input: FutureEngineInput): FutureEngineOutput {
     nextBestObservation,
     falsifiersTriggered,
     marketTwin: input.marketTwin ?? null,
+    wavefront,
   };
 }
 
