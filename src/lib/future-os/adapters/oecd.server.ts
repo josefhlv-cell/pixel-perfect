@@ -1,6 +1,6 @@
 import type { EvidenceObservation } from "../types";
 
-const OECD_BASE = "https://sdmx.oecd.org/public/rest/data";
+const OECD_BASE = "https://sdmx.oecd.org/public/rest/v1/data";
 const FLOW = "OECD.ECO.MPD,DSD_AN_HOUSE_PRICES@DF_HOUSE_PRICES,1.0";
 
 type SdmxDimension = { id: string; values: Array<{ id: string; name?: string }> };
