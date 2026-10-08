@@ -535,6 +535,132 @@ export type Database = {
           },
         ]
       }
+      reality_evidence_sources: {
+        Row: {
+          id: string
+          source_name: string
+          source_type: string
+          publisher: string | null
+          canonical_url: string | null
+          geography_scope: string | null
+          default_reliability: number
+          independence_group: string
+          active: boolean
+          metadata: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          source_name: string
+          source_type: string
+          publisher?: string | null
+          canonical_url?: string | null
+          geography_scope?: string | null
+          default_reliability?: number
+          independence_group: string
+          active?: boolean
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["reality_evidence_sources"]["Insert"]>
+        Relationships: []
+      }
+      reality_evidence: {
+        Row: {
+          id: string
+          source_id: string
+          source_url: string | null
+          source_name: string
+          source_type: string
+          publisher: string | null
+          geography_type: string
+          geography_key: string
+          entity_type: string
+          entity_key: string
+          observed_at: string | null
+          published_at: string | null
+          retrieved_at: string
+          available_at: string
+          effective_from: string | null
+          effective_to: string | null
+          revision: number
+          value: Json
+          unit: string | null
+          frequency: string | null
+          lead_class: "LEADING" | "COINCIDENT" | "LAGGING" | "UNKNOWN"
+          source_reliability: number
+          independence_group: string
+          content_hash: string
+          is_revision: boolean
+          supersedes_id: string | null
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          source_id: string
+          source_url?: string | null
+          source_name: string
+          source_type: string
+          publisher?: string | null
+          geography_type: string
+          geography_key: string
+          entity_type: string
+          entity_key: string
+          observed_at?: string | null
+          published_at?: string | null
+          retrieved_at: string
+          available_at: string
+          effective_from?: string | null
+          effective_to?: string | null
+          revision?: number
+          value: Json
+          unit?: string | null
+          frequency?: string | null
+          lead_class?: "LEADING" | "COINCIDENT" | "LAGGING" | "UNKNOWN"
+          source_reliability?: number
+          independence_group: string
+          content_hash: string
+          is_revision?: boolean
+          supersedes_id?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["reality_evidence"]["Insert"]>
+        Relationships: []
+      }
+      reality_world_state_snapshots: {
+        Row: {
+          id: string
+          geography_type: string
+          geography_key: string
+          as_of: string
+          state: Json
+          evidence_ids: Json
+          evidence_count: number
+          missingness: Json
+          confidence: number | null
+          regime: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          geography_type: string
+          geography_key: string
+          as_of: string
+          state: Json
+          evidence_ids?: Json
+          evidence_count?: number
+          missingness?: Json
+          confidence?: number | null
+          regime?: string | null
+          created_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["reality_world_state_snapshots"]["Insert"]>
+        Relationships: []
+      }
       market_statistics: {
         Row: {
           avg_asking_price_m2: number | null
