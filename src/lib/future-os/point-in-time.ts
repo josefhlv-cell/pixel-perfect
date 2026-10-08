@@ -31,7 +31,8 @@ export function getEvidenceAvailableAt(
 
   const latest = new Map<string, EvidenceObservation>();
   for (const row of eligible) {
-    const key = `${row.sourceId}|${row.geographyType}|${row.geographyKey}|${row.entityType}|${row.entityKey}`;
+    const periodKey = row.effectiveFrom ?? row.observedAt ?? row.createdAt;
+    const key = `${row.sourceId}|${row.geographyType}|${row.geographyKey}|${row.entityType}|${row.entityKey}|${periodKey}`;
     const current = latest.get(key);
     if (!current ||
       new Date(row.availableAt).getTime() > new Date(current.availableAt).getTime() ||
