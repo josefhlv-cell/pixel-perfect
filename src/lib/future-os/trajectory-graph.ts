@@ -58,7 +58,7 @@ export function isPreregisteredTrajectoryNode(
   );
 }
 
-export function isPreregis­teredTrajectoryEdge(
+export function isPreregisteredTrajectoryEdge(
   id: string,
 ): id is TrajectoryGraphEdgeId {
   return PREREGISTERED_TRAJECTORY_GRAPH.edgeIds.includes(
