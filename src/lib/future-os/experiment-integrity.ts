@@ -33,6 +33,7 @@ export function canonicalizeConfig(config: ExperimentConfig): string {
     scoreBeta: config.scoreBeta,
     informationScaleSource: config.informationScaleSource,
     vintagePolicy: config.vintagePolicy,
+    trajectoryGraphHash: config.trajectoryGraphHash,
     trajectory: {
       version: config.trajectory.version,
       nodeIds: [...config.trajectory.nodeIds],
