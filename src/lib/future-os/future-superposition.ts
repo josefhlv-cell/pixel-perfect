@@ -1,6 +1,6 @@
 import type { FutureConvergence } from "./future-convergence";
 import { convergenceWarningLevel } from "./future-convergence";
-import type { TurningPointDetection } from "./turning-point-detector";
+import type { TurningPointResult } from "./turning-point-detector";
 
 export type FuturePath = {
   id: string;
@@ -29,7 +29,7 @@ export type FutureSuperposition = {
  */
 export function buildFutureSuperposition(input: {
   convergence: FutureConvergence[];
-  turningPoint?: TurningPointDetection | null;
+  turningPoint?: TurningPointResult | null;
   minimumProbability?: number;
 }): FutureSuperposition {
   const minimum = input.minimumProbability ?? 0.08;
