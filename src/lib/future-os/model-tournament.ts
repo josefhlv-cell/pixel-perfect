@@ -15,16 +15,16 @@ export type ModelEvaluation = {
 
 export function tournamentScore(e: ModelEvaluation): number | null {
   if (e.sampleCount < 10) return null;
-  const accuracy = e.mae == null ? 0 : 1 / (1 + Math.max(0, e.mae));
-  const rmse = e.rmse == null ? 0 : 1 / (1 + Math.max(0, e.rmse));
-  const direction = e.directionalAccuracy ?? 0;
-  const coverage = e.intervalCoverage == null ? 0 : 1 - Math.abs(e.intervalCoverage - 0.9);
-  const brier = e.brierScore == null ? 0 : 1 - Math.min(1, Math.max(0, e.brierScore));
+  if (e.mae == null || e.rmse == null || e.directionalAccuracy == null || e.intervalCoverage == null || e.brierScore == null || e.robustnessScore == null) return null;\n  const accuracy = 1 / (1 + Math.max(0, e.mae));
+  const rmse = 1 / (1 + Math.max(0, e.rmse));
+  const direction = e.directionalAccuracy;
+  const coverage = 1 - Math.abs(e.intervalCoverage - 0.9);
+  const brier = 1 - Math.min(1, Math.max(0, e.brierScore));
   const utility = e.decisionUtility == null ? 0 : 1 / (1 + Math.max(0, -e.decisionUtility));
   const regretPenalty = e.regret == null ? 0 : Math.min(1, Math.max(0, e.regret));
   const calibrationPenalty = e.calibrationError == null ? 0 : Math.min(1, Math.max(0, e.calibrationError));
   const driftPenalty = e.driftPenalty == null ? 0 : Math.min(1, Math.max(0, e.driftPenalty));
-  const robustness = e.robustnessScore ?? 0.5;
+  const robustness = e.robustnessScore;
 
   return (
     accuracy * 0.18 +
