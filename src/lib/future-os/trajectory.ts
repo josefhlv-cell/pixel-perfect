@@ -7,15 +7,30 @@ export type TrajectoryNode = {
 };
 
 export type TrajectoryEdge = {
+  id: string;
   from: string;
   to: string;
   direction: -1 | 1;
+  /**
+   * Conditional probability P(to | current state), not a marginal probability.
+   * Multiplication across a fixed ordered path therefore represents a joint
+   * probability via the chain rule, not an independence assumption.
+   */
   probability: number;
   leadDays: number;
   evidenceStrength: number;
-  causalStrength: number;
+  /**
+   * Association strength only. Do not interpret as causal identification
+   * unless the experiment supplies stronger identification evidence.
+   */
+  associationStrength: number;
   survival: number;
 };
+
+export type PathSurvivalAggregation = "GEOMETRIC_MEAN";
+
+export const PATH_SURVIVAL_AGGREGATION: PathSurvivalAggregation =
+  "GEOMETRIC_MEAN";
 
 export type FutureTrajectory = {
   id: string;
@@ -23,10 +38,26 @@ export type FutureTrajectory = {
   edges: TrajectoryEdge[];
   pathProbability: number;
   pathSurvival: number;
+  pathLength: number;
   bottleneckEdgeId: string | null;
   earliestBreakRisk: number;
   status: "VIABLE" | "FRAGILE" | "BROKEN";
 };
+
+function edgeRobustness(edge: TrajectoryEdge): number {
+  return (
+    edge.survival *
+    (0.5 * edge.evidenceStrength + 0.5 * edge.associationStrength)
+  );
+}
+
+function geometricMean(values: number[]): number {
+  if (!values.length) return 0;
+  if (values.some((value) => value <= 0)) return 0;
+  return Math.exp(
+    values.reduce((sum, value) => sum + Math.log(value), 0) / values.length,
+  );
+}
 
 export function evaluateFutureTrajectory(
   id: string,
@@ -44,8 +75,8 @@ export function evaluateFutureTrajectory(
       edge.survival <= 1 &&
       edge.evidenceStrength >= 0 &&
       edge.evidenceStrength <= 1 &&
-      edge.causalStrength >= 0 &&
-      edge.causalStrength <= 1,
+      edge.associationStrength >= 0 &&
+      edge.associationStrength <= 1,
   );
 
   if (!validEdges.length) {
@@ -55,31 +86,29 @@ export function evaluateFutureTrajectory(
       edges: validEdges,
       pathProbability: 0,
       pathSurvival: 0,
+      pathLength: 0,
       bottleneckEdgeId: null,
       earliestBreakRisk: 1,
       status: "BROKEN",
     };
   }
 
+  // Conditional edge probabilities are multiplied only to obtain the joint
+  // probability of the fixed ordered path. They are not treated as
+  // independent marginal probabilities.
   const pathProbability = validEdges.reduce(
     (value, edge) => value * edge.probability,
     1,
   );
 
-  // The weakest link is intentional: a long causal chain is only as robust
-  // as its most fragile transition. This is not a probability of the future.
-  const pathSurvival = Math.min(
-    ...validEdges.map(
-      (edge) =>
-        edge.survival *
-        (0.5 * edge.evidenceStrength + 0.5 * edge.causalStrength),
-    ),
-  );
+  const robustness = validEdges.map(edgeRobustness);
+
+  // Preregistered aggregation: geometric mean. This is length-normalized,
+  // unlike a raw product, while preserving multiplicative penalties.
+  const pathSurvival = geometricMean(robustness);
 
   const bottleneck = validEdges.reduce((weakest, edge) => {
-    const score =
-      edge.survival *
-      (0.5 * edge.evidenceStrength + 0.5 * edge.causalStrength);
+    const score = edgeRobustness(edge);
     if (!weakest) return { edge, score };
     return score < weakest.score ? { edge, score } : weakest;
   }, null as { edge: TrajectoryEdge; score: number } | null);
@@ -98,6 +127,7 @@ export function evaluateFutureTrajectory(
     edges: validEdges,
     pathProbability,
     pathSurvival,
+    pathLength: validEdges.length,
     bottleneckEdgeId: bottleneck?.edge.id ?? null,
     earliestBreakRisk,
     status,
@@ -107,8 +137,8 @@ export function evaluateFutureTrajectory(
 /**
  * A trajectory is deliberately different from a forecast:
  * it records the intermediate transitions required for a forecast to occur.
- * If a high-value terminal forecast has a weak intermediate edge, the engine
- * must expose that edge instead of hiding it inside one confidence number.
+ * The bottleneck is a preregistered diagnostic, not a claim of causal
+ * identification. H2 tests whether this diagnostic has out-of-sample value.
  */
 export function findTrajectoryBottleneck(
   trajectory: FutureTrajectory,
