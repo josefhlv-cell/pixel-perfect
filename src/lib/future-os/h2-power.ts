@@ -13,7 +13,10 @@ export type PowerEstimate = {
   effectiveCases: number;
   approximateStandardError: number;
   detectableEffect: number;
+  decisionStatus: "PLANNING_ONLY" | "UNRESOLVED_SMALL_SAMPLE";
 };
+
+export const MIN_EFFECTIVE_CASES_FOR_H2_DECISION = 50;
 
 function assertProbability(value: number, name: string): void {
   if (!Number.isFinite(value) || value < 0 || value > 1) {
@@ -60,5 +63,9 @@ export function estimateH2Power(design: PowerDesign): PowerEstimate {
     effectiveCases,
     approximateStandardError,
     detectableEffect,
+    decisionStatus:
+      effectiveCases >= MIN_EFFECTIVE_CASES_FOR_H2_DECISION
+        ? "PLANNING_ONLY"
+        : "UNRESOLVED_SMALL_SAMPLE",
   };
 }
