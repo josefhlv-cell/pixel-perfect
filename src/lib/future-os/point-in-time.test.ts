@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evidenceContentHash } from "./evidence";
+import { evidenceContentHash } from "./evidence-hash.server";
 import { assertNoFutureEvidence, computeDataQuality, getEvidenceAvailableAt } from "./point-in-time";
 import type { EvidenceObservation } from "./types";
 
