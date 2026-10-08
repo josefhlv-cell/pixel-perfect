@@ -1,5 +1,6 @@
 import type { ExperimentConfig } from "./experiment-config";
 import { hashExperimentConfig } from "./experiment-integrity";
+import { PREREGISTERED_TRAJECTORY_GRAPH_HASH } from "./trajectory-graph";
 import { assertPredictionRecordComplete, type PredictionRecord, type PredictionJournal } from "./prediction-journal";
 import { assertRevealState, type RunnerState, transitionRunner } from "./runner-state";
 
@@ -34,6 +35,7 @@ export type WalkForwardRunnerDeps = {
   seed: number;
   journal: PredictionJournal;
   buildCases: () => readonly WalkForwardCase[];
+  loadRealization: (item: WalkForwardCase) => Promise<WalkForwardCase["realization"]>;
 };
 
 export async function runWalkForward(
@@ -41,6 +43,7 @@ export async function runWalkForward(
 ): Promise<WalkForwardResult> {
   const cases = deps.buildCases();
   const configHash = await hashExperimentConfig(deps.config);
+  if (deps.config.trajectoryGraphHash !== PREREGISTERED_TRAJECTORY_GRAPH_HASH) throw new Error("Trajectory graph hash mismatch.");
   let state: RunnerState = "INIT";
 
   for (const item of cases) {
@@ -70,6 +73,7 @@ export async function runWalkForward(
 
     assertRevealState(state);
     state = transitionRunner(state, "REALIZATION_REVEALED");
+    const realization = await deps.loadRealization(item);
     await deps.journal.appendRealization({
       experimentId: item.experimentId,
       predictionRecordHash: [
@@ -81,8 +85,8 @@ export async function runWalkForward(
         item.bottleneckEdgeId ?? "NO_BOTTLENECK",
       ].join("|"),
       realizedAt: item.horizonEnd,
-      targetValue: item.realization.value,
-      targetDirection: item.realization.direction,
+      targetValue: realization.value,
+      targetDirection: realization.direction,
     });
     state = transitionRunner(state, "SCORE_COMPLETE");
     state = "INIT";
