@@ -123,3 +123,28 @@ No component is considered validated by implementation or unit tests alone.
 H1 and H2 are accepted only from the preregistered walk-forward evaluation, with the predefined metrics and block-bootstrap uncertainty intervals.
 
 No result may be retroactively promoted from exploratory to primary.
+
+## Frozen pilot data-access protocol
+
+Before inspecting any target price/transaction realization data, v0.1 freezes:
+- training window: 2010-01-01 through 2019-12-31;
+- holdout window: 2020-01-01 through 2022-12-31;
+- quarterly origins;
+- the 14 Czech NUTS-3 regions encoded in PREREGISTERED_PILOT_SPLIT;
+- the 12-month forecast horizon and 12-month embargo.
+
+This split is metadata-defined and is not selected from observed price outcomes.
+
+## Vintage audit gate
+
+The four primary H2 nodes have an explicit audit record containing source, series, transformation, publication lag, lag basis, data tier, coverage, and revision policy. The current branch intentionally marks all four as ASSUMED / PENDING_SOURCE_VERIFICATION. Strict mode therefore rejects a real vintage run until the source-specific publication timestamps and exact series identifiers are verified.
+
+The Bank Lending Survey is an official CNB quarterly survey covering household demand for housing loans, and CNB publishes its historical releases. CNB also identifies ARAD as the source system for MFI interest-rate statistics. These facts support the source families, but they do not by themselves verify the placeholder series IDs or fixed lags currently present in the code.
+
+## Superseded trajectory definition
+
+The earlier duplicate trajectory definition existed in commit 3eb691a83054225dff440d34a0869fa23e4f7aeb and was replaced by the canonical trajectory-graph.ts contract. The legacy module is now only a compatibility re-export and cannot define a second graph object. No real prediction journal or vintage snapshot was created by that superseded definition; any future record referencing its configuration must be treated as invalid for v0.1.
+
+## Small-sample rule
+
+H2 power planning uses effective cases after the declared dependence penalty. If effective cases are below 50, the decision status is preregistered as UNRESOLVED_SMALL_SAMPLE; this is not treated as evidence for or against the mechanism. Final inference remains the preregistered block-bootstrap procedure.
