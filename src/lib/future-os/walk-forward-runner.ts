@@ -1,4 +1,5 @@
 import type { ExperimentConfig } from "./experiment-config";
+import { hashExperimentConfig } from "./experiment-integrity";
 import { assertPredictionRecordComplete, type PredictionRecord, type PredictionJournal } from "./prediction-journal";
 import { assertRevealState, type RunnerState, transitionRunner } from "./runner-state";
 
@@ -39,15 +40,16 @@ export async function runWalkForward(
   deps: WalkForwardRunnerDeps,
 ): Promise<WalkForwardResult> {
   const cases = deps.buildCases();
+  const configHash = await hashExperimentConfig(deps.config);
   let state: RunnerState = "INIT";
-  state = transitionRunner(state, "FIT_COMPLETE");
 
   for (const item of cases) {
+    state = transitionRunner(state, "FIT_COMPLETE");
     state = transitionRunner(state, "PREDICTION_CREATED");
 
     const prediction: PredictionRecord = {
       experimentId: item.experimentId,
-      configHash: JSON.stringify(deps.config),
+      configHash,
       codeSha: deps.codeSha,
       dependencyLockHash: deps.dependencyLockHash,
       vintageSnapshotHash: deps.vintageSnapshotHash,
@@ -83,13 +85,13 @@ export async function runWalkForward(
       targetDirection: item.realization.direction,
     });
     state = transitionRunner(state, "SCORE_COMPLETE");
-    state = "PREDICTION_COMMITTED";
+    state = "INIT";
   }
 
   return {
     cases: cases.length,
     committedPredictions: cases.length,
     revealedRealizations: cases.length,
-    state: cases.length ? "PREDICTION_COMMITTED" : "INIT",
+    state: cases.length ? "COMPLETE" : "INIT",
   };
 }
