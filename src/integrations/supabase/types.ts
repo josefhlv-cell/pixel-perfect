@@ -1201,6 +1201,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_reality_evidence_available_at: {
+        Args: {
+          p_as_of: string
+          p_geography_type?: string | null
+          p_geography_key?: string | null
+        }
+        Returns: Database["public"]["Tables"]["reality_evidence"]["Row"][]
+      }
+
       schedule_watchdog_cron: { Args: { _secret: string }; Returns: undefined }
     }
     Enums: {
