@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateForecast, validateForecastOutcome } from "./forecast-integrity";
+import { validateForecast, validateForecastOutcome, validateOutcomeTiming } from "./forecast-integrity";
 
 const validForecast = {
   checkpointAsOf: "2025-01-01T00:00:00Z",
@@ -44,5 +44,33 @@ describe("forecast integrity guards", () => {
       valid: false,
       issues: ["realizedValue must be finite"],
     });
+  });
+});
+
+
+describe("forecast outcome timing", () => {
+  it("accepts outcomes observed after the forecast horizon matures", () => {
+    expect(validateOutcomeTiming(
+      "2020-01-01T00:00:00Z",
+      365,
+      "2021-01-01T00:00:00Z",
+    ).valid).toBe(true);
+  });
+
+  it("rejects outcomes observed before the forecast horizon matures", () => {
+    expect(validateOutcomeTiming(
+      "2020-01-01T00:00:00Z",
+      365,
+      "2020-12-31T23:59:59Z",
+    )).toEqual({
+      valid: false,
+      issues: ["outcome was observed before the forecast horizon matured"],
+    });
+  });
+
+  it("rejects invalid timestamps and horizons", () => {
+    const result = validateOutcomeTiming("bad-date", 0, "also-bad");
+    expect(result.valid).toBe(false);
+    expect(result.issues).toHaveLength(3);
   });
 });
