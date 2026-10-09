@@ -1,3 +1,5 @@
+import { validateForecast, validateForecastOutcome } from "./forecast-integrity";
+
 export type HistoricalForecast = {
   checkpointAsOf: string;
   horizonDays: number;
@@ -22,19 +24,32 @@ export type HistoricalScore = {
   regret: number;
 };
 
+/** Score one forecast against an observed outcome. Invalid records fail closed. */
 export function scoreHistoricalForecast(
   forecast: HistoricalForecast,
   outcome: HistoricalOutcome,
 ): HistoricalScore {
+  const forecastValidation = validateForecast(forecast);
+  if (!forecastValidation.valid) {
+    throw new RangeError(`Invalid forecast: ${forecastValidation.issues.join("; ")}`);
+  }
+  const outcomeValidation = validateForecastOutcome(outcome);
+  if (!outcomeValidation.valid) {
+    throw new RangeError(`Invalid outcome: ${outcomeValidation.issues.join("; ")}`);
+  }
+
   const actualChange = outcome.realizedValue - outcome.baselineValue;
   const predictedChange = forecast.p50 - outcome.baselineValue;
-  const absoluteError = Math.abs(predictedChange - actualChange);
-  const squaredError = (predictedChange - actualChange) ** 2;
+  const error = predictedChange - actualChange;
+  const absoluteError = Math.abs(error);
+  const squaredError = error ** 2;
   const predictedDirection = Math.sign(predictedChange);
   const actualDirection = Math.sign(actualChange);
-  const directionalHit = predictedDirection === actualDirection;
+  // A zero-change forecast is not counted as a directional hit.
+  const directionalHit = predictedDirection !== 0 && predictedDirection === actualDirection;
   const intervalCovered = outcome.realizedValue >= forecast.p10 && outcome.realizedValue <= forecast.p90;
   const y = actualChange > 0 ? 1 : 0;
+  // Avoid infinite log loss at exact 0/1 while retaining a finite score.
   const p = Math.min(1 - 1e-12, Math.max(1e-12, forecast.probabilityPositive));
   const brierScore = (p - y) ** 2;
   const logScore = -(y * Math.log(p) + (1 - y) * Math.log(1 - p));
