@@ -43,6 +43,62 @@
       "when": 1791262693835,
       "tag": "0005_grant_watchdog_scheduler",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791444447695,
+      "tag": "0006_future_os_evidence_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791446500000,
+      "tag": "0007_future_os_causal_signal_forecast",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791446800000,
+      "tag": "0008_future_os_source_intelligence",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791447009000,
+      "tag": "0009_future_os_time_series_identity",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791447010000,
+      "tag": "0010_future_os_source_adapter_configuration",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791447011000,
+      "tag": "0011_future_os_model_tournament",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791447012000,
+      "tag": "0012_future_os_falsification",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791447013000,
+      "tag": "0013_future_os_market_dna_signal_discovery",
+      "breakpoints": true
     }
   ]
 }

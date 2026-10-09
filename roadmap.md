@@ -1,0 +1,3 @@
+- [x] Firecrawl: more pages per search (24), Bazoš/Sbazar/Annonce, Facebook via open web
+- [x] ČNB ARAD import into point-in-time evidence
+- [ ] Higher Firecrawl plan — user upgrades on firecrawl.dev
