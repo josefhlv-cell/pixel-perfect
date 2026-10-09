@@ -76,7 +76,7 @@ export async function ingestEvidence(
       .insert({
         source_id: adapter.source_id,
         source_url: row.sourceUrl ?? adapter.canonical_url,
-        source_name: adapter.sourceName,
+        source_name: adapter.source_name,
         source_type: row.sourceType,
         publisher: row.publisher ?? adapter.publisher,
         geography_type: row.geographyType,

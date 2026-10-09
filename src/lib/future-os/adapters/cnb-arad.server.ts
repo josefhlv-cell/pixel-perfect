@@ -86,7 +86,7 @@ export async function importAradSet(setId: string): Promise<AradImportResult> {
   }
 
   let skipped = 0, revised = 0, noPeriod = 0;
-  const inserts: Parameters<typeof supabaseAdmin.from<"reality_evidence">>[0] extends never ? never : Record<string, unknown>[] = [];
+  const inserts: Record<string, unknown>[] = [];
   const seenBatch = new Set<string>();
   for (const r of rows) {
     const m: AradIndicatorMeta | undefined = meta.get(r.indicatorId);
