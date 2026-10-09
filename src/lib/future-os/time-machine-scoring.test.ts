@@ -2,23 +2,77 @@ import { describe, expect, it } from "vitest";
 import { aggregateHistoricalScores, scoreHistoricalForecast } from "./time-machine-scoring";
 
 describe("Historical Time Machine scoring", () => {
-  it("scores probabilistic and point forecasts", () => {
-    const score = scoreHistoricalForecast(
-      { checkpointAsOf: "2020-01-01T00:00:00Z", horizonDays: 365, p10: 98, p50: 105, p90: 112, probabilityPositive: 0.8 },
-      { realizedValue: 108, baselineValue: 100 },
-    );
+  const forecast = {
+    checkpointAsOf: "2020-01-01T00:00:00Z",
+    horizonDays: 365,
+    p10: 98,
+    p50: 105,
+    p90: 112,
+    probabilityPositive: 0.8,
+  };
+  const outcome = {
+    realizedValue: 108,
+    baselineValue: 100,
+    outcomeObservedAt: "2021-01-01T00:00:00Z",
+  };
+
+  it("scores probabilistic and point forecasts after the horizon matures", () => {
+    const score = scoreHistoricalForecast(forecast, outcome);
     expect(score.directionalHit).toBe(true);
     expect(score.intervalCovered).toBe(true);
     expect(score.brierScore).toBeLessThan(0.1);
+    expect(score.absoluteError).toBe(3);
+    expect(score.naiveAbsoluteError).toBe(8);
   });
 
-  it("aggregates walk-forward performance", () => {
-    const score = scoreHistoricalForecast(
-      { checkpointAsOf: "2020-01-01T00:00:00Z", horizonDays: 365, p10: 98, p50: 105, p90: 112, probabilityPositive: 0.8 },
-      { realizedValue: 108, baselineValue: 100 },
-    );
+  it("aggregates model performance against a naive no-change baseline", () => {
+    const score = scoreHistoricalForecast(forecast, outcome);
     const aggregate = aggregateHistoricalScores([score, score]);
     expect(aggregate?.sampleCount).toBe(2);
     expect(aggregate?.mae).toBe(3);
+    expect(aggregate?.naiveMae).toBe(8);
+    expect(aggregate?.skillVsNaive).toBeCloseTo(0.625);
+  });
+
+  it("returns null skill when the naive baseline has zero error", () => {
+    const score = scoreHistoricalForecast(forecast, {
+      ...outcome,
+      realizedValue: 100,
+    });
+    const aggregate = aggregateHistoricalScores([score]);
+    expect(aggregate?.naiveMae).toBe(0);
+    expect(aggregate?.skillVsNaive).toBeNull();
+  });
+
+  it("rejects malformed forecasts instead of scoring them", () => {
+    expect(() => scoreHistoricalForecast({ ...forecast, p10: 120 }, outcome)).toThrow(
+      "Invalid forecast: quantiles must be ordered p10 <= p50 <= p90",
+    );
+  });
+
+  it("rejects non-finite outcomes instead of returning misleading scores", () => {
+    expect(() =>
+      scoreHistoricalForecast(forecast, { ...outcome, realizedValue: Number.NaN }),
+    ).toThrow("Invalid outcome: realizedValue must be finite");
+  });
+
+  it("rejects outcomes observed before the forecast horizon matures", () => {
+    expect(() =>
+      scoreHistoricalForecast(forecast, {
+        ...outcome,
+        outcomeObservedAt: "2020-12-31T23:59:59Z",
+      }),
+    ).toThrow("Invalid outcome timing: outcome was observed before the forecast horizon matured");
+  });
+
+  it("rejects invalid outcome timestamps", () => {
+    expect(() =>
+      scoreHistoricalForecast(forecast, { ...outcome, outcomeObservedAt: "not-a-date" }),
+    ).toThrow("Invalid outcome timing: outcomeObservedAt must be a valid date-time");
+  });
+
+  it("does not count a zero-change forecast as a directional hit", () => {
+    const score = scoreHistoricalForecast({ ...forecast, p50: 100 }, outcome);
+    expect(score.directionalHit).toBe(false);
   });
 });
