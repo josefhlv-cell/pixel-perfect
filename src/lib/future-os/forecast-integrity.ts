@@ -57,3 +57,32 @@ export function validateForecastOutcome(outcome: {
   if (!Number.isFinite(outcome.baselineValue)) issues.push("baselineValue must be finite");
   return { valid: issues.length === 0, issues };
 }
+
+
+/**
+ * Ensure an outcome is not scored before the forecast horizon has elapsed.
+ * Callers must pass the timestamp when the outcome became observable, not a
+ * later database-import timestamp. This is a guardrail, not proof that all
+ * input features were historically available.
+ */
+export function validateOutcomeTiming(
+  checkpointAsOf: string,
+  horizonDays: number,
+  outcomeObservedAt: string,
+): ForecastValidation {
+  const issues: string[] = [];
+  const checkpoint = Date.parse(checkpointAsOf);
+  const observed = Date.parse(outcomeObservedAt);
+
+  if (!Number.isFinite(checkpoint)) issues.push("checkpointAsOf must be a valid date-time");
+  if (!Number.isFinite(horizonDays) || horizonDays <= 0) {
+    issues.push("horizonDays must be a finite positive number");
+  }
+  if (!Number.isFinite(observed)) issues.push("outcomeObservedAt must be a valid date-time");
+
+  if (issues.length === 0 && observed < checkpoint + horizonDays * 24 * 60 * 60 * 1000) {
+    issues.push("outcome was observed before the forecast horizon matured");
+  }
+
+  return { valid: issues.length === 0, issues };
+}
