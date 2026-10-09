@@ -10,9 +10,13 @@ describe("Historical Time Machine scoring", () => {
     p90: 112,
     probabilityPositive: 0.8,
   };
-  const outcome = { realizedValue: 108, baselineValue: 100 };
+  const outcome = {
+    realizedValue: 108,
+    baselineValue: 100,
+    outcomeObservedAt: "2021-01-01T00:00:00Z",
+  };
 
-  it("scores probabilistic and point forecasts", () => {
+  it("scores probabilistic and point forecasts after the horizon matures", () => {
     const score = scoreHistoricalForecast(forecast, outcome);
     expect(score.directionalHit).toBe(true);
     expect(score.intervalCovered).toBe(true);
@@ -34,8 +38,23 @@ describe("Historical Time Machine scoring", () => {
 
   it("rejects non-finite outcomes instead of returning misleading scores", () => {
     expect(() =>
-      scoreHistoricalForecast(forecast, { ...outcome, realizedValue: Number.NaN }),
+      scoreHistoricalForecast({ ...forecast, p50: 100 }, { ...outcome, realizedValue: Number.NaN }),
     ).toThrow("Invalid outcome: realizedValue must be finite");
+  });
+
+  it("rejects outcomes observed before the forecast horizon matures", () => {
+    expect(() =>
+      scoreHistoricalForecast(forecast, {
+        ...outcome,
+        outcomeObservedAt: "2020-12-31T23:59:59Z",
+      }),
+    ).toThrow("Invalid outcome timing: outcome was observed before the forecast horizon matured");
+  });
+
+  it("rejects invalid outcome timestamps", () => {
+    expect(() =>
+      scoreHistoricalForecast(forecast, { ...outcome, outcomeObservedAt: "not-a-date" }),
+    ).toThrow("Invalid outcome timing: outcomeObservedAt must be a valid date-time");
   });
 
   it("does not count a zero-change forecast as a directional hit", () => {
