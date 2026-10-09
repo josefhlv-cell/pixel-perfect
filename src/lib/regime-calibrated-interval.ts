@@ -1,0 +1,3 @@
+export interface CalibrationBin{regime:string;nominal:number;observed:number;sample:number;}
+export interface CalibratedInterval{lower:number;upper:number;coverageTarget:number;adjustment:number;status:"CALIBRATED"|"SHRUNK"|"INSUFFICIENT_DATA";}
+export function calibrateInterval(lower:number,upper:number,target:number,bin?:CalibrationBin,minSample=30):CalibratedInterval{if(!bin||bin.sample<minSample)return{lower,upper,coverageTarget:target,adjustment:0,status:"INSUFFICIENT_DATA"};const gap=target-bin.observed,width=Math.max(.0001,upper-lower),adjustment=Math.max(-.5,Math.min(.75,gap))*width;return{lower:lower-adjustment,upper:upper+adjustment,coverageTarget:target,adjustment,status:bin.sample<100?"SHRUNK":"CALIBRATED"};}

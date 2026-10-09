@@ -1,0 +1,3 @@
+export interface LagObservation{from:string;to:string;lagMonths:number;correlation:number;sample:number;}
+export interface LagSignal{from:string;to:string;lagMonths:number;strength:number;reliability:number;}
+export function rankCausalLags(rows:LagObservation[],minSample=30):LagSignal[]{return rows.map(r=>({from:r.from,to:r.to,lagMonths:r.lagMonths,strength:r.correlation,reliability:Math.min(1,r.sample/minSample)})).sort((a,b)=>Math.abs(b.strength*b.reliability)-Math.abs(a.strength*a.reliability));}

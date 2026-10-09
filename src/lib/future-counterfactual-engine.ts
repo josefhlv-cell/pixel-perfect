@@ -1,0 +1,3 @@
+export interface Counterfactual{intervention:string;delta:number;confidence:number;mechanism:string[];}
+export interface CounterfactualResult{base:number;paths:Counterfactual[];bestUpside:Counterfactual|null;worstDownside:Counterfactual|null;}
+export function runCounterfactual(base:number,paths:Counterfactual[]):CounterfactualResult{const ranked=[...paths].sort((a,b)=>(b.delta*b.confidence)-(a.delta*a.confidence));return{base,paths:ranked,bestUpside:ranked.find(x=>x.delta>0)??null,worstDownside:[...ranked].reverse().find(x=>x.delta<0)??null};}
