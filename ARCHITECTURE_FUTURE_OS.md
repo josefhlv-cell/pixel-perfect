@@ -198,3 +198,10 @@ The system should continuously ask not only:
 but also:
 
 "Why do we believe it, what would disprove it, what did we know at the time, and what information should we obtain next?"
+
+## ČNB ARAD adapter (live)
+- Endpoints: `/aradb/api/v1/indicators` (metadata: frequency, unit) + `/aradb/api/v1/data` (indicator_id;snapshot_id;period;value), `set_id` required, windows-1250 body.
+- Secret `CNB_ARAD_API_KEY` is read server-side only; the stored `source_url` never contains the key.
+- `available_at = retrieved_at = import time`; `published_at = NULL` (ARAD gives none); `observed_at = effective_from = period date`; `frequency`/`unit` only from provider metadata; `lead_class = UNKNOWN`.
+- Same indicator+period+hash → skipped; same indicator+period with a changed value → new row with `revision+1`, `supersedes_id` → old truth stays queryable.
+- Rows without a parseable period or numeric value are not stored.
