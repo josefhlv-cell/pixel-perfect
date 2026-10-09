@@ -126,7 +126,10 @@ export function InvestmentCalculator({ initial, compact }: { initial: Investment
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <Kpi label="Měsíční splátka" value={formatCZK(r.monthlyMortgage)} />
+          <Kpi label="NOI / měs." value={formatCZK(r.monthlyNOI)} tone={r.monthlyNOI >= 0 ? "pos" : "neg"} />
           <Kpi label="Cash-flow / měs." value={formatCZK(r.monthlyCashFlow)} tone={r.monthlyCashFlow >= 0 ? "pos" : "neg"} />
+          <Kpi label="DSCR" value={r.debtServiceCoverageRatio == null ? "—" : r.debtServiceCoverageRatio.toLocaleString("cs-CZ", { maximumFractionDigits: 2 }) + "×"} sub="NOI / splátka" />
+          <Kpi label="Nájem na nulu CF" value={r.breakEvenRent > 0 ? formatCZK(r.breakEvenRent) : "—"} sub="měsíčně, před daní" />
           <Kpi label="Gross yield" value={formatBps(r.grossYieldBps)} />
           <Kpi label="Net yield" value={formatBps(r.netYieldBps)} />
           <Kpi label="Cash-on-cash" value={formatBps(r.cashOnCashBps)} tone={r.cashOnCashBps >= 0 ? "pos" : "neg"} />
@@ -137,6 +140,9 @@ export function InvestmentCalculator({ initial, compact }: { initial: Investment
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-md border bg-card p-4">
             <Row k="Úvěr" v={formatCZK(r.loan)} />
+            <Row k="NOI / měsíc" v={formatCZK(r.monthlyNOI)} />
+            <Row k="DSCR" v={r.debtServiceCoverageRatio == null ? "Bez úvěru" : r.debtServiceCoverageRatio.toLocaleString("cs-CZ", { maximumFractionDigits: 2 }) + "×"} />
+            <Row k="Nájem na nulu CF" v={r.breakEvenRent > 0 ? formatCZK(r.breakEvenRent) : "Nedosažitelné při 100% neobsazenosti"} />
             <Row k="Vlastní zdroje celkem" v={formatCZK(r.cashInvested)} />
             <Row k="Celkové pořizovací náklady" v={formatCZK(r.totalCost)} />
             <Row k={`Budoucí hodnota (rok ${inp.holdingYears})`} v={formatCZK(r.exitValue)} />

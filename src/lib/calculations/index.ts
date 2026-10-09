@@ -216,6 +216,9 @@ export interface InvestmentResult {
   ltvBps: Bps;
   monthlyMortgage: CZK;
   monthlyCashFlow: CZK;
+  monthlyNOI: CZK;
+  debtServiceCoverageRatio: number | null;
+  breakEvenRent: CZK;
   grossYieldBps: Bps;
   netYieldBps: Bps;
   cashOnCashBps: Bps;
@@ -234,7 +237,14 @@ export function calculateTotalReturn(input: InvestmentInput): InvestmentResult {
   const cashInvested = downPayment + input.closingCosts + input.renovation;
   const totalCost = input.purchasePrice + input.closingCosts + input.renovation;
   const monthlyMortgage = calculateMortgagePayment(loan, input.interestRateBps, input.termMonths);
-  const monthlyCashFlow = calculateCashFlow(input.monthlyRent, input.vacancyBps, input.monthlyExpenses, monthlyMortgage);
+  const monthlyVacancyLoss = calculateVacancy(input.monthlyRent, input.vacancyBps);
+  const monthlyNOI = input.monthlyRent - monthlyVacancyLoss - input.monthlyExpenses;
+  const monthlyCashFlow = monthlyNOI - monthlyMortgage;
+  const debtServiceCoverageRatio =
+    monthlyMortgage > 0 ? Math.round((monthlyNOI / monthlyMortgage) * 100) / 100 : null;
+  const occupancyRate = Math.max(0, 1 - bpsToRate(Math.min(10_000, Math.max(0, input.vacancyBps))));
+  const breakEvenRent =
+    occupancyRate > 0 ? Math.ceil((input.monthlyExpenses + monthlyMortgage) / occupancyRate) : 0;
 
   const yearly: InvestmentResult["yearly"] = [];
   const flows: number[] = [-cashInvested];
@@ -264,6 +274,9 @@ export function calculateTotalReturn(input: InvestmentInput): InvestmentResult {
     ltvBps: calculateLTV(loan, input.purchasePrice),
     monthlyMortgage,
     monthlyCashFlow,
+    monthlyNOI,
+    debtServiceCoverageRatio,
+    breakEvenRent,
     grossYieldBps: calculateGrossYield(input.monthlyRent, input.purchasePrice),
     netYieldBps: calculateNetYield(input.monthlyRent, input.vacancyBps, input.monthlyExpenses, totalCost),
     cashOnCashBps: calculateCashOnCash(monthlyCashFlow, cashInvested),
