@@ -4,9 +4,9 @@ import type { Database } from "@/integrations/supabase/types";
 import { computeFreshnessScore, computeFreshnessStatus, decideAvailability, isLikelyDuplicate } from "./freshness";
 import { canonicalUrl, detailLinksFrom, isUsable, LIVE_SOURCE_TYPE } from "./webagent";
 
-const MAX_PAGES = 8;
+const MAX_PAGES = 12;
 const OPEN_RETRIES = 2;
-const MAX_TOTAL = 14;
+const MAX_TOTAL = 24;
 const BATCH = 4;
 
 async function openWithRetry(
@@ -45,7 +45,7 @@ export async function runAgentPipeline(supabase: SupabaseClient<Database>, userI
     }
 
     // Detail pages first; result lists are expanded into details later.
-    const isDetail = (u: string) => /(detail|nemovitost\/|\/inzerat\/|\d{6,})/i.test(u) && !/(hledani|vyhledavani|\/s\/|vypis)/i.test(u);
+    const isDetail = (u: string) => /(detail|nemovitost\/|\/inzerat\/|\/inzerce\/|\d{6,})/i.test(u) && !/(hledani|vyhledavani|\/s\/|vypis)/i.test(u);
     const candidates = [...urls.filter(isDetail), ...urls.filter((u) => !isDetail(u))].slice(0, MAX_PAGES);
     const seen = new Set(candidates);
     const expanded = new Set<string>();

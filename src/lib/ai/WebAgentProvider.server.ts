@@ -17,6 +17,8 @@ export const MAJOR_PORTALS = [
   "sreality.cz", "bezrealitky.cz", "reality.idnes.cz", "realitymix.cz", "reality.bazos.cz",
   "remax-czech.cz", "century21.cz", "mmreality.cz", "realitycechy.cz", "ulovdomov.cz",
 ];
+/** Classified-ad marketplaces (private sellers). Facebook needs login, so it is only reached via open web search. */
+export const CLASSIFIED_SITES = ["bazos.cz", "sbazar.cz", "annonce.cz"];
 
 export class WebAgentUnavailableError extends Error {}
 export interface OpenedPage { url: string; http: number; html: string | null; links?: string[]; }
@@ -30,7 +32,7 @@ export class WebAgentProvider {
     const fcP = this.firecrawlSearch(query);
     const res = await fetch(`${BASE}/responses`, { method: "POST", headers: this.headers(), body: JSON.stringify({
       model: MODEL, tools: [{ type: "web_search" }], reasoning: { effort: "low" },
-      input: `Vyhledej na veřejném webu AKTUÁLNÍ jednotlivé inzeráty nemovitostí k prodeji (detail jedné nabídky, ne výpis/kategorie) odpovídající zadání: "${query.slice(0, 300)}". Hledej na českých realitních portálech a webech realitních kanceláří. Vrať pouze seznam až 12 URL detailů inzerátů, jedna na řádek. Nic nevymýšlej.`,
+      input: `Vyhledej na veřejném webu AKTUÁLNÍ jednotlivé inzeráty nemovitostí k prodeji (detail jedné nabídky, ne výpis/kategorie) odpovídající zadání: "${query.slice(0, 300)}". Hledej na českých realitních portálech, webech realitních kanceláří i inzertních serverech (Bazoš, Sbazar, Annonce) a ve veřejných příspěvcích Facebook Marketplace / skupin, pokud jsou veřejně dostupné. Vrať pouze seznam až 12 URL detailů inzerátů, jedna na řádek. Nic nevymýšlej.`,
     }) });
     if (!res.ok) throw new WebAgentUnavailableError(`search ${res.status}`);
     const j = await res.json() as { output?: { type: string; content?: { text?: string; annotations?: { type: string; url?: string }[] }[] }[] };
@@ -89,9 +91,9 @@ export class WebAgentProvider {
         return collectUrls("", rows.map((r) => r.url ?? "").filter(Boolean));
       } catch { return []; }
     };
-    // 3 requests total (stays inside Firecrawl's per-minute limit): open web + two OR-ed portal groups.
+    // 4 requests: open web + two OR-ed portal groups + one classified-ads group.
     const half = Math.ceil(MAJOR_PORTALS.length / 2);
-    const groups = [MAJOR_PORTALS.slice(0, half), MAJOR_PORTALS.slice(half)];
+    const groups = [MAJOR_PORTALS.slice(0, half), MAJOR_PORTALS.slice(half), CLASSIFIED_SITES];
     const lists = await Promise.all([one(`${q} prodej inzerát`, 10), ...groups.map((g) => one(`${q} prodej (${g.map((d) => `site:${d}`).join(" OR ")})`, 12))]);
     // Interleave so every portal gets a slot before any portal gets a second one.
     const out: string[] = [];
