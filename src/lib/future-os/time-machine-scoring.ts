@@ -1,4 +1,4 @@
-import { validateForecast, validateForecastOutcome } from "./forecast-integrity";
+import { validateForecast, validateForecastOutcome, validateOutcomeTiming } from "./forecast-integrity";
 
 export type HistoricalForecast = {
   checkpointAsOf: string;
@@ -12,6 +12,8 @@ export type HistoricalForecast = {
 export type HistoricalOutcome = {
   realizedValue: number;
   baselineValue: number;
+  /** Timestamp when the realized value became observable, not when it was imported. */
+  outcomeObservedAt: string;
 };
 
 export type HistoricalScore = {
@@ -24,7 +26,10 @@ export type HistoricalScore = {
   regret: number;
 };
 
-/** Score one forecast against an observed outcome. Invalid records fail closed. */
+/**
+ * Score one forecast against an observed outcome.
+ * Invalid records and outcomes observed before the forecast horizon matures fail closed.
+ */
 export function scoreHistoricalForecast(
   forecast: HistoricalForecast,
   outcome: HistoricalOutcome,
@@ -33,9 +38,19 @@ export function scoreHistoricalForecast(
   if (!forecastValidation.valid) {
     throw new RangeError(`Invalid forecast: ${forecastValidation.issues.join("; ")}`);
   }
+
   const outcomeValidation = validateForecastOutcome(outcome);
   if (!outcomeValidation.valid) {
     throw new RangeError(`Invalid outcome: ${outcomeValidation.issues.join("; ")}`);
+  }
+
+  const timingValidation = validateOutcomeTiming(
+    forecast.checkpointAsOf,
+    forecast.horizonDays,
+    outcome.outcomeObservedAt,
+  );
+  if (!timingValidation.valid) {
+    throw new RangeError(`Invalid outcome timing: ${timingValidation.issues.join("; ")}`);
   }
 
   const actualChange = outcome.realizedValue - outcome.baselineValue;
