@@ -21,13 +21,27 @@ describe("Historical Time Machine scoring", () => {
     expect(score.directionalHit).toBe(true);
     expect(score.intervalCovered).toBe(true);
     expect(score.brierScore).toBeLessThan(0.1);
+    expect(score.absoluteError).toBe(3);
+    expect(score.naiveAbsoluteError).toBe(8);
   });
 
-  it("aggregates walk-forward performance", () => {
+  it("aggregates model performance against a naive no-change baseline", () => {
     const score = scoreHistoricalForecast(forecast, outcome);
     const aggregate = aggregateHistoricalScores([score, score]);
     expect(aggregate?.sampleCount).toBe(2);
     expect(aggregate?.mae).toBe(3);
+    expect(aggregate?.naiveMae).toBe(8);
+    expect(aggregate?.skillVsNaive).toBeCloseTo(0.625);
+  });
+
+  it("returns null skill when the naive baseline has zero error", () => {
+    const score = scoreHistoricalForecast(forecast, {
+      ...outcome,
+      realizedValue: 100,
+    });
+    const aggregate = aggregateHistoricalScores([score]);
+    expect(aggregate?.naiveMae).toBe(0);
+    expect(aggregate?.skillVsNaive).toBeNull();
   });
 
   it("rejects malformed forecasts instead of scoring them", () => {
@@ -38,7 +52,7 @@ describe("Historical Time Machine scoring", () => {
 
   it("rejects non-finite outcomes instead of returning misleading scores", () => {
     expect(() =>
-      scoreHistoricalForecast({ ...forecast, p50: 100 }, { ...outcome, realizedValue: Number.NaN }),
+      scoreHistoricalForecast(forecast, { ...outcome, realizedValue: Number.NaN }),
     ).toThrow("Invalid outcome: realizedValue must be finite");
   });
 
