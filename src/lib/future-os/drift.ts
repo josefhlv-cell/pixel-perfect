@@ -30,7 +30,7 @@ function quantile(values: number[], q: number) {
   const p = (s.length - 1) * q;
   const lo = Math.floor(p);
   const hi = Math.ceil(p);
-  return s[lo] + (s[hi] - s[lo]) * (p - lo);
+  return s[lo]! + (s[hi]! - s[lo]!) * (p - lo);
 }
 
 export function detectDrift(metric: DriftMetric): DriftResult {

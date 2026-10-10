@@ -61,7 +61,7 @@ export function buildPropertyFutureTwin(input: PropertyTwinInput): PropertyDecis
   const fairValueP90 = input.fairValueP90 ?? input.fairValue * 1.1;
   const marginOfSafety = input.fairValue > 0 ? (input.fairValue - input.purchasePrice) / input.fairValue : 0;
   const valuationRangeWidth = input.fairValue > 0 ? (fairValueP90 - fairValueP10) / input.fairValue : 1;
-  const downside = scenarios[2].totalReturn;
+  const downside = scenarios[2]!.totalReturn;
   const maxSafePrice = Math.max(0, input.fairValue * (1 - Math.max(0.05, 0.12 - input.liquidityScore * 0.05)));
 
   let action: PropertyDecision["action"];

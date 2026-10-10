@@ -7,7 +7,7 @@ describe("Experiment tournament", () => {
       { modelKey: "A", horizonDays: 365, sampleCount: 20, mae: 2, rmse: 3, directionalAccuracy: .7, intervalCoverage: .9, brier: .2, logLoss: .3, regret: 1, driftPenalty: 0 },
       { modelKey: "B", horizonDays: 365, sampleCount: 20, mae: 1, rmse: 2, directionalAccuracy: .8, intervalCoverage: .9, brier: .1, logLoss: .2, regret: .5, driftPenalty: 0 },
     ]);
-    expect(results[0].modelKey).toBe("B");
+    expect(results[0]!.modelKey).toBe("B");
   });
 
   it("does not crown a champion with too little history", () => {

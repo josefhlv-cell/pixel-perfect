@@ -8,7 +8,7 @@ export function analyzePropertyPathRisk(points: PropertyTrajectoryPoint[]) {
     recoveryMonth: null as number | null,
     pathRisk: 1,
   };
-  const initialValue = points[0].propertyValue;
+  const initialValue = points[0]!.propertyValue;
   let peak = initialValue;
   let maxDrawdown = 0;
   let recoveryMonth: number | null = null;

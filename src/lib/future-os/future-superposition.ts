@@ -73,7 +73,7 @@ export function buildFutureSuperposition(input: {
     ? paths.filter(path => path.direction === dominant.direction).reduce((sum, path) => sum + path.probability, 0)
     : 0;
 
-  const contested = paths.length > 1 && dominant && paths[1].probability >= dominant.probability * 0.7;
+  const contested = paths.length > 1 && dominant && paths[1]!.probability >= dominant.probability * 0.7;
 
   return {
     dominant,

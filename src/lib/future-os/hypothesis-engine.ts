@@ -35,9 +35,9 @@ export function nextBestObservation(
       for (let j = i + 1; j < posteriors.length; j++) {
         const a = posteriors[i];
         const b = posteriors[j];
-        const da = candidate.discrimination[a.key] ?? 0;
-        const db = candidate.discrimination[b.key] ?? 0;
-        discrimination += a.posterior * b.posterior * Math.abs(da - db);
+        const da = candidate.discrimination[a!.key] ?? 0;
+        const db = candidate.discrimination[b!.key] ?? 0;
+        discrimination += a!.posterior * b!.posterior * Math.abs(da - db);
       }
     }
     const utility = discrimination * candidate.reliability /

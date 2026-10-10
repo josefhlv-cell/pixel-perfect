@@ -82,7 +82,7 @@ function normalizedTrajectoryDistance(a: number[], b: number[]) {
   const bb = zNormalize(b.slice(-n));
   let sum = 0;
   for (let i = 0; i < n; i++) {
-    const delta = aa[i] - bb[i];
+    const delta = aa[i]! - bb[i]!;
     sum += delta * delta;
   }
   return Math.sqrt(sum / n);

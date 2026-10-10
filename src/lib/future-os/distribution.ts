@@ -23,15 +23,15 @@ export function analyzeForecastDistribution(values: number[]): DistributionCompa
   }
   const sorted = [...values].sort((a, b) => a - b);
   const mean = values.reduce((s, x) => s + x, 0) / values.length;
-  const median = sorted.length % 2 ? sorted[Math.floor(sorted.length / 2)] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2;
+  const median = sorted.length % 2 ? sorted[Math.floor(sorted.length / 2)] : (sorted[sorted.length / 2 - 1]! + sorted[sorted.length / 2]!) / 2;
   const q10 = sorted[Math.max(0, Math.floor((sorted.length - 1) * 0.1))];
   const q90 = sorted[Math.max(0, Math.floor((sorted.length - 1) * 0.9))];
-  const dispersion = q90 - q10;
-  const tailRisk = Math.abs(q10 - median) / Math.max(1, dispersion);
-  const skewProxy = ((q90 - median) - (median - q10)) / Math.max(1, dispersion);
-  const sameSign = values.filter((x) => Math.sign(x) === Math.sign(median)).length / values.length;
+  const dispersion = q90! - q10!;
+  const tailRisk = Math.abs(q10! - median!) / Math.max(1, dispersion);
+  const skewProxy = ((q90! - median!) - (median! - q10!)) / Math.max(1, dispersion);
+  const sameSign = values.filter((x) => Math.sign(x) === Math.sign(median!)).length / values.length;
   const concentration = sameSign;
-  const interpretation = dispersion > Math.max(5, Math.abs(median) * 2)
+  const interpretation = dispersion > Math.max(5, Math.abs(median!) * 2)
     ? "HETEROGENEOUS"
     : tailRisk > 0.65
       ? "TAIL_DRIVEN"

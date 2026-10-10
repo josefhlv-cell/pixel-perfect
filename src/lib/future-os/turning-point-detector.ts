@@ -44,7 +44,7 @@ export function detectTurningPoint(
     return { key: signal.key, status: "QUIET", score: 0, changePointIndex: null, direction: 0, leadMagnitude: 0, persistence: 0 };
   }
 
-  const changes = ordered.slice(1).map((p, i) => p.value - ordered[i].value);
+  const changes = ordered.slice(1).map((p, i) => p.value - ordered[i]!.value);
   const baseline = changes.slice(0, -confirmationWindow);
   const recent = changes.slice(-confirmationWindow);
   const m = mean(baseline.slice(-baselineWindow));
@@ -59,7 +59,7 @@ export function detectTurningPoint(
   const threshold = Math.max(2.5 * s, Math.abs(m) * 1.5, 1e-9);
 
   for (let i = Math.max(0, changes.length - baselineWindow * 2); i < changes.length; i++) {
-    cumulative += changes[i] - m;
+    cumulative += changes[i]! - m;
     if (Math.abs(cumulative) > maxAbs) {
       maxAbs = Math.abs(cumulative);
       changePointIndex = i + 1;
@@ -89,7 +89,7 @@ export function fuseTurningPointSignals(
   const results = signals.map(signal => detectTurningPoint(signal, baselineWindow, confirmationWindow));
   const weights = signals.map(signal => signal.weight ?? 1);
   const totalWeight = Math.max(1e-9, weights.reduce((a, b) => a + b, 0));
-  const score = results.reduce((sum, result, i) => sum + result.score * weights[i], 0) / totalWeight;
+  const score = results.reduce((sum, result, i) => sum + result.score * weights[i]!, 0) / totalWeight;
   const positive = results.reduce((sum, result, i) => sum + (result.direction > 0 ? weights[i] : 0), 0);
   const negative = results.reduce((sum, result, i) => sum + (result.direction < 0 ? weights[i] : 0), 0);
   const agreement = Math.max(positive, negative) / totalWeight;

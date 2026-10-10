@@ -7,7 +7,7 @@ describe("Future OS hypothesis engine", () => {
       { key: "recovery", prior: 0.5, evidenceFor: 3, evidenceAgainst: 1, modelConfidence: 0.9 },
       { key: "correction", prior: 0.5, evidenceFor: 1, evidenceAgainst: 3, modelConfidence: 0.9 },
     ]);
-    expect(result[0].posterior).toBeGreaterThan(result[1].posterior);
+    expect(result[0]!.posterior).toBeGreaterThan(result[1]!.posterior);
     expect(result.reduce((s, x) => s + x.posterior, 0)).toBeCloseTo(1);
   });
 
@@ -22,6 +22,6 @@ describe("Future OS hypothesis engine", () => {
         { key: "strong", reliability: 0.9, cost: 1, latencyDays: 1, discrimination: { recovery: 1, correction: 0 } },
       ],
     );
-    expect(result[0].key).toBe("strong");
+    expect(result[0]!.key).toBe("strong");
   });
 });

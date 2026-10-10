@@ -13,8 +13,8 @@ describe("Future OS mechanism discovery",()=>{
     const source=makeSeries(i=>i);
     const target=makeSeries(i=>i-3);
     const results=discoverMechanisms({rates:source},{prices:target},[90]);
-    expect(results[0].status).toBe("PROMISING");
-    expect(results[0].correlation).toBeGreaterThan(0.9);
+    expect(results[0]!.status).toBe("PROMISING");
+    expect(results[0]!.correlation).toBeGreaterThan(0.9);
   });
 
   it("does not manufacture a mechanism from too little data",()=>{

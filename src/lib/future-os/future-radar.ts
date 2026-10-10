@@ -70,7 +70,7 @@ export function buildFutureRadar(
   const centralEstimate = sorted.length
     ? sorted.length % 2 === 1
       ? sorted[Math.floor(sorted.length / 2)]
-      : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
+      : (sorted[sorted.length / 2 - 1]! + sorted[sorted.length / 2]!) / 2
     : null;
   const spread = medians.length > 1
     ? Math.max(...medians) - Math.min(...medians)

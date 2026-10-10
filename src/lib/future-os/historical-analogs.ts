@@ -27,7 +27,7 @@ export function findHistoricalAnalogs(
       const a=current[key], b=state.features[key];
       if(!Number.isFinite(a)||!Number.isFinite(b)) continue;
       const s=scales.get(key)??1;
-      sum+=((a-b)/s)**2;
+      sum+=((a!-b!)/s)**2;
       weight++;
     }
     const distance=weight?Math.sqrt(sum/weight):Infinity;
