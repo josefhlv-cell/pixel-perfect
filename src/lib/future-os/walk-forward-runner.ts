@@ -105,7 +105,6 @@ export async function runWalkForward(
     });
 
     state = transitionRunner(state, "SCORE_COMPLETE");
-    state = transitionRunner(state, "SCORE_COMPLETE");
 
     if (state !== "COMPLETE") {
       throw new Error("Walk-forward case did not reach COMPLETE state.");
