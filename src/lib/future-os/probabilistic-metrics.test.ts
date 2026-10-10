@@ -26,6 +26,9 @@ describe("probabilistic forecast diagnostics", () => {
     expect(result.brierScore).toBeCloseTo(0.04);
     expect(result.directionalAccuracy).toBe(1);
     expect(result.calibrationBins.reduce((sum, bin) => sum + bin.sampleCount, 0)).toBe(1);
+    expect(result.calibrationBins[0]?.meanPredictedProbability).toBeNull();
+    expect(result.calibrationBins[0]?.observedFrequency).toBeNull();
+    expect(result.calibrationBins[0]?.observedFrequency).toBeNull();
   });
 
   it("excludes outcomes that were not known at the evaluation cutoff", () => {
