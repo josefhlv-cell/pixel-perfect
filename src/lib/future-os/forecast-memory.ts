@@ -29,21 +29,28 @@ export function buildForecastLesson(
   forecast: ForecastMemorySnapshot,
   outcome: ForecastMemoryOutcome,
 ): ForecastMemoryOutcome {
-  const errorValues = Object.values(outcome.errorSnapshot).filter((value): value is number => typeof value === "number");
+  // Missing or malformed error measurements are not zero-error successes.
+  const errorValues = Object.values(outcome.errorSnapshot).filter(
+    (value): value is number => typeof value === "number" && Number.isFinite(value),
+  );
   const meanAbsError = errorValues.length
     ? errorValues.reduce((sum, value) => sum + Math.abs(value), 0) / errorValues.length
-    : 0;
+    : null;
+  const recordedAtMs = Date.parse(forecast.recordedAt);
+  const observedAtMs = Date.parse(outcome.observedAt);
+  const forecastAgeDays =
+    Number.isFinite(recordedAtMs) && Number.isFinite(observedAtMs)
+      ? Math.max(0, (observedAtMs - recordedAtMs) / 86_400_000)
+      : null;
 
   return {
     ...outcome,
     lessonSnapshot: {
       ...outcome.lessonSnapshot,
       meanAbsError,
+      validErrorCount: errorValues.length,
       provenanceHash: forecast.provenanceHash,
-      forecastAgeDays: Math.max(
-        0,
-        (+new Date(outcome.observedAt) - +new Date(forecast.recordedAt)) / 86_400_000,
-      ),
+      forecastAgeDays,
     },
   };
 }
