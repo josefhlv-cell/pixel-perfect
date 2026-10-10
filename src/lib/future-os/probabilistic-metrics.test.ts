@@ -58,6 +58,12 @@ describe("probabilistic forecast diagnostics", () => {
     expect(result.sampleCount).toBe(1);
   });
 
+  it("does not invent directional accuracy when every forecast predicts no change", () => {
+    const result = evaluateProbabilisticForecasts([row({ p50: 1, baselineValue: 1 })], "2025-03-01T00:00:00Z");
+    expect(result.directionalSampleCount).toBe(0);
+    expect(result.directionalAccuracy).toBeNull();
+  });
+
   it("returns an explicit empty summary and validates configuration", () => {
     const result = evaluateProbabilisticForecasts([], "2025-03-01T00:00:00Z");
     expect(result.sampleCount).toBe(0);
@@ -65,8 +71,10 @@ describe("probabilistic forecast diagnostics", () => {
     expect(result.brierScore).toBeNull();
     expect(result.calibrationBins).toHaveLength(10);
     expect(result.calibrationBins[0]?.meanPredictedProbability).toBeNull();
+    expect(result.calibrationBins[0]?.observedFrequency).toBeNull();
     expect(() => evaluateProbabilisticForecasts([], "bad-date")).toThrow(/asOf/);
     expect(() => evaluateProbabilisticForecasts([], "2025-03-01T00:00:00Z", { binCount: 0 })).toThrow(/binCount/);
     expect(() => evaluateProbabilisticForecasts([], "2025-03-01T00:00:00Z", { alpha: 1 })).toThrow(/alpha/);
+    expect(() => evaluateProbabilisticForecasts([], "2025-03-01T00:00:00Z", { alpha: 0.1 })).toThrow(/alpha/);
   });
 });
