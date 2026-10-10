@@ -41,7 +41,7 @@ export function compareForecastToBenchmark(
     while(count<deltas.length){
       const start=Math.floor(random()*deltas.length);
       const take=Math.min(block,deltas.length-count);
-      for(let j=0;j<take;j++) sum+=deltas[(start+j)%deltas.length];
+      for(let j=0;j<take;j++) sum+=deltas[(start+j)%deltas.length]!;
       count+=take;
     }
     means.push(sum/deltas.length);
@@ -54,9 +54,9 @@ export function compareForecastToBenchmark(
     candidateMean:samples.reduce((a,s)=>a+metric(s,"candidate",kind),0)/samples.length,
     benchmarkMean:samples.reduce((a,s)=>a+metric(s,"benchmark",kind),0)/samples.length,
     improvement:-mean,
-    confidenceLow:-high,
-    confidenceHigh:-low,
-    significant:high<0,
+    confidenceLow:-high!,
+    confidenceHigh:-low!,
+    significant:high!<0,
     bootstrapSamples:iterations,
   };
 }

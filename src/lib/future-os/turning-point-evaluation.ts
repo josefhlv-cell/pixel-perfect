@@ -81,7 +81,7 @@ export function evaluateTurningPointEvents(
     : Math.max(
         1,
         orderedDetections.length > 1
-          ? (+new Date(orderedDetections.at(-1)!.detectedAt) - +new Date(orderedDetections[0].detectedAt)) / 86_400_000
+          ? (+new Date(orderedDetections.at(-1)!.detectedAt) - +new Date(orderedDetections[0]!.detectedAt)) / 86_400_000
           : 365,
       );
 

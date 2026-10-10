@@ -7,7 +7,7 @@ describe("Counterfactual explanation", () => {
       { rates: 6, supply: 12, liquidity: 0.5 },
       { rates: 4, supply: 10, liquidity: 0.8 },
     );
-    expect(result[0].key).toBe("rates");
+    expect(result[0]!.key).toBe("rates");
     expect(result.reduce((s, x) => s + x.contribution, 0)).toBeCloseTo(1);
   });
 });

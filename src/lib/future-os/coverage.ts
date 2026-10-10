@@ -36,7 +36,7 @@ export function summarizeCoverage(
   }
 
   return [...groups.entries()].map(([key, group]) => {
-    const [geographyType, geographyKey, entityType, entityKey] = key.split("|");
+    const [geographyType = "", geographyKey = "", entityType = "", entityKey = ""] = key.split("|");
     const ordered = [...group].sort((a,b) => +new Date(a.availableAt) - +new Date(b.availableAt));
     const missingRate = ordered.length
       ? ordered.filter((row) => row.value == null).length / ordered.length

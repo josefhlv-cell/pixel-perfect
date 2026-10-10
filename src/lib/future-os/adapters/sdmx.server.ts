@@ -18,8 +18,8 @@ export async function fetchSdmxJson(options: SdmxFetchOptions): Promise<{
     ? `/rest/v1/data/${encodeURIComponent(options.flowRef)}/${encodeURIComponent(options.key)}/${encodeURIComponent(options.providerRef ?? "all")}`
     : `/rest/v1/data/${encodeURIComponent(options.flowRef)}/${encodeURIComponent(options.providerRef ?? "all")}`;
   const url = new URL(base + path);
-  const response = await fetch(url, {
-    signal: options.signal,
+  const response = await fetch(url.toString(), {
+    signal: options.signal ?? null,
     headers: { accept: options.accept ?? "application/vnd.sdmx.data+json;version=1.0.0" },
   });
   if (!response.ok) throw new Error(`SDMX HTTP ${response.status} from ${url.hostname}`);

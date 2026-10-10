@@ -27,7 +27,7 @@ function mapRow(row: Database["public"]["Tables"]["reality_evidence"]["Row"]): E
     value: row.value,
     unit: row.unit,
     frequency: row.frequency,
-    leadClass: row.lead_class,
+    leadClass: row.lead_class as EvidenceObservation["leadClass"],
     sourceReliability: Number(row.source_reliability),
     independenceGroup: row.independence_group,
     contentHash: row.content_hash,
@@ -43,11 +43,10 @@ export async function getEvidenceAvailableAt(
   asOf: Date | string,
   filters: EvidenceFilters = {},
 ) {
-  const { data, error } = await supabase.rpc("get_reality_evidence_available_at", {
-    p_as_of: new Date(asOf).toISOString(),
-    p_geography_type: filters.geographyType ?? null,
-    p_geography_key: filters.geographyKey ?? null,
-  });
+  const args: { p_as_of: string; p_geography_type?: string; p_geography_key?: string } = { p_as_of: new Date(asOf).toISOString() };
+  if (filters.geographyType) args.p_geography_type = filters.geographyType;
+  if (filters.geographyKey) args.p_geography_key = filters.geographyKey;
+  const { data, error } = await supabase.rpc("get_reality_evidence_available_at", args);
   if (error) throw error;
 
   const rows = (data ?? []).map(mapRow).filter((row) =>

@@ -18,8 +18,8 @@ describe("Historical Time Machine", () => {
     ];
     const run = buildTimeMachineCheckpoints(rows, ["2019-06-01T00:00:00Z", "2020-06-01T00:00:00Z"], [365]);
     expect(run.leakageDetected).toBe(false);
-    expect(run.checkpoints[0].evidenceIds).toEqual(["2019"]);
-    expect(run.checkpoints[1].evidenceIds).toEqual(["2019", "2020"]);
+    expect(run!.checkpoints[0]!.evidenceIds).toEqual(["2019"]);
+    expect(run!.checkpoints[1]!.evidenceIds).toEqual(["2019", "2020"]);
   });
 
   it("creates deterministic walk-forward checkpoints", () => {

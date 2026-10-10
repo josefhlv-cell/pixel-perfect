@@ -38,7 +38,7 @@ export function evaluateMechanismTrust(input: MechanismEvidence): MechanismTrust
     .reduce((sum, key) => sum + dimensions[key] * weights[key], 0);
 
   const weakestDimension = (Object.keys(dimensions) as Array<keyof MechanismEvidence>)
-    .sort((a, b) => dimensions[a] - dimensions[b])[0];
+    .sort((a, b) => dimensions[a] - dimensions[b])[0]!;
 
   const status =
     score >= 0.82 && dimensions.causalIdentification >= 0.7 && dimensions.outOfSamplePerformance >= 0.75

@@ -19,7 +19,7 @@ export function summarizeSourceIndependence(rows: EvidenceCluster[]): Independen
   }
   const weights = [...groups.values()].sort((a,b)=>b-a);
   const total = weights.reduce((s,x)=>s+x,0);
-  const concentration = total ? weights[0] / total : 1;
+  const concentration = total ? weights[0]! / total : 1;
   const effectiveEvidence = total > 0
     ? (total * total) / weights.reduce((s,x)=>s+x*x,0)
     : 0;

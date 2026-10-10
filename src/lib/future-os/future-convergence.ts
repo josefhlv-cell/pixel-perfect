@@ -120,12 +120,12 @@ export function detectFutureConvergence(
 
     return {
       target,
-      direction: key.endsWith(":1") ? 1 : -1,
+      direction: (key.endsWith(":1") ? 1 : -1) as 1 | -1,
       independentPathCount: pathCount,
       supportingPathCount: group.length,
       convergenceScore,
       earliestImpactDays: impacts[0] ?? null,
-      medianImpactDays,
+      medianImpactDays: medianImpactDays ?? null,
       fragility,
       supportingGroups: independent.map(path => path.independenceGroup),
       paths: independent,

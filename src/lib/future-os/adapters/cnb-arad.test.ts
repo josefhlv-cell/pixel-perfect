@@ -29,7 +29,7 @@ describe("ČNB ARAD parsing", () => {
     expect(rows).toHaveLength(1);
     expect(skipped).toBe(1);
     expect(rows[0]!.value).toBe(3.75);
-    expect(rows[0]!.original.period).toBe("20250131");
+    expect(rows[0]!.original["period"]).toBe("20250131");
     const meta = parseIndicators('indicator_id;indicator_name;frequency_code;frequency_name;unit_mult_code;unit_mult_name;unit\n"SFTP02M11";"Diskontní sazba";"M";"Měsíční";"0";"jednotky";"procento"\n');
     expect(meta.get("SFTP02M11")?.unit).toBe("procento");
     expect(meta.get("SFTP02M11")?.frequencyCode).toBe("M");

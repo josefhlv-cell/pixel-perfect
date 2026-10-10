@@ -83,7 +83,7 @@ function quantile(values: number[], q: number) {
   const p = (sorted.length - 1) * q;
   const lo = Math.floor(p);
   const hi = Math.ceil(p);
-  return sorted[lo] + (sorted[hi] - sorted[lo]) * (p - lo);
+  return sorted[lo]! + (sorted[hi]! - sorted[lo]!) * (p - lo);
 }
 
 function empiricalCoverage(pool: CalibrationResidual[], halfWidth: number) {

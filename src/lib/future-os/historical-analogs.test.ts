@@ -10,7 +10,7 @@ describe("Historical analogs",()=>{
         {date:"2020",features:{rates:1,liquidity:120}},
       ],
     );
-    expect(result[0].date).toBe("2019");
-    expect(result[0].similarity).toBeGreaterThan(result[1].similarity);
+    expect(result[0]!.date).toBe("2019");
+    expect(result[0]!.similarity).toBeGreaterThan(result[1]!.similarity);
   });
 });

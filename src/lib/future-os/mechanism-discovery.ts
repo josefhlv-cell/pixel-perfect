@@ -15,7 +15,7 @@ function mean(v: number[]) { return v.length ? v.reduce((s,x)=>s+x,0)/v.length :
 function corr(a: number[], b: number[]) {
   if (a.length < 3 || a.length !== b.length) return 0;
   const am=mean(a), bm=mean(b);
-  const num=a.reduce((s,x,i)=>s+(x-am)*(b[i]-bm),0);
+  const num=a.reduce((s,x,i)=>s+(x-am)*(b[i]!-bm),0);
   const da=Math.sqrt(a.reduce((s,x)=>s+(x-am)**2,0));
   const db=Math.sqrt(b.reduce((s,x)=>s+(x-bm)**2,0));
   return da && db ? num/(da*db) : 0;
@@ -45,8 +45,8 @@ export function discoverMechanisms(
         const correlation=corr(a,b);
         let directional=0;
         for(let i=1;i<a.length;i++) {
-          const da=Math.sign(a[i]-a[i-1]);
-          const db=Math.sign(b[i]-b[i-1]);
+          const da=Math.sign(a[i]!-a[i-1]!);
+          const db=Math.sign(b[i]!-b[i-1]!);
           if(da===db) directional++;
         }
         const directionalAccuracy=directional/Math.max(1,a.length-1);

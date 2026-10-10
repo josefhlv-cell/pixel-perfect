@@ -38,7 +38,7 @@ export async function fetchOecdHousePrices(geos: string[] = ["CZE"], startPeriod
     url.searchParams.set("startPeriod", startPeriod);
     url.searchParams.set("endPeriod", endPeriod);
     url.searchParams.set("dimensionAtObservation", "AllDimensions");
-    const response = await fetch(url, { signal, headers: { accept: "application/vnd.sdmx.data+json;version=2.0.0" } });
+    const response = await fetch(url.toString(), { signal: signal ?? null, headers: { accept: "application/vnd.sdmx.data+json;version=2.0.0" } });
     if (!response.ok) throw new Error("OECD HTTP " + response.status);
     const dataset = await response.json() as SdmxJson;
     for (const point of parseObservations(dataset)) {
