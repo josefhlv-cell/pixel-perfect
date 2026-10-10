@@ -5,6 +5,7 @@ import { marketQuery } from "@/lib/queries";
 import { formatCZK } from "@/lib/format";
 import { pageHead } from "@/lib/head";
 import { Kpi, PageHeader, SampleBadge, Section } from "@/components/app/shared";
+import { HousePriceForecast } from "@/components/app/HousePriceForecast";
 import { Bars, MultiLine } from "@/components/app/Charts";
 import { AiRunner } from "@/components/app/AiPanel";
 import { cn } from "@/lib/utils";
@@ -50,6 +51,7 @@ function Market() {
         sub={<span className="inline-flex items-center gap-2">Zdroj: <SampleBadge /> · připraveno pro napojení skutečných datových providerů</span>}
         actions={<div className="flex gap-0.5 rounded-md border p-0.5">{(Object.keys(RANGE) as R[]).map((r) => <button key={r} onClick={() => setRange(r)} className={cn("num rounded px-2.5 py-1 text-xs", r === range ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>{r}</button>)}</div>}
       />
+      <HousePriceForecast />
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
         <Kpi label="Prům. nabídková cena" value={`${formatCZK(avg)}/m²`} sub="napříč městy" />
         <Kpi label="Prům. nájem" value={`${formatCZK(avgRent)}/m²`} />

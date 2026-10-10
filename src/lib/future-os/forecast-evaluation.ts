@@ -27,6 +27,18 @@ export function compareForecastToBenchmark(
   iterations = 1000,
 ) {
   if (samples.length < 20) return null;
+  // Invalid probabilities must fail closed. Silently clamping malformed model
+  // output would make the evaluation look valid and hide a broken forecast.
+  const validProbability = (value: number) =>
+    Number.isFinite(value) && value >= 0 && value <= 1;
+  const validSample = (sample: ForecastEvaluationSample) =>
+    Number.isFinite(sample.actual) &&
+    Number.isFinite(sample.baselineActual) &&
+    Number.isFinite(sample.candidate.p50) &&
+    Number.isFinite(sample.benchmark.p50) &&
+    validProbability(sample.candidate.probabilityPositive) &&
+    validProbability(sample.benchmark.probabilityPositive);
+  if (!samples.every(validSample)) return null;
   const deltas = samples.map(s => metric(s, "candidate", kind) - metric(s, "benchmark", kind));
   const mean = deltas.reduce((a,b)=>a+b,0) / deltas.length;
   let state = 0x9e3779b9;

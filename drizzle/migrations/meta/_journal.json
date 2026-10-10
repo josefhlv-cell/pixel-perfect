@@ -99,6 +99,13 @@
       "when": 1791447013000,
       "tag": "0013_future_os_market_dna_signal_discovery",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791447014000,
+      "tag": "0014_future_os_forecast_memory",
+      "breakpoints": true
     }
   ]
 }
