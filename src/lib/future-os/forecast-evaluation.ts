@@ -57,6 +57,7 @@ export function compareForecastToBenchmark(
   if (!["MAE", "BRIER", "LOG_LOSS", "DIRECTIONAL_ERROR"].includes(kind)) {
     throw new RangeError("kind must be a supported paired metric");
   }
+  validateSamples(samples);
   if (samples.length < 20) return null;
   if (!Number.isInteger(iterations) || iterations < 100) {
     throw new RangeError("iterations must be an integer >= 100");
@@ -64,7 +65,6 @@ export function compareForecastToBenchmark(
   if (!Number.isInteger(blockLength) || blockLength < 1) {
     throw new RangeError("blockLength must be an integer >= 1");
   }
-  validateSamples(samples);
 
   const deltas = samples.map(s => metric(s, "candidate", kind) - metric(s, "benchmark", kind));
   const mean = deltas.reduce((a, b) => a + b, 0) / deltas.length;
