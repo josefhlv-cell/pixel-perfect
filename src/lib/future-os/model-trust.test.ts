@@ -2,6 +2,13 @@ import { describe, expect, it } from "vitest";
 import { evaluateModelTrust } from "./model-trust";
 
 describe("Future OS model trust", () => {
+  it("limits trust when there is no validated forecast history", () => {
+    const result = evaluateModelTrust([], []);
+    expect(result.action).toBe("WATCH_CHAMPION");
+    expect(result.trustScore).toBe(0.65);
+    expect(result.reasons.some((reason) => reason.includes("není dostatek platných výsledků"))).toBe(true);
+  });
+
   it("demotes a champion when regime and forecast health break", () => {
     const result = evaluateModelTrust(
       [
