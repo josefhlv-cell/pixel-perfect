@@ -18,7 +18,7 @@ function history(
       outcomeObservedAt: new Date(Date.UTC(2024, month - 1, 2)).toISOString(),
       actual: 5 + score,
       p10: 0,
-      p90: 10,
+      p90: 5,
     };
   });
 }
