@@ -75,3 +75,76 @@ export function validateVintage(row: SourceVintage): void {
     throw new Error("Observed vintages require source-supplied publication time and revision.");
   }
 }
+
+
+import { createHash } from "node:crypto";
+import type { EvidenceObservation } from "./types";
+import { CZECH_HPI_SERIES } from "./predictive-core/publish";
+
+export type SourceVintageInsert = {
+  source_key: string;
+  series_key: string;
+  geography_key: string;
+  period_key: string;
+  source_published_at: string | null;
+  retrieved_at: string;
+  source_revision: string | null;
+  numeric_value: number;
+  unit: string;
+  raw_payload: Record<string, unknown>;
+  payload_hash: string;
+  quality: "RETRIEVAL_SNAPSHOT";
+};
+
+/** Map live source observations to deterministic immutable retrieval snapshots. */
+export function toSourceVintageInserts(
+  observations: readonly EvidenceObservation[],
+): SourceVintageInsert[] {
+  const snapshots: SourceVintageInsert[] = [];
+  for (const observation of observations) {
+    const raw = observation.value;
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
+    const value = raw as Record<string, unknown>;
+    const period = typeof value.period === "string" ? value.period : null;
+    const numericValue = typeof value.value === "number" ? value.value : null;
+    if (!period || !/^\\d{4}-Q[1-4]$/.test(period) || numericValue == null || !Number.isFinite(numericValue)) continue;
+    if (!observation.retrievedAt || !Number.isFinite(Date.parse(observation.retrievedAt))) continue;
+
+    const sourceRevision = typeof observation.metadata.eurostatDatasetUpdatedAt === "string"
+      ? observation.metadata.eurostatDatasetUpdatedAt
+      : null;
+    const canonical = JSON.stringify({
+      source: "eurostat-prc-hpi-q",
+      series: CZECH_HPI_SERIES,
+      geography: observation.geographyKey,
+      period,
+      value: numericValue,
+      unit: observation.unit,
+      sourceRevision,
+    });
+    snapshots.push({
+      source_key: "eurostat-prc-hpi-q",
+      series_key: CZECH_HPI_SERIES,
+      geography_key: observation.geographyKey,
+      period_key: period,
+      source_published_at: observation.publishedAt,
+      retrieved_at: observation.retrievedAt,
+      source_revision: sourceRevision,
+      numeric_value: numericValue,
+      unit: observation.unit ?? "index_2015_100",
+      raw_payload: {
+        value: numericValue,
+        period,
+        sourceUrl: observation.sourceUrl,
+        observedAt: observation.observedAt,
+        retrievedAt: observation.retrievedAt,
+        availableAt: observation.availableAt,
+        sourceRevision,
+        quality: "RETRIEVAL_SNAPSHOT",
+      },
+      payload_hash: createHash("sha256").update(canonical).digest("hex"),
+      quality: "RETRIEVAL_SNAPSHOT",
+    });
+  }
+  return snapshots;
+}
