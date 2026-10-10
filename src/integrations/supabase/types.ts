@@ -685,6 +685,42 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["reality_forecast_outcomes"]["Insert"]>
         Relationships: []
       }
+      reality_source_vintages: {
+        Row: {
+          id: string;
+          source_key: string;
+          series_key: string;
+          geography_key: string;
+          period_key: string;
+          source_published_at: string | null;
+          retrieved_at: string;
+          source_revision: string | null;
+          numeric_value: number | null;
+          unit: string | null;
+          raw_payload: Json;
+          payload_hash: string;
+          quality: "OBSERVED_VINTAGE" | "RETRIEVAL_SNAPSHOT" | "ASSUMED_PUBLICATION_LAG";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          source_key: string;
+          series_key: string;
+          geography_key: string;
+          period_key: string;
+          source_published_at?: string | null;
+          retrieved_at: string;
+          source_revision?: string | null;
+          numeric_value?: number | null;
+          unit?: string | null;
+          raw_payload?: Json;
+          payload_hash: string;
+          quality: "OBSERVED_VINTAGE" | "RETRIEVAL_SNAPSHOT" | "ASSUMED_PUBLICATION_LAG";
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["reality_source_vintages"]["Insert"]>;
+        Relationships: [];
+      }
       reality_source_adapters: {
         Row: { id:string; source_id:string|null; adapter_key:string; source_name:string; publisher:string|null; canonical_url:string|null; access_protocol:string; data_domains:Json; geography_scopes:Json; frequencies:Json; latency_class:"REALTIME"|"INTRADAY"|"DAILY"|"WEEKLY"|"MONTHLY"|"QUARTERLY"|"ANNUAL"|"UNKNOWN"; historical_start:string|null; revision_policy:string|null; publication_timestamp_available:boolean; retrieval_timestamp_recorded:boolean; point_in_time_safe:boolean; reliability:number|null; independence_group:string; status:"PLANNED"|"ACTIVE"|"DEGRADED"|"BLOCKED"|"RETIRED"; last_success_at:string|null; metadata:Json; created_at:string; updated_at:string }
         Insert: { id?:string; source_id?:string|null; adapter_key:string; source_name:string; publisher?:string|null; canonical_url?:string|null; access_protocol:string; data_domains?:Json; geography_scopes?:Json; frequencies?:Json; latency_class?:"REALTIME"|"INTRADAY"|"DAILY"|"WEEKLY"|"MONTHLY"|"QUARTERLY"|"ANNUAL"|"UNKNOWN"; historical_start?:string|null; revision_policy?:string|null; publication_timestamp_available?:boolean; retrieval_timestamp_recorded?:boolean; point_in_time_safe?:boolean; reliability?:number|null; independence_group:string; status?:"PLANNED"|"ACTIVE"|"DEGRADED"|"BLOCKED"|"RETIRED"; last_success_at?:string|null; metadata?:Json; created_at?:string; updated_at?:string }

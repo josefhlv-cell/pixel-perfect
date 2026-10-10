@@ -2,11 +2,12 @@ import { describe, expect, it } from "vitest";
 import { HousePriceLedger } from "./ledger";
 import { addQuarters, realizeSealedForecast, sealHousePriceIndex, vintageOfQuarter } from "./publish";
 
-function quarters(count: number, startYear = 2010): { period: string; value: number }[] {
+function quarters(count: number, startYear = 2010): { period: string; value: number; availableAt: string }[] {
   return Array.from({ length: count }, (_, index) => {
     const year = startYear + Math.floor(index / 4);
     const quarter = (index % 4) + 1;
-    return { period: `${year}-Q${quarter}`, value: 100 + index };
+    const period = `${year}-Q${quarter}`;
+    return { period, value: 100 + index, availableAt: vintageOfQuarter(period, 210) };
   });
 }
 
@@ -23,7 +24,7 @@ describe("sealed house-price publication", () => {
 
     const later = vintageOfQuarter("2019-Q2", 210);
     const realized = realizeSealedForecast(sealed, rows, later);
-    expect(realized?.outcomeAsOf).toBe(later);
+    expect(realized?.outcomeAsOf).toBe(vintageOfQuarter("2019-Q2", 210));
     expect(realized?.absoluteError).toBeGreaterThanOrEqual(0);
     expect(Number.isFinite(realized?.realized)).toBe(true);
   });

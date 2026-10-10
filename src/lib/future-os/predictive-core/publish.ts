@@ -4,19 +4,21 @@ import { addDays, levelsVisibleAt, logReturn, quarterlyIndexToLevels, quarterSta
 export const CZECH_HPI_SERIES = "eurostat:prc_hpi_q:TOTAL:I15_Q";
 export const CZECH_HPI_TARGET = `${CZECH_HPI_SERIES}:h4_log_return`;
 
-export type IndexPoint = { period: string; value: number };
+export type IndexPoint = { period: string; value: number; availableAt?: string };
 
-export function eurostatIndexRows(observations: readonly { value: unknown }[]): IndexPoint[] {
-  const byPeriod = new Map<string, number>();
+export function eurostatIndexRows(observations: readonly { value: unknown; availableAt?: string }[]): IndexPoint[] {
+  const byPeriod = new Map<string, IndexPoint>();
   for (const row of observations) {
     const value = row.value as { value?: unknown; period?: unknown };
     if (typeof value?.value !== "number" || !Number.isFinite(value.value) || value.value <= 0) continue;
     if (typeof value.period !== "string" || !/^\d{4}-Q[1-4]$/.test(value.period)) continue;
-    byPeriod.set(value.period, value.value);
+    byPeriod.set(value.period, {
+      period: value.period,
+      value: value.value,
+      ...(row.availableAt && Number.isFinite(Date.parse(row.availableAt)) ? { availableAt: row.availableAt } : {}),
+    });
   }
-  return [...byPeriod.entries()]
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([period, value]) => ({ period, value }));
+  return [...byPeriod.values()].sort((a, b) => a.period.localeCompare(b.period));
 }
 
 export type SealedHousePriceForecast = {
@@ -103,10 +105,23 @@ export function scoreFrozenForecast(
   asOf: string,
 ): ForecastRealization | null {
   if (!(frozen.originLevel > 0)) return null;
-  const future = levelsVisibleAt(quarterlyIndexToLevels(rows), asOf).find((row) => row.period === frozen.horizonPeriod);
-  if (!future) return null;
+  const cutoff = Date.parse(asOf);
+  if (!Number.isFinite(cutoff)) throw new Error(`Invalid outcome asOf: ${asOf}`);
+  // Scoring is allowed only when the source's actual retrieval/availability time
+  // is recorded. An assumed publication lag is suitable for conservative
+  // forecasting, but cannot prove when a historical outcome became knowable.
+  const futurePoint = rows
+    .filter((row) => row.period === frozen.horizonPeriod &&
+      typeof row.availableAt === "string" &&
+      Number.isFinite(Date.parse(row.availableAt)) &&
+      Date.parse(row.availableAt) <= cutoff)
+    .sort((a, b) => Date.parse(a.availableAt!) - Date.parse(b.availableAt!))
+    .at(-1);
+  if (!futurePoint) return null;
+  const future = futurePoint.value;
+  if (!(future > 0) || !Number.isFinite(future)) return null;
   const hit = (realized: number) => (realized >= 0 ? 1 : 0);
-  const realized = logReturn(future.level, frozen.originLevel);
+  const realized = logReturn(future, frozen.originLevel);
   return {
     realized,
     insideInterval: realized >= frozen.p10 && realized <= frozen.p90,
@@ -115,9 +130,7 @@ export function scoreFrozenForecast(
     brierScore: frozen.probabilityPositive == null || !Number.isFinite(frozen.probabilityPositive)
       ? null
       : (frozen.probabilityPositive - hit(realized)) ** 2,
-    // This adapter only has the retrieval timestamp, not archived source vintages.
-    // Never mislabel the assumed publication-lag date as the actual observation time.
-    outcomeAsOf: asOf,
+    outcomeAsOf: futurePoint.availableAt!,
   };
 }
 
