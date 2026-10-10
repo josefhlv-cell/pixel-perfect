@@ -48,7 +48,8 @@ export async function fetchEcbCzechLongTermRates(signal?: AbortSignal): Promise<
   const retrievedAt = new Date().toISOString();
   const rows = lines.slice(1).map(parseCsvLine).flatMap((row) => {
     const period = row[periodIndex];
-    const value = Number(row[valueIndex]);
+    const rawValue = row[valueIndex]?.trim();
+    const value = rawValue ? Number(rawValue) : Number.NaN;
     if (!/^\d{4}-\d{2}$/.test(period ?? "") || !Number.isFinite(value)) return [];
     return [{ period, value }];
   });
