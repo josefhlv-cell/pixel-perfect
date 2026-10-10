@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { scoreForecast, validateForecastInput, type ForecastInput } from "./forecast";
+import { calibrateForecastIntervals, scoreForecast, validateForecastInput, type ForecastInput } from "./forecast";
 import { buildFutureRadarFoundation } from "./future-radar";
 import type { EvidenceObservation } from "./types";
 
@@ -33,6 +33,32 @@ describe("Future OS forecast integrity", () => {
     expect(score.directionalHit).toBe(true);
     expect(score.brierScore).toBeCloseTo(.09);
     expect(score.absoluteError).toBe(1);
+  });
+  it("scores direction relative to a supplied baseline", () => {
+    const score = scoreForecast({ ...input, p10: 98, p50: 102, p90: 106 }, 103, 100);
+    expect(score.directionalHit).toBe(true);
+    expect(score.brierScore).toBeCloseTo(.09);
+  });
+  it("does not call a flat forecast directionally correct", () => {
+    const score = scoreForecast({ ...input, p10: 98, p50: 100, p90: 106 }, 103, 100);
+    expect(score.directionalHit).toBe(false);
+  });
+  it("rejects non-finite forecast values", () => {
+    expect(() => validateForecastInput({ ...input, p50: Number.NaN })).toThrow(/finite/);
+  });
+  it("uses only matured outcomes when calibrating forecast intervals", () => {
+    const history = Array.from({ length: 20 }, (_, index) => ({
+      forecastIssuedAt: new Date(Date.UTC(2024, index, 1)).toISOString(),
+      outcomeObservedAt: new Date(Date.UTC(2024, index, 2)).toISOString(),
+      actual: index === 19 ? 20 : 5,
+      p10: 0,
+      p90: 10,
+    }));
+    const result = calibrateForecastIntervals(input, "2026-02-04T00:00:00Z", history);
+    expect(result.calibration.status).toBe("CALIBRATED");
+    expect(result.calibration.calibrationCutoff).toBe("2026-02-04T00:00:00.000Z");
+    expect(result.p10).toBeLessThanOrEqual(input.p10);
+    expect(result.p90).toBeGreaterThanOrEqual(input.p90);
   });
   it("reports DATA_STARVED rather than fabricating a future", () => {
     const radar = buildFutureRadarFoundation([], "2026-02-03T00:00:00Z", ["price_growth"]);
