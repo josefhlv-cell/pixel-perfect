@@ -66,7 +66,7 @@ export async function fetchEurostatHousePriceIndex(
 
   const retrievedAt = new Date().toISOString();
   const response = await fetch(url.toString(), {
-    signal,
+    signal: signal ?? null,
     headers: { accept: "application/json" },
   });
   if (!response.ok) throw new Error(`Eurostat HTTP ${response.status}`);
