@@ -21,6 +21,21 @@ describe("Future Survival Engine", () => {
     expect(result.status).toBe("ROBUST");
     expect(result.survivalScore).toBeGreaterThan(0.72);
     expect(result.failedDimensions).toEqual([]);
+    expect(result.missingDimensions).toEqual([]);
+  });
+
+  it("does not call a partially tested future robust", () => {
+    const result = evaluateFutureSurvival({
+      candidateId: "partial-coverage",
+      baselineScore: 1,
+      tests: [
+        { dimension: "DATA", id: "data", description: "data test", survived: true, lossRatio: 0, confidence: 1, evidence: ["observed"] },
+        { dimension: "MODEL", id: "model", description: "model test", survived: true, lossRatio: 0, confidence: 1, evidence: ["observed"] },
+      ],
+    });
+
+    expect(result.status).not.toBe("ROBUST");
+    expect(result.missingDimensions).toContain("CAUSAL");
   });
 
   it("detects a future that depends on one fragile dimension", () => {

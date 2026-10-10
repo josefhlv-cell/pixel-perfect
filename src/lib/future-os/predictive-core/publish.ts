@@ -115,7 +115,9 @@ export function scoreFrozenForecast(
     brierScore: frozen.probabilityPositive == null || !Number.isFinite(frozen.probabilityPositive)
       ? null
       : (frozen.probabilityPositive - hit(realized)) ** 2,
-    outcomeAsOf: future.vintageDate,
+    // This adapter only has the retrieval timestamp, not archived source vintages.
+    // Never mislabel the assumed publication-lag date as the actual observation time.
+    outcomeAsOf: asOf,
   };
 }
 
