@@ -66,8 +66,8 @@ export function evaluateProbabilisticForecasts(
   if (!Number.isInteger(binCount) || binCount < 1 || binCount > 100) {
     throw new RangeError("binCount must be an integer between 1 and 100");
   }
-  if (!Number.isFinite(alpha) || alpha <= 0 || alpha >= 1) {
-    throw new RangeError("alpha must be strictly between 0 and 1");
+  if (alpha !== 0.2) {
+    throw new RangeError("alpha must be 0.2 because these metrics are defined for the p10-p90 80% interval");
   }
 
   const rows = observations
@@ -133,10 +133,10 @@ export function evaluateProbabilisticForecasts(
       lowerProbability,
       upperProbability,
       sampleCount: bin.length,
-      meanPredictedProbability: bin.length ? mean(bin.map((row) => row.probabilityPositive)) : 0,
+      meanPredictedProbability: bin.length ? mean(bin.map((row) => row.probabilityPositive)) : null,
       observedFrequency: bin.length
         ? mean(bin.map((row) => (row.actual - row.baselineValue > 0 ? 1 : 0)))
-        : 0,
+        : null,
     };
   });
 
@@ -149,7 +149,7 @@ export function evaluateProbabilisticForecasts(
     intervalScore80: mean(intervalScores),
     brierScore: mean(brier),
     logLoss: mean(logLoss),
-    directionalAccuracy: directional.length ? directionalHits.length / directional.length : 0,
+    directionalAccuracy: directional.length ? directionalHits.length / directional.length : null,
     directionalSampleCount: directional.length,
     calibrationBins,
   };
