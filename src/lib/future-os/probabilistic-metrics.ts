@@ -17,21 +17,21 @@ export type ProbabilisticForecastObservation = {
 
 export type ProbabilisticForecastMetrics = {
   sampleCount: number;
-  mae: number;
-  meanBias: number;
-  intervalCoverage80: number;
-  meanIntervalWidth80: number;
-  intervalScore80: number;
-  brierScore: number;
-  logLoss: number;
-  directionalAccuracy: number;
+  mae: number | null;
+  meanBias: number | null;
+  intervalCoverage80: number | null;
+  meanIntervalWidth80: number | null;
+  intervalScore80: number | null;
+  brierScore: number | null;
+  logLoss: number | null;
+  directionalAccuracy: number | null;
   directionalSampleCount: number;
   calibrationBins: Array<{
     lowerProbability: number;
     upperProbability: number;
     sampleCount: number;
-    meanPredictedProbability: number;
-    observedFrequency: number;
+    meanPredictedProbability: number | null;
+    observedFrequency: number | null;
   }>;
 };
 
@@ -79,21 +79,21 @@ export function evaluateProbabilisticForecasts(
   if (rows.length === 0) {
     return {
       sampleCount: 0,
-      mae: 0,
-      meanBias: 0,
-      intervalCoverage80: 0,
-      meanIntervalWidth80: 0,
-      intervalScore80: 0,
-      brierScore: 0,
-      logLoss: 0,
-      directionalAccuracy: 0,
+      mae: null,
+      meanBias: null,
+      intervalCoverage80: null,
+      meanIntervalWidth80: null,
+      intervalScore80: null,
+      brierScore: null,
+      logLoss: null,
+      directionalAccuracy: null,
       directionalSampleCount: 0,
       calibrationBins: Array.from({ length: binCount }, (_, i) => ({
         lowerProbability: i / binCount,
         upperProbability: (i + 1) / binCount,
         sampleCount: 0,
-        meanPredictedProbability: 0,
-        observedFrequency: 0,
+        meanPredictedProbability: null,
+        observedFrequency: null,
       })),
     };
   }
