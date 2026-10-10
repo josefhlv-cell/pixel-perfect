@@ -17,7 +17,7 @@ function quarterStart(period: string): string | null {
   return m ? m[1] + "-" + String((Number(m[2]) - 1) * 3 + 1).padStart(2, "0") + "-01T00:00:00.000Z" : null;
 }
 
-function parseBIS(dataset: Sdmx, requestedGeos: string[]) {
+export function parseBisResidentialPropertyPrices(dataset: Sdmx, requestedGeos: string[] = []) {
   const structure = dataset.data?.structure;
   const seriesDimensions = structure?.dimensions?.series ?? [];
   const observationDimensions = structure?.dimensions?.observation ?? [];
@@ -70,7 +70,7 @@ export async function fetchBisResidentialPropertyPrices(
   });
   if (!response.ok) throw new Error(`BIS residential property prices HTTP ${response.status}`);
   const dataset = await response.json() as Sdmx;
-  const rows = parseBIS(dataset, geos);
+  const rows = parseBisResidentialPropertyPrices(dataset, geos);
   if (!rows.length) throw new Error("BIS returned no usable quarterly residential property-price observations.");
 
   return rows.map((row): EvidenceObservation => {
