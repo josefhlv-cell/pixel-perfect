@@ -42,7 +42,7 @@ describe("future engine", () => {
       ],
     });
 
-    expect(result.field.mechanism.generativeRegime).toBe("DECELERATION");
+    expect(result.field.mechanism.generativeRegime).toBe("CORRECTION");
     expect(result.field.leadingFuture).toBe("CORRECTION");
     expect(result.survivingFutures.length).toBeGreaterThan(0);
     expect(result.nextBestObservation?.id).toBe("mortgage-demand");

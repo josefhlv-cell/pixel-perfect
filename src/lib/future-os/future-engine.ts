@@ -6,6 +6,8 @@ import { selectNextBestObservation, type ObservationCandidate } from "./mechanis
 import type { FutureField, FutureAttractor, MechanismRegime } from "./mechanism-field/types";
 import type { FutureMarketTwin } from "./future-market-twin";
 import { buildFutureWavefront, type FutureWavefront } from "./future-wavefront";
+import { runHousePriceForecast, type HousePriceForecastReport } from "./predictive-core/engine";
+import type { LevelObservation } from "./predictive-core/levels";
 
 export type FutureEngineInput = {
   asOf: string;
@@ -25,6 +27,14 @@ export type FutureEngineInput = {
   superposition?: FutureSuperposition | null;
   marketTwin?: FutureMarketTwin | null;
   wavefrontInput?: Parameters<typeof buildFutureWavefront>[0];
+  /** Optional earned numeric forecast. It is reported beside the field and cannot change pressure or survival. */
+  housePrice?: {
+    seriesId: string;
+    region: string;
+    levels: readonly LevelObservation[];
+    rates?: readonly LevelObservation[];
+    horizonQuarters?: number;
+  } | null;
 };
 
 export type FutureEngineOutput = {
@@ -35,6 +45,7 @@ export type FutureEngineOutput = {
   falsifiersTriggered: Record<string, string[]>;
   marketTwin: FutureMarketTwin | null;
   wavefront: FutureWavefront | null;
+  housePriceForecast: HousePriceForecastReport | null;
 };
 
 /**
@@ -80,6 +91,9 @@ export function runFutureEngine(input: FutureEngineInput): FutureEngineOutput {
     falsifiersTriggered,
     marketTwin: input.marketTwin ?? null,
     wavefront,
+    housePriceForecast: input.housePrice
+      ? runHousePriceForecast(input.housePrice)
+      : null,
   };
 }
 

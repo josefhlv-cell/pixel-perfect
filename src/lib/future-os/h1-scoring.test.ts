@@ -16,6 +16,10 @@ describe("H1 scoring", () => {
     expect(result.selectedScenarioRate).toBe(1);
   });
 
+  it("rejects an empty ranking instead of reporting a perfect Brier score", () => {
+    expect(() => scoreScenarioRanking([])).toThrow(/empty scenario ranking/);
+  });
+
   it("rejects invalid probability", () => {
     expect(() => combinedScenarioScore(1.1, 0.5, 0.5)).toThrow();
   });

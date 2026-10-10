@@ -19,9 +19,7 @@ function assertProbability(value: number, name: string): void {
 }
 
 export function scoreScenarioRanking(rows: readonly ScenarioScoreRow[]): RankingMetrics {
-  if (!rows.length) {
-    return { brier: 0, directionalAccuracy: 0, selectedScenarioRate: 0 };
-  }
+  if (!rows.length) throw new Error("Cannot score an empty scenario ranking.");
 
   rows.forEach((row) => {
     assertProbability(row.probability, "probability");
