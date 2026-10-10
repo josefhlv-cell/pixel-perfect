@@ -57,7 +57,7 @@ export async function fetchBisResidentialPropertyPrices(
 ): Promise<EvidenceObservation[]> {
   const measures = [...BIS_MEASURES];
   const key = "Q." + geos.join("+") + "." + measures.join("+") + ".628";
-  const url = new URL(`${BIS_BASE}/${key}/all`);
+  const url = new URL(`${BIS_BASE}/${key}`);
   url.searchParams.set("format", "sdmx-json");
   url.searchParams.set("detail", "dataonly");
   url.searchParams.set("startPeriod", "2000-Q1");
