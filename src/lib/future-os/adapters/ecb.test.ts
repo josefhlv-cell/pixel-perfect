@@ -6,7 +6,7 @@ describe("ECB Czech long-term interest-rate adapter", () => {
 
   it("maps monthly CSV observations with explicit units and retrieval provenance", async () => {
     const csv = [
-      "KEY,FREQ,REF_AREA,IR_TYPE,TRANS_CAT,MATURITY,BS_COUNT_SECTOR,CURRENCY,IR_BUS_COVERAGE,IR_TYPE_FIX, TIME_PERIOD,OBS_VALUE",
+      "KEY,FREQ,REF_AREA,IR_TYPE,TRANS_CAT,MATURITY,BS_COUNT_SECTOR,CURRENCY,IR_BUS_COVERAGE,IR_TYPE_FIX,TIME_PERIOD,OBS_VALUE",
       "IRS.M.CZ.L.L40.CI.0000.CZK.N.Z,M,CZ,L,L40,CI,0000,CZK,N,Z,2024-01,4.02",
       "IRS.M.CZ.L.L40.CI.0000.CZK.N.Z,M,CZ,L,L40,CI,0000,CZK,N,Z,2024-02,4.11",
       "IRS.M.CZ.L.L40.CI.0000.CZK.N.Z,M,CZ,L,L40,CI,0000,CZK,N,Z,2024-03,not-a-number",
