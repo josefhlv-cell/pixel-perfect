@@ -39,7 +39,7 @@ export function parseBisResidentialPropertyPrices(dataset: Sdmx, requestedGeos: 
       const timeIndex = Number(obsKey.split(":")[0]);
       const period = timeValues[timeIndex]?.id;
       const value = payload[0];
-      if (!period || typeof value !== "number" || !Number.isFinite(value)) continue;
+      if (!period || !/^\\d{4}-Q[1-4]$/.test(period) || typeof value !== "number" || !Number.isFinite(value)) continue;
       rows.push({ geo, measure, period, value });
     }
   }
