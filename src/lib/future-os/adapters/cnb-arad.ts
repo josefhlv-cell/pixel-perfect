@@ -55,7 +55,9 @@ export function parseDelimited(text: string, delimiter = ";"): string[][] {
   return rows;
 }
 
-const HEADER_ALIASES: Record<string, string[]> = {
+type CanonKey = "indicator_id" | "indicator_name" | "frequency_code" | "frequency_name" | "unit_mult_code" | "unit_mult_name" | "unit" | "snapshot_id" | "period" | "value";
+type Canon = Partial<Record<CanonKey, string>>;
+const HEADER_ALIASES: Record<CanonKey, string[]> = {
   indicator_id: ["indicator_id", "id_ukazatele", "kod_ukazatele", "ukazatel_id", "indicator"],
   indicator_name: ["indicator_name", "nazev_ukazatele", "nazev", "name"],
   frequency_code: ["frequency_code", "frekvence_kod", "frequency"],
@@ -73,15 +75,15 @@ function normHeader(h: string) {
 }
 
 /** Rows as objects keyed by canonical names; `original` keeps every provider field verbatim. */
-export function toRecords(table: string[][]): { canonical: Record<string, string>; original: Record<string, string> }[] {
+export function toRecords(table: string[][]): { canonical: Canon; original: Record<string, string> }[] {
   const [header, ...body] = table;
   if (!header) return [];
   const keys = header.map((h) => {
     const n = normHeader(h);
-    return Object.entries(HEADER_ALIASES).find(([, al]) => al.includes(n))?.[0] ?? null;
+    return (Object.entries(HEADER_ALIASES) as [CanonKey, string[]][]).find(([, al]) => al.includes(n))?.[0] ?? null;
   });
   return body.map((r) => {
-    const canonical: Record<string, string> = {};
+    const canonical: Canon = {};
     const original: Record<string, string> = {};
     header.forEach((h, i) => {
       const v = (r[i] ?? "").trim();
