@@ -10,7 +10,7 @@ export type TrustDecision = {
 export function evaluateModelTrust(
   driftMetrics: DriftMetric[],
   forecastHistory: Parameters<typeof evaluateForecastHealth>[0],
-) : TrustDecision {
+): TrustDecision {
   const regime = detectRegimeBreak(driftMetrics);
   const health = evaluateForecastHealth(forecastHistory);
   let trustScore = 1;
@@ -23,6 +23,11 @@ export function evaluateModelTrust(
   if (regime.regime === "REGIME_BREAK") {
     trustScore -= 0.4;
     reasons.push("Byl detekován režimový zlom trhu.");
+  }
+  if (health.status === "INSUFFICIENT_DATA") {
+    // Lack of evidence is not evidence of good performance.
+    trustScore = Math.min(trustScore, 0.65);
+    reasons.push("Pro ověření predikční výkonnosti není dostatek platných výsledků.");
   }
   if (health.status === "DEGRADING") {
     trustScore -= 0.2;
