@@ -108,7 +108,7 @@ export function toSourceVintageInserts(
     const value = raw as Record<string, unknown>;
     const period = typeof value.period === "string" ? value.period : null;
     const numericValue = typeof value.value === "number" ? value.value : null;
-    if (!period || !/^\\d{4}-Q[1-4]$/.test(period) || numericValue == null || !Number.isFinite(numericValue)) continue;
+    if (!period || !/^\d{4}-Q[1-4]$/.test(period) || numericValue == null || !Number.isFinite(numericValue)) continue;
     if (!observation.retrievedAt || !Number.isFinite(Date.parse(observation.retrievedAt))) continue;
 
     const sourceRevision = typeof observation.metadata.eurostatDatasetUpdatedAt === "string"
