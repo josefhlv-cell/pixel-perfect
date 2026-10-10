@@ -38,7 +38,7 @@ export type IntervalCalibrationResult = {
   calibrationCutoff: string;
 };
 
-const DEFAULT_ALPHA = 0.1;
+const DEFAULT_ALPHA = 0.2;
 const DEFAULT_WINDOW_SIZE = 120;
 const DEFAULT_MIN_SAMPLES = 20;
 
