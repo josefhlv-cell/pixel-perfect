@@ -1,3 +1,4 @@
+import { evaluateForecastHealth } from "./forecast-health";
 import { evaluateModelTrust } from "./model-trust";
 import { detectRegimeBreak, type DriftMetric } from "./drift";
 import { nextBestObservation, type Hypothesis, type ObservationCandidate } from "./hypothesis-engine";
@@ -20,11 +21,13 @@ export function buildFutureRadarDecision(input: {
 }): FutureRadarDecision {
   const regime = detectRegimeBreak(input.driftMetrics);
   const modelTrust = evaluateModelTrust(input.driftMetrics, input.forecastHistory);
+  const forecastHealth = evaluateForecastHealth(input.forecastHistory);
+  const evidenceInsufficient = forecastHealth.status === "INSUFFICIENT_DATA";
   const next = nextBestObservation(input.hypotheses, input.observations)[0] ?? null;
   const explanation: string[] = [];
 
-  if (!input.dataReady) {
-    explanation.push("Radar je DATA_STARVED: chybí dostatečná evidence.");
+  if (!input.dataReady || evidenceInsufficient) {
+    explanation.push("Radar je DATA_STARVED: chybí dostatečná evidence pro ověření predikční výkonnosti.");
   }
   if (regime.regime === "REGIME_BREAK") {
     explanation.push("Byl detekován režimový zlom; historické vztahy mají sníženou přenositelnost.");
@@ -40,7 +43,7 @@ export function buildFutureRadarDecision(input: {
   }
 
   const status =
-    !input.dataReady ? "DATA_STARVED" :
+    !input.dataReady || evidenceInsufficient ? "DATA_STARVED" :
     regime.regime === "REGIME_BREAK" ? "REGIME_BREAK" :
     input.modelDisagreement >= 0.35 ? "CONTESTED" :
     "CLEAR";
