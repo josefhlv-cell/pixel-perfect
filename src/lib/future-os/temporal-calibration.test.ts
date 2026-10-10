@@ -114,6 +114,17 @@ describe("temporal conformal calibration", () => {
     ).toThrow(/quantiles must be ordered/);
   });
 
+  it("defaults to 80% coverage for p10-p90 intervals", () => {
+    const result = calibratePredictionInterval({
+      issuedAt,
+      p10: 0,
+      p50: 5,
+      p90: 10,
+      history: history(20),
+    });
+    expect(result.alpha).toBe(0.2);
+  });
+
   it("rejects invalid alpha and window parameters", () => {
     const input = { issuedAt, p10: 0, p50: 5, p90: 10, history: history(20) };
     expect(() => calibratePredictionInterval({ ...input, alpha: 1 })).toThrow(/alpha/);
