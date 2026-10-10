@@ -130,7 +130,8 @@ export function toSourceVintageInserts(
       period_key: period,
       source_published_at: observation.publishedAt,
       retrieved_at: observation.retrievedAt,
-      source_revision: sourceRevision,
+      // Dataset updated-at is retained in raw provenance, but is not an observation-level revision ID.
+      source_revision: null,
       numeric_value: numericValue,
       unit: observation.unit ?? "index_2015_100",
       raw_payload: {
