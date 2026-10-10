@@ -47,7 +47,7 @@ function parseBIS(dataset: Sdmx, requestedGeos: string[]) {
  * so availableAt = retrievedAt (conservative point-in-time cutoff).
  */
 export async function fetchBisResidentialPropertyPrices(
-  geos: string[] = ["CZ"],
+  geos: string[],
   signal?: AbortSignal,
   measures: string[] = ["N", "R"],
 ): Promise<EvidenceObservation[]> {
