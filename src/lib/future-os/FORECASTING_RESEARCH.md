@@ -1,43 +1,32 @@
-# Forecasting research and implementation principles
+# Forecasting research and evaluation protocol
 
-This project aims to make probabilistic real-estate forecasts auditable and empirically useful. A forecast is a distribution plus a decision horizon, data cutoff, and explicit uncertainty—not a promise to know the future.
+This project treats a forecast as a time-stamped probability distribution conditional on information available at issuance. The objective is measurable decision value, not confident prose or an untestable claim of foresight.
 
-## Methods mapped to engineering choices
+## Research foundations
 
-### 1. Rolling-origin evaluation and point-in-time data
+- Hyndman & Athanasopoulos, *Forecasting: Principles and Practice*, time-series cross-validation: https://otexts.com/fpp3/tscv.html
+- Gneiting & Raftery (2007), *Strictly Proper Scoring Rules, Prediction, and Estimation*: https://doi.org/10.1198/016214506000001437
+- Xu & Xie (2023), *Sequential Predictive Conformal Inference for Time Series*: https://proceedings.mlr.press/v202/xu23r.html
+- Makridakis et al., M4 forecasting competition: https://doi.org/10.1016/j.ijforecast.2018.06.001
+- NIST/SEMATECH e-Handbook of Statistical Methods: https://www.itl.nist.gov/div898/handbook/
 
-Evaluate forecasts in chronological order. At each origin, only use features and revisions that would have been available at that time; evaluate separately by target horizon. Random train/test splits can leak future information into time-series estimates.
+## Mandatory protocol
 
-Reference: Hyndman and Athanasopoulos, *Forecasting: Principles and Practice*, section on time-series cross-validation: https://otexts.com/fpp3/tscv.html
+1. **Point-in-time features:** use release/availability timestamps, not just observation dates. Never use later revisions before their release.
+2. **Rolling-origin evaluation:** each forecast is produced using only the past; keep a locked chronological holdout.
+3. **Benchmarks:** compare with no-change, seasonal-naive where appropriate, and simple regularized economic baselines.
+4. **Separate target and horizon:** report metrics by geography, target, forecast horizon, and market regime. Aggregates must not conceal local failures.
+5. **Probabilistic quality:** report MAE and bias for point forecasts; Brier and log loss for binary events; interval coverage, width and interval score for quantiles; reliability bins for calibration.
+6. **Sample sufficiency:** publish sample count and a distinct insufficient-evidence status. Avoid performance claims when sample sizes are small.
+7. **Model selection discipline:** tune only on validation periods; use the final chronological test once; correct for multiple testing when exploring many signals.
+8. **Regime shifts:** detect and report distribution changes; lower trust and widen uncertainty rather than assuming a particular market direction.
+9. **Source lineage:** retain publisher, series identifier, units, geography, observed period, publication time, retrieval time, revision/version, hash, and license.
+10. **Decision relevance:** evaluate expected rent, vacancy, operating costs, financing, taxes, liquidity and downside scenarios; keep assumptions editable and explicit.
 
-### 2. Strictly proper scores for probabilities
+## Why astrophysics is not a default property predictor
 
-For binary events, Brier score and log loss reward honest probability estimates in expectation. For distributions and quantiles, add interval score or weighted interval score; never judge a probabilistic model only by point error or whether one outcome happened to land inside an interval.
+Astrophysical cycles can be studied as exploratory hypotheses, but there is no established causal basis to treat them as predictive inputs for local property prices. Only consider them if a preregistered mechanism and prospective out-of-sample tests demonstrate incremental skill after controlling for ordinary macroeconomic predictors and correcting for multiple comparisons. Otherwise exclude them from decision models.
 
-Reference: Gneiting and Raftery (2007), *Strictly Proper Scoring Rules, Prediction, and Estimation*, Journal of the American Statistical Association: https://doi.org/10.1198/016214506000001437
+## Operational status
 
-### 3. Prediction intervals under temporal dependence
-
-Conformal methods can calibrate intervals using past forecast errors and finite-sample order statistics. The standard exchangeability guarantee does not automatically carry over unchanged to dependent, non-stationary market time series. Therefore the implementation filters by what was observable at the forecast issue time, uses a chronological calibration window, exposes insufficient-data states, and must be monitored for realized coverage by horizon and market regime.
-
-References:
-- Xu and Xie (2023), *Sequential Predictive Conformal Inference for Time Series*, ICML / PMLR: https://proceedings.mlr.press/v202/xu23r.html
-- Barber and Pananjady (2026), *Predictive inference for time series: why is split conformal effective despite temporal dependence?*, ALT / PMLR: https://proceedings.mlr.press/v313/barber26a.html
-
-### 4. Regime changes and model trust
-
-Housing markets react to rates, lending conditions, supply constraints, incomes, migration, regulation, and local market liquidity. Relationships can change across geographies and cycles. A regime warning should lower trust and broaden uncertainty—not automatically assert a crash or force a particular direction.
-
-### 5. Evidence hierarchy
-
-Prefer timestamped first-party statistical sources and transparent revision histories (e.g. national statistical offices, central banks, Eurostat, OECD, BIS, ECB). Third-party asking-price data can be useful as a high-frequency signal but must not be conflated with completed transaction prices. Store source, series identifier, units, geography, observation time, release time, retrieval time, revision/version, and license.
-
-## Research guardrails
-
-- No publication or model name proves out-of-sample skill for Czech property prices; validate locally by region and horizon.
-- Keep baselines (no-change, seasonal/naive, and simple economic predictors) in every evaluation.
-- Use a locked chronological test period after model selection.
-- Track MAE/MASE for point forecasts; Brier/log loss for event probabilities; quantile/interval scores and empirical coverage for uncertainty.
-- Record model, features, hyperparameters, data cutoff, and forecast-time evidence for each issued prediction.
-- Treat astrophysics, sunspot cycles, or other distant signals as hypotheses only. Do not use them unless a defensible causal mechanism is specified in advance and prospective out-of-sample testing shows incremental skill after multiple-testing corrections.
-- Distinguish association from causation. A causal graph is a set of explicit assumptions, not causal proof by itself.
+The modules in this directory provide evaluation/calibration primitives. Do not describe them as production-connected until the forecast persistence and ingestion paths call them, data lineage is verified, and tests/build pass in CI. A score is not proof of causality, and calibrated intervals under exchangeability do not guarantee coverage during structural market breaks.
