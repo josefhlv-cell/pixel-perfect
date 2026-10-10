@@ -25,6 +25,33 @@ describe("house price forecast engine", () => {
     expect(clean.comparisons.map((row) => row.mae)).toEqual(dirty.comparisons.map((row) => row.mae));
   });
 
+
+  it("does not let a future observed vintage upgrade current evidence quality", () => {
+    const assumed = observedLevels(Array.from({ length: 48 }, (_, index) => 100 + index))
+      .map((row) => ({ ...row, quality: "PUBLICATION_LAG_ASSUMED" as const }));
+    const asOf = assumed[30].vintageDate;
+    const baseline = runHousePriceForecast({ seriesId: "vintage", region: "CZ", levels: assumed, horizonQuarters: 1, asOf });
+    const withFutureVintage = [
+      ...assumed,
+      {
+        period: assumed[20].period,
+        level: 999_999,
+        vintageDate: addDays(asOf, 365),
+        quality: "OBSERVED_VINTAGE" as const,
+      },
+    ];
+    const future = runHousePriceForecast({
+      seriesId: "vintage",
+      region: "CZ",
+      levels: withFutureVintage,
+      horizonQuarters: 1,
+      asOf,
+    });
+    expect(baseline.evidenceClass).toBe("ASSUMED_LAG_LATEST_REVISION");
+    expect(future.evidenceClass).toBe("ASSUMED_LAG_LATEST_REVISION");
+    expect(future.promotable).toBe(false);
+  });
+
   it("issues an unpromotable persistence forecast when nothing beats it", () => {
     const levels = observedLevels(Array.from({ length: 48 }, () => 100));
     const report = runHousePriceForecast({ seriesId: "flat", region: "CZ", levels, horizonQuarters: 1 });
