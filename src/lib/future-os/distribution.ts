@@ -38,5 +38,5 @@ export function analyzeForecastDistribution(values: number[]): DistributionCompa
       : concentration > 0.75
         ? "BROAD_BASED"
         : "UNRESOLVED";
-  return { mean, median, dispersion, tailRisk, skewProxy, concentration, interpretation };
+  return { mean, median: median!, dispersion, tailRisk, skewProxy, concentration, interpretation };
 }

@@ -18,7 +18,7 @@ export async function fetchSdmxJson(options: SdmxFetchOptions): Promise<{
     ? `/rest/v1/data/${encodeURIComponent(options.flowRef)}/${encodeURIComponent(options.key)}/${encodeURIComponent(options.providerRef ?? "all")}`
     : `/rest/v1/data/${encodeURIComponent(options.flowRef)}/${encodeURIComponent(options.providerRef ?? "all")}`;
   const url = new URL(base + path);
-  const response = await fetch(url, {
+  const response = await fetch(url.toString(), {
     signal: options.signal,
     headers: { accept: options.accept ?? "application/vnd.sdmx.data+json;version=1.0.0" },
   });

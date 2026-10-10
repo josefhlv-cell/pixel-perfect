@@ -90,8 +90,8 @@ export function fuseTurningPointSignals(
   const weights = signals.map(signal => signal.weight ?? 1);
   const totalWeight = Math.max(1e-9, weights.reduce((a, b) => a + b, 0));
   const score = results.reduce((sum, result, i) => sum + result.score * weights[i]!, 0) / totalWeight;
-  const positive = results.reduce((sum, result, i) => sum + (result.direction > 0 ? weights[i] : 0), 0);
-  const negative = results.reduce((sum, result, i) => sum + (result.direction < 0 ? weights[i] : 0), 0);
+  const positive = results.reduce((sum, result, i) => sum + (result.direction > 0 ? weights[i]! : 0), 0);
+  const negative = results.reduce((sum, result, i) => sum + (result.direction < 0 ? weights[i]! : 0), 0);
   const agreement = Math.max(positive, negative) / totalWeight;
   const direction: -1 | 0 | 1 = positive > negative ? 1 : negative > positive ? -1 : 0;
   const status =

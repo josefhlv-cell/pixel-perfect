@@ -161,9 +161,11 @@ export function discoverLeadingSignals(
   const byEntity = new Map<string, SignalPoint[]>();
   for (const row of observations) {
     if (typeof row.value !== "number") continue;
+    const date = row.effectiveFrom ?? row.observedAt;
+    if (!date) continue;
     const key = `${row.entityType}:${row.entityKey}`;
     const list = byEntity.get(key) ?? [];
-    list.push({ date: row.effectiveFrom ?? row.observedAt, value: row.value, evidenceId: row.id });
+    list.push({ date, value: row.value, evidenceId: row.id });
     byEntity.set(key, list);
   }
   const target = byEntity.get(targetEntityKey) ?? [];

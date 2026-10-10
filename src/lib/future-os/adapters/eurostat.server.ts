@@ -65,7 +65,7 @@ export async function fetchEurostatHousePriceIndex(
   for (const geo of geos) url.searchParams.append("geo", geo);
 
   const retrievedAt = new Date().toISOString();
-  const response = await fetch(url, {
+  const response = await fetch(url.toString(), {
     signal,
     headers: { accept: "application/json" },
   });

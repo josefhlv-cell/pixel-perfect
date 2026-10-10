@@ -32,8 +32,8 @@ export function decomposeUncertainty(input: UncertaintyInputs): UncertaintyDecom
   }:{data:.25,model:.25,parameter:.25,regime:.25};
   const entries=Object.entries(shares) as Array<[keyof typeof shares,number]>;
   entries.sort((a,b)=>b[1]-a[1]);
-  const dominant=entries[0][1]!-entries[1][1]!<0.15?"MIXED":({
+  const dominant=entries[0]![1]-entries[1]![1]<0.15?"MIXED":({
     data:"DATA",model:"MODEL",parameter:"PARAMETER",regime:"REGIME",
-  } as const)[entries[0][0]!];
+  } as const)[entries[0]![0]];
   return {total,shares,dominant};
 }
