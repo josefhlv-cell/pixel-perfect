@@ -9,6 +9,7 @@ import { isActive } from "@/lib/freshness";
 import { pageHead } from "@/lib/head";
 import { t } from "@/lib/i18n";
 import { Empty, Kpi, PageHeader, PriorityBadge, SampleBadge, Section } from "@/components/app/shared";
+import { HousePriceForecast } from "@/components/app/HousePriceForecast";
 import { ValueChart, SERIES } from "@/components/app/Charts";
 import { AiRunner } from "@/components/app/AiPanel";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,8 @@ function Dashboard() {
         <Kpi label="Aktivní dealy" value={active.length} sub={<span className="inline-flex items-center gap-1">vč. <SampleBadge /></span>} />
         <Kpi label="Watchlist" value={wl.length} />
       </div>
+
+      <HousePriceForecast compact />
 
       <Section
         title="Vývoj portfolia"

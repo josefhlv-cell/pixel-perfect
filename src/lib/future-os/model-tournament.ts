@@ -15,7 +15,8 @@ export type ModelEvaluation = {
 
 export function tournamentScore(e: ModelEvaluation): number | null {
   if (e.sampleCount < 10) return null;
-  if (e.mae == null || e.rmse == null || e.directionalAccuracy == null || e.intervalCoverage == null || e.brierScore == null || e.robustnessScore == null) return null;\n  const accuracy = 1 / (1 + Math.max(0, e.mae));
+  if (e.mae == null || e.rmse == null || e.directionalAccuracy == null || e.intervalCoverage == null || e.brierScore == null || e.robustnessScore == null) return null;
+  const accuracy = 1 / (1 + Math.max(0, e.mae));
   const rmse = 1 / (1 + Math.max(0, e.rmse));
   const direction = e.directionalAccuracy;
   const coverage = 1 - Math.abs(e.intervalCoverage - 0.9);
