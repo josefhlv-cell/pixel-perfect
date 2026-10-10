@@ -54,12 +54,15 @@ export function compareForecastToBenchmark(
   blockLength = 4,
   iterations = 1000,
 ) {
+  if (!["MAE", "BRIER", "LOG_LOSS", "DIRECTIONAL_ERROR"].includes(kind)) {
+    throw new RangeError("kind must be a supported paired metric");
+  }
   if (samples.length < 20) return null;
   if (!Number.isInteger(iterations) || iterations < 100) {
     throw new RangeError("iterations must be an integer >= 100");
   }
-  if (!Number.isFinite(blockLength) || blockLength < 1) {
-    throw new RangeError("blockLength must be a finite number >= 1");
+  if (!Number.isInteger(blockLength) || blockLength < 1) {
+    throw new RangeError("blockLength must be an integer >= 1");
   }
   validateSamples(samples);
 
