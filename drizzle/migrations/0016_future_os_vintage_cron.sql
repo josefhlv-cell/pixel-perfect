@@ -8,7 +8,7 @@ CREATE OR REPLACE FUNCTION public.schedule_future_os_vintage_ingestion(_base_url
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, cron
+SET search_path = pg_catalog, public, cron, net
 AS $$
 DECLARE
   normalized_url text;
