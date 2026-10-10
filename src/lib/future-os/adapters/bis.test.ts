@@ -55,7 +55,7 @@ describe("BIS residential property adapter", () => {
         },
         dataSets: [{
           series: {
-            "0:0:0": { observations: { "0": [100], "1": [101], "2": [102], "3": [null] } },
+            "0:0:0": { observations: { "0": [100], "1": [101], "2": [102], "3": [Number.NaN] } },
             "0:1:0": { observations: { "0": [999] } },
           },
         }],
