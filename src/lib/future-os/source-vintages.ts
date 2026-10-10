@@ -1,3 +1,8 @@
+import { createHash } from "node:crypto";
+import type { Json } from "@/integrations/supabase/types";
+import type { EvidenceObservation } from "./types";
+import { CZECH_HPI_SERIES } from "./predictive-core/publish";
+
 export type SourceVintageQuality =
   | "OBSERVED_VINTAGE"
   | "RETRIEVAL_SNAPSHOT"
@@ -76,11 +81,6 @@ export function validateVintage(row: SourceVintage): void {
   }
 }
 
-
-import { createHash } from "node:crypto";
-import type { Json } from "@/integrations/supabase/types";
-import type { EvidenceObservation } from "./types";
-import { CZECH_HPI_SERIES } from "./predictive-core/publish";
 
 export type SourceVintageInsert = {
   source_key: string;
