@@ -186,7 +186,7 @@ async function scoreOpenForecasts(admin: Admin, rows: readonly IndexPoint[], asO
       brier_score: realization.brierScore,
       metrics: {
         evidence: "latest_revision_with_frozen_origin",
-        note: "Origin level was frozen at issue. The horizon uses the latest published revision.",
+        note: "Origin level was frozen at issue. Outcome uses the latest source revision available at outcome retrieval time; historical source vintages are not archived, so this is not a real-time vintage backtest.",
       },
     };
     const written = await admin.from("reality_forecast_outcomes").insert(outcome);
