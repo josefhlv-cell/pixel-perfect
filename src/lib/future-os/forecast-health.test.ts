@@ -28,6 +28,27 @@ describe("Future OS forecast health", () => {
     expect(evaluateForecastHealth(history, 4).status).toBe("INSUFFICIENT_DATA");
   });
 
+  it("keeps zero-baseline MAE ratios JSON serializable", () => {
+    const history = [
+      ...Array.from({ length: 4 }, (_, i) => ({
+        asOf: new Date(Date.UTC(2024, i, 1)).toISOString(),
+        absoluteError: 0,
+        directionalHit: true,
+        intervalCovered: true,
+      })),
+      ...Array.from({ length: 4 }, (_, i) => ({
+        asOf: new Date(Date.UTC(2025, i, 1)).toISOString(),
+        absoluteError: 1,
+        directionalHit: true,
+        intervalCovered: true,
+      })),
+    ];
+    const result = evaluateForecastHealth(history, 4);
+    expect(result.status).toBe("BROKEN");
+    expect(Number.isFinite(result.maeRatio)).toBe(true);
+    expect(JSON.parse(JSON.stringify(result)).maeRatio).toBe(Number.MAX_VALUE);
+  });
+
   it("ignores malformed outcomes rather than counting them as valid evidence", () => {
     const result = evaluateForecastHealth([
       { asOf: "not-a-date", absoluteError: 0, directionalHit: true, intervalCovered: true },
