@@ -6,6 +6,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { authenticateCronRequest } from "@/integrations/supabase/cron-auth";
 import { fetchEurostatHousePriceIndex } from "@/lib/future-os/adapters/eurostat.server";
 import { fetchBisResidentialPropertyPrices } from "@/lib/future-os/adapters/bis.server";
+import { fetchEcbCzechLongTermRates } from "@/lib/future-os/adapters/ecb.server";
 import { toSourceVintageInserts } from "@/lib/future-os/source-vintages";
 
 export const Route = createFileRoute("/api/public/cron/future-os-vintages")({
@@ -19,9 +20,10 @@ export const Route = createFileRoute("/api/public/cron/future-os-vintages")({
           const results = await Promise.allSettled([
             fetchEurostatHousePriceIndex(["CZ"], request.signal),
             fetchBisResidentialPropertyPrices(["CZ"], request.signal),
+            fetchEcbCzechLongTermRates(request.signal),
           ]);
           const sourceFailures = results.flatMap((result, index) => result.status === "rejected"
-            ? [{ source: index === 0 ? "eurostat-prc-hpi-q" : "bis-ws-spp", error: result.reason instanceof Error ? result.reason.message : "Source fetch failed" }]
+            ? [{ source: index === 0 ? "eurostat-prc-hpi-q" : index === 1 ? "bis-ws-spp" : "ecb-irs-cz-10y", error: result.reason instanceof Error ? result.reason.message : "Source fetch failed" }]
             : []);
           const observations = results.flatMap(result => result.status === "fulfilled" ? result.value : []);
           const snapshots = toSourceVintageInserts(observations);
