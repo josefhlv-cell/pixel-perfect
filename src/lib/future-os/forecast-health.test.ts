@@ -11,4 +11,29 @@ describe("Future OS forecast health", () => {
     expect(result.status).toBe("BROKEN");
     expect(result.maeRatio).toBeGreaterThan(1.75);
   });
+
+  it("does not label empty history as healthy", () => {
+    const result = evaluateForecastHealth([]);
+    expect(result.status).toBe("INSUFFICIENT_DATA");
+    expect(result.sampleCount).toBe(0);
+  });
+
+  it("requires a historical comparator and enough recent outcomes", () => {
+    const history = Array.from({ length: 7 }, (_, i) => ({
+      asOf: new Date(Date.UTC(2025, i, 1)).toISOString(),
+      absoluteError: 0,
+      directionalHit: true,
+      intervalCovered: true,
+    }));
+    expect(evaluateForecastHealth(history, 4).status).toBe("INSUFFICIENT_DATA");
+  });
+
+  it("ignores malformed outcomes rather than counting them as valid evidence", () => {
+    const result = evaluateForecastHealth([
+      { asOf: "not-a-date", absoluteError: 0, directionalHit: true, intervalCovered: true },
+      { asOf: "2025-01-01T00:00:00Z", absoluteError: Number.NaN, directionalHit: true, intervalCovered: true },
+    ]);
+    expect(result.sampleCount).toBe(0);
+    expect(result.status).toBe("INSUFFICIENT_DATA");
+  });
 });
