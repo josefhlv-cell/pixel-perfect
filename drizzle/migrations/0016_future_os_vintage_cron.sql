@@ -1,4 +1,4 @@
--- Schedule authenticated source snapshot collection hourly.
+-- Schedule authenticated source snapshot collection daily; HPI is a low-frequency quarterly series.
 -- Call once after deployment with the public app URL and the same cron secret
 -- configured for authenticateCronRequest. Do not use a preview URL in production.
 CREATE EXTENSION IF NOT EXISTS pg_cron;
@@ -27,7 +27,7 @@ BEGIN
 
   PERFORM cron.schedule(
     'future-os-vintage-ingestion',
-    '15 * * * *',
+    '15 3 * * *',
     format(
       $job$SELECT net.http_post(
         url := %L,
