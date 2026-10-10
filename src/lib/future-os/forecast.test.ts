@@ -50,7 +50,7 @@ describe("Future OS forecast integrity", () => {
     const history = Array.from({ length: 20 }, (_, index) => ({
       forecastIssuedAt: new Date(Date.UTC(2024, index, 1)).toISOString(),
       outcomeObservedAt: new Date(Date.UTC(2024, index, 2)).toISOString(),
-      actual: index === 19 ? 20 : 5,
+      actual: index >= 17 ? 20 : 5,
       p10: 0,
       p90: 10,
     }));
