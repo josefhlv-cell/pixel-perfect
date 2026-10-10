@@ -88,7 +88,7 @@ export async function fetchEcbCzechLongTermRates(signal?: AbortSignal): Promise<
         ingestionMode: "live",
         pointInTimeMode: "conservative_retrieval_cutoff",
         quality: "RETRIEVAL_SNAPSHOT",
-        caveat: "Current ECB API values are retrieval snapshots, not archived source-published vintages.",
+        caveat: "Current ECB API values are retrieval snapshots, not archived source-published vintages. The sovereign 10-year yield is a macro-financing proxy, not a mortgage offer rate or direct measure of household borrowing costs.",
       },
       createdAt: retrievedAt,
     };
