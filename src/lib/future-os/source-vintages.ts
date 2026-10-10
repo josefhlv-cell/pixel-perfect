@@ -115,8 +115,8 @@ export function toSourceVintageInserts(
       ? observation.metadata.eurostatDatasetUpdatedAt
       : null;
     const canonical = JSON.stringify({
-      source: "eurostat-prc-hpi-q",
-      series: CZECH_HPI_SERIES,
+      source: observation.sourceId,
+      series: observation.sourceId === "eurostat-prc-hpi-q" ? CZECH_HPI_SERIES : observation.entityKey,
       geography: observation.geographyKey,
       period,
       value: numericValue,
@@ -124,8 +124,8 @@ export function toSourceVintageInserts(
       sourceRevision,
     });
     snapshots.push({
-      source_key: "eurostat-prc-hpi-q",
-      series_key: CZECH_HPI_SERIES,
+      source_key: observation.sourceId,
+      series_key: observation.sourceId === "eurostat-prc-hpi-q" ? CZECH_HPI_SERIES : observation.entityKey,
       geography_key: observation.geographyKey,
       period_key: period,
       source_published_at: observation.publishedAt,
