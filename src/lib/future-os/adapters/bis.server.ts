@@ -41,3 +41,42 @@ function parseBIS(dataset: Sdmx, requestedGeos: string[]) {
   }
   return rows;
 }
+
+/**
+ * BIS selected residential property prices (WS_SPP). BIS gives no per-observation publication time,
+ * so availableAt = retrievedAt (conservative point-in-time cutoff).
+ */
+export async function fetchBisResidentialPropertyPrices(
+  geos: string[] = ["CZ"],
+  signal?: AbortSignal,
+  measures: string[] = ["N", "R"],
+): Promise<EvidenceObservation[]> {
+  const key = "Q." + geos.join("+") + "." + measures.join("+");
+  const url = BIS_BASE + "/" + encodeURIComponent(key) + "?format=jsondata";
+  const retrievedAt = new Date().toISOString();
+  const response = await fetch(url, { signal, headers: { accept: "application/vnd.sdmx.data+json;version=2.0.0" } });
+  if (!response.ok) throw new Error("BIS HTTP " + response.status);
+  const rows = parseBIS((await response.json()) as Sdmx, geos);
+  const out: EvidenceObservation[] = [];
+  for (const r of rows) {
+    const observedAt = quarterStart(r.period);
+    if (!observedAt) continue;
+    out.push({
+      id: `bis:${r.geo}:${r.measure}:${r.period}`,
+      sourceId: "bis-rpp", sourceName: "BIS Residential Property Prices", sourceType: "official_statistical",
+      sourceUrl: url, publisher: "Bank for International Settlements",
+      geographyType: "country", geographyKey: r.geo,
+      entityType: "series", entityKey: `residential_property_price_${r.measure || "unknown"}`,
+      observedAt, publishedAt: null, retrievedAt, availableAt: retrievedAt,
+      effectiveFrom: observedAt, effectiveTo: null, revision: 1,
+      value: { value: r.value, period: r.period, measure: r.measure },
+      unit: null, frequency: "quarterly", leadClass: "UNKNOWN",
+      sourceReliability: 0.95, independenceGroup: "bis",
+      contentHash: ["bis", "WS_SPP", r.geo, r.measure, r.period, String(r.value)].join("|"),
+      isRevision: false, supersedesId: null,
+      metadata: { ingestionMode: "live", pointInTimeMode: "conservative_retrieval_cutoff" },
+      createdAt: retrievedAt,
+    });
+  }
+  return out;
+}
