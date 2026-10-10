@@ -25,7 +25,7 @@ function parseBIS(dataset: Sdmx, requestedGeos: string[]) {
   const timeDimension = observationDimensions.find((d) => d.id === "TIME_PERIOD");
   const timeValues = timeDimension?.values ?? [];
   const geoIndex = seriesDimensions.findIndex((d) => d.id === "REF_AREA");
-  const measureIndex = seriesDimensions.findIndex((d) => d.id === "VALUE_MEASURE");
+  const measureIndex = seriesDimensions.findIndex((d) => ["VALUE_MEASURE", "MEASURE", "INDICATOR"].includes(d.id));
   const frequencyIndex = seriesDimensions.findIndex((d) => d.id === "FREQ");
   const rows: Array<{ geo: string; measure: string; period: string; value: number }> = [];
 
@@ -56,8 +56,8 @@ export async function fetchBisResidentialPropertyPrices(
   signal?: AbortSignal,
 ): Promise<EvidenceObservation[]> {
   const measures = [...BIS_MEASURES];
-  const key = "Q." + geos.join("+") + "." + measures.join("+");
-  const url = new URL(`${BIS_BASE}/${key}`);
+  const key = "Q." + geos.join("+") + "." + measures.join("+") + ".628";
+  const url = new URL(`${BIS_BASE}/${key}/all`);
   url.searchParams.set("format", "sdmx-json");
   url.searchParams.set("detail", "dataonly");
   url.searchParams.set("startPeriod", "2000-Q1");
