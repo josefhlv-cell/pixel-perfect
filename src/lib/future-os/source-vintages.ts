@@ -78,6 +78,7 @@ export function validateVintage(row: SourceVintage): void {
 
 
 import { createHash } from "node:crypto";
+import type { Json } from "@/integrations/supabase/types";
 import type { EvidenceObservation } from "./types";
 import { CZECH_HPI_SERIES } from "./predictive-core/publish";
 
@@ -91,7 +92,7 @@ export type SourceVintageInsert = {
   source_revision: string | null;
   numeric_value: number;
   unit: string;
-  raw_payload: Record<string, unknown>;
+  raw_payload: Json;
   payload_hash: string;
   quality: "RETRIEVAL_SNAPSHOT";
 };
