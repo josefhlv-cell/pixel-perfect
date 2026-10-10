@@ -30,9 +30,10 @@ export function buildForecastLesson(
   outcome: ForecastMemoryOutcome,
 ): ForecastMemoryOutcome {
   const errorValues = Object.values(outcome.errorSnapshot).filter((value): value is number => typeof value === "number");
+  // Missing errors are unknown, not a perfect forecast.
   const meanAbsError = errorValues.length
     ? errorValues.reduce((sum, value) => sum + Math.abs(value), 0) / errorValues.length
-    : 0;
+    : null;
 
   return {
     ...outcome,
