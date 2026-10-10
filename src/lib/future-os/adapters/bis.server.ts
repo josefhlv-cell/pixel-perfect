@@ -54,7 +54,7 @@ export async function fetchBisResidentialPropertyPrices(
   const key = "Q." + geos.join("+") + "." + measures.join("+");
   const url = BIS_BASE + "/" + encodeURIComponent(key) + "?format=jsondata";
   const retrievedAt = new Date().toISOString();
-  const response = await fetch(url, { signal, headers: { accept: "application/vnd.sdmx.data+json;version=2.0.0" } });
+  const response = await fetch(url, { signal: signal ?? null, headers: { accept: "application/vnd.sdmx.data+json;version=2.0.0" } });
   if (!response.ok) throw new Error("BIS HTTP " + response.status);
   const rows = parseBIS((await response.json()) as Sdmx, geos);
   const out: EvidenceObservation[] = [];
