@@ -12,11 +12,21 @@ export function eurostatIndexRows(observations: readonly { value: unknown; avail
     const value = row.value as { value?: unknown; period?: unknown };
     if (typeof value?.value !== "number" || !Number.isFinite(value.value) || value.value <= 0) continue;
     if (typeof value.period !== "string" || !/^\d{4}-Q[1-4]$/.test(value.period)) continue;
-    byPeriod.set(value.period, {
+    const availableAt = row.availableAt && Number.isFinite(Date.parse(row.availableAt)) ? row.availableAt : undefined;
+    const candidate: IndexPoint = {
       period: value.period,
       value: value.value,
-      ...(row.availableAt && Number.isFinite(Date.parse(row.availableAt)) ? { availableAt: row.availableAt } : {}),
-    });
+      ...(availableAt ? { availableAt } : {}),
+    };
+    const previous = byPeriod.get(value.period);
+    // Input order is not a reliable proxy for vintage order. When multiple
+    // retrievals of one period are supplied, retain the newest timestamped row.
+    // If neither row has a timestamp, retain the first row rather than silently
+    // allowing array order to overwrite it.
+    if (!previous ||
+      (candidate.availableAt && (!previous.availableAt || Date.parse(candidate.availableAt) > Date.parse(previous.availableAt)))) {
+      byPeriod.set(value.period, candidate);
+    }
   }
   return [...byPeriod.values()].sort((a, b) => a.period.localeCompare(b.period));
 }
