@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { discoverLeadingSignals, evaluateLeadingSignal } from "./signal-discovery";
+import { discoverLeadingSignals, evaluateLeadingSignal, parseEvidenceNumericValue } from "./signal-discovery";
 
 function series(offset = 0) {
   return Array.from({ length: 24 }, (_, i) => ({
@@ -9,6 +9,19 @@ function series(offset = 0) {
 }
 
 describe("Future OS leading-signal discovery", () => {
+  it("normalizes numeric evidence values from importer JSON shapes", () => {
+    expect(parseEvidenceNumericValue(12.5)).toBe(12.5);
+    expect(parseEvidenceNumericValue(" 12.5 ")).toBe(12.5);
+    expect(parseEvidenceNumericValue("12,5")).toBe(12.5);
+    expect(parseEvidenceNumericValue({ value: 12.5, raw: "12.5" })).toBe(12.5);
+    expect(parseEvidenceNumericValue({ value: null, raw: "12.5" })).toBe(12.5);
+    expect(parseEvidenceNumericValue({ value: "not-a-number", raw: "12.5" })).toBe(12.5);
+    expect(parseEvidenceNumericValue({ value: null, raw: null })).toBeNull();
+    expect(parseEvidenceNumericValue("")).toBeNull();
+    expect(parseEvidenceNumericValue(true)).toBeNull();
+    expect(parseEvidenceNumericValue(Number.NaN)).toBeNull();
+  });
+
   it("rejects undersampled relationships", () => {
     const result = evaluateLeadingSignal({
       signal: series().slice(0, 5),
