@@ -37,16 +37,14 @@ export const runAiAnalysis = createServerFn({ method: "POST" })
         tokens_output: usage?.tokensOutput ?? null,
         tool_calls: 0,
       });
-      await supabase
-        .from("ai_analyses")
-        .insert({
-          user_id: userId,
-          property_id: propertyId,
-          kind: data.kind,
-          provider: ai.name,
-          model: ai.model,
-          result: result as never,
-        });
+      await supabase.from("ai_analyses").insert({
+        user_id: userId,
+        property_id: propertyId,
+        kind: data.kind,
+        provider: ai.name,
+        model: ai.model,
+        result: result as never,
+      });
     };
 
     try {

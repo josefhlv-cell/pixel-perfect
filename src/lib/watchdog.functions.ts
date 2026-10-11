@@ -96,13 +96,11 @@ async function notifyWatch(
   query: string,
   n: number,
 ) {
-  await supabase
-    .from("alerts")
-    .insert({
-      user_id: userId,
-      kind: "new_deal",
-      severity: "opportunity",
-      title: `Hlídací pes: ${n} ${n === 1 ? "nový inzerát" : n < 5 ? "nové inzeráty" : "nových inzerátů"}`,
-      body: query,
-    } as never);
+  await supabase.from("alerts").insert({
+    user_id: userId,
+    kind: "new_deal",
+    severity: "opportunity",
+    title: `Hlídací pes: ${n} ${n === 1 ? "nový inzerát" : n < 5 ? "nové inzeráty" : "nových inzerátů"}`,
+    body: query,
+  } as never);
 }

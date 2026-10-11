@@ -407,16 +407,14 @@ function TxDialog({ row, onClose }: { row: PortfolioRow; onClose: () => void }) 
   const [v, setV] = useState({ amount: "", date: new Date().toISOString().slice(0, 10), note: "" });
   const save = async () => {
     const sign = ["rent", "income", "sale"].includes(kind) ? 1 : -1;
-    const { error } = await supabase
-      .from("portfolio_transactions")
-      .insert({
-        user_id: await uid(),
-        portfolio_property_id: row.id,
-        kind,
-        amount: sign * Math.abs(n(v.amount)),
-        occurred_on: v.date,
-        note: v.note.slice(0, 300) || null,
-      });
+    const { error } = await supabase.from("portfolio_transactions").insert({
+      user_id: await uid(),
+      portfolio_property_id: row.id,
+      kind,
+      amount: sign * Math.abs(n(v.amount)),
+      occurred_on: v.date,
+      note: v.note.slice(0, 300) || null,
+    });
     if (error) return void toast.error("Uložení se nepovedlo.");
     toast.success("Transakce přidána");
     onClose();
@@ -471,15 +469,13 @@ function ValDialog({ row, onClose }: { row: PortfolioRow; onClose: () => void })
     date: new Date().toISOString().slice(0, 10),
   });
   const save = async () => {
-    const { error } = await supabase
-      .from("portfolio_valuations")
-      .insert({
-        user_id: await uid(),
-        portfolio_property_id: row.id,
-        value: n(v.value),
-        valued_on: v.date,
-        source: "manual",
-      });
+    const { error } = await supabase.from("portfolio_valuations").insert({
+      user_id: await uid(),
+      portfolio_property_id: row.id,
+      value: n(v.value),
+      valued_on: v.date,
+      source: "manual",
+    });
     if (error) return void toast.error("Uložení se nepovedlo.");
     toast.success("Ocenění uloženo");
     onClose();

@@ -37,15 +37,13 @@ export const Route = createFileRoute("/api/public/cron/watchdog")({
               results.push({ id: w.id, found: r.listingIds.length, isNew: r.newCount });
               if (r.newCount > 0) {
                 const n = r.newCount;
-                await supabaseAdmin
-                  .from("alerts")
-                  .insert({
-                    user_id: w.user_id,
-                    kind: "new_deal",
-                    severity: "opportunity",
-                    title: `Hlídací pes: ${n} ${n === 1 ? "nový inzerát" : n < 5 ? "nové inzeráty" : "nových inzerátů"}`,
-                    body: w.query,
-                  });
+                await supabaseAdmin.from("alerts").insert({
+                  user_id: w.user_id,
+                  kind: "new_deal",
+                  severity: "opportunity",
+                  title: `Hlídací pes: ${n} ${n === 1 ? "nový inzerát" : n < 5 ? "nové inzeráty" : "nových inzerátů"}`,
+                  body: w.query,
+                });
               }
             }
           } catch (e) {
