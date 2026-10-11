@@ -46,6 +46,22 @@ jobs:
           echo "bun config"
           bun pm --help >/dev/null || true
 
+      - name: Guard against private package registries
+        shell: bash
+        run: |
+          set -euo pipefail
+          registry="$(npm config get registry)"
+          echo "Configured npm registry: $registry"
+          if [[ "$registry" != "https://registry.npmjs.org/" ]]; then
+            echo "::error::Expected the public npm registry, got: $registry"
+            exit 1
+          fi
+          if grep -nE 'pkg\\.dev|artifactregistry|packages\\.cloud\\.google' bun.lock; then
+            echo "::error::bun.lock still contains a private package registry URL"
+            exit 1
+          fi
+          echo "Lockfile registry guard passed."
+
       - name: Install locked dependencies
         id: install
         shell: bash
