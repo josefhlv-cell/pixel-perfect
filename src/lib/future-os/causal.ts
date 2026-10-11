@@ -1,5 +1,6 @@
 import type { EvidenceObservation } from "./types";
 import { parseEvidenceNumericValue } from "./signal-discovery";
+import { getEvidenceAvailableAt } from "./point-in-time";
 
 export type CausalEdge = {
   edgeKey: string;
@@ -13,19 +14,46 @@ export type CausalEdge = {
   modelVersion: string;
 };
 
+function periodTimestamp(row: EvidenceObservation): number {
+  const period = row.effectiveFrom ?? row.observedAt;
+  return period ? new Date(period).getTime() : Number.NEGATIVE_INFINITY;
+}
+
 export function propagateCausalSignal(
   edges: CausalEdge[],
   evidence: EvidenceObservation[],
   asOf: Date | string,
 ) {
-  const cutoff = new Date(asOf).getTime();
-  const usable = evidence.filter((row) => new Date(row.availableAt).getTime() <= cutoff);
-  const values = new Map(usable.map((row) => [row.entityType + ":" + row.entityKey, row]));
+  // Fail closed for invalid cutoffs and exclude evidence with invalid/future availability.
+  const usable = getEvidenceAvailableAt(evidence, asOf);
+  const grouped = new Map<string, EvidenceObservation[]>();
+  for (const row of usable) {
+    const key = row.entityType + ":" + row.entityKey;
+    grouped.set(key, [...(grouped.get(key) ?? []), row]);
+  }
+
   return edges.flatMap((edge) => {
-    const parent = values.get(edge.parent);
+    const candidates = grouped.get(edge.parent) ?? [];
+    if (candidates.length === 0) return [];
+
+    // An edge has no geography/source selector. Refuse to silently mix distinct
+    // geographic series; callers must disambiguate them before causal propagation.
+    const geographies = new Set(candidates.map((row) => row.geographyType + ":" + row.geographyKey));
+    if (geographies.size !== 1) return [];
+
+    // Select the newest effective period, then latest available revision for that period.
+    const sorted = [...candidates].sort((a, b) => {
+      const periodDiff = periodTimestamp(b) - periodTimestamp(a);
+      if (Number.isFinite(periodDiff) && periodDiff !== 0) return periodDiff;
+      const availableDiff = new Date(b.availableAt).getTime() - new Date(a.availableAt).getTime();
+      if (availableDiff !== 0) return availableDiff;
+      return b.revision - a.revision;
+    });
+    const parent = sorted[0];
     if (!parent) return [];
     const raw = parseEvidenceNumericValue(parent.value);
     if (raw == null) return [];
+
     const direction = raw === 0 ? 0 : edge.expectedSign;
     const confidence = (edge.confidence ?? 0.5) * (edge.strength ?? 0.5) * parent.sourceReliability;
     return [
