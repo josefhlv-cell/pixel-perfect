@@ -2,7 +2,7 @@ name: Future OS CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/future-os-vintage-ingestion]
   pull_request:
     branches: [main]
 

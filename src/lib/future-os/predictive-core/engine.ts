@@ -58,7 +58,7 @@ export function runHousePriceForecast(input: {
   if (!Number.isInteger(horizon) || horizon < 1) throw new Error("Horizon must be a positive integer.");
   const periods = uniquePeriods(input.levels).filter((period) => Date.parse(earliestVintage(input.levels, period)) <= clockOf(input));
   assertQuarterly(periods);
-  const evidenceClass = evidenceOf(input.levels);
+  const evidenceClass = evidenceOf(levelsVisibleAt(input.levels, new Date(clockOf(input)).toISOString()));
   const scored: Array<{ realized: number; forecasts: DistributionForecast[] }> = [];
 
   for (let origin = horizon; origin + horizon < periods.length; origin += 1) {
@@ -142,14 +142,17 @@ function forecastAt(
 ): DistributionForecast[] | null {
   const visible = levelsVisibleAt(levels, asOf);
   if (visible.at(-1)?.period !== periods[origin]) return null;
-  if (visible.length < origin + 1) return null;
+  // Index against the actually visible series, not the full period list: a
+  // missing or not-yet-published period must never shift training labels.
+  const visibleOrigin = visible.findIndex((row) => row.period === periods[origin]);
+  if (visibleOrigin < horizon) return null;
   const logLevels = visible.map((row) => Math.log(row.level));
   const deltas = visible.map((row, index) => {
     if (index < horizon) return null;
     return rateDelta(rates, visible[index - horizon].period, row.period, asOf);
   });
-  const pairs = trainingPairs(logLevels, origin, horizon, deltas);
-  const forecasts = fitModels(pairs, logLevels[origin] - logLevels[origin - horizon], deltas[origin] ?? null);
+  const pairs = trainingPairs(logLevels, visibleOrigin, horizon, deltas);
+  const forecasts = fitModels(pairs, logLevels[visibleOrigin] - logLevels[visibleOrigin - horizon], deltas[visibleOrigin] ?? null);
   return forecasts.some((forecast) => forecast.modelId === "PERSIST") ? forecasts : null;
 }
 
