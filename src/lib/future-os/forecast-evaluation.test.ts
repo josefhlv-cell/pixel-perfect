@@ -10,7 +10,12 @@ const sample = (candidateP50: number, benchmarkP50: number): ForecastEvaluationS
 
 describe("paired forecast evaluation", () => {
   it("does not claim a benchmark win with fewer than 20 paired samples", () => {
-    expect(compareForecastToBenchmark(Array.from({ length: 19 }, () => sample(110, 105)), "MAE")).toBeNull();
+    expect(
+      compareForecastToBenchmark(
+        Array.from({ length: 19 }, () => sample(110, 105)),
+        "MAE",
+      ),
+    ).toBeNull();
   });
 
   it("detects a consistent out-of-sample MAE improvement over the baseline", () => {

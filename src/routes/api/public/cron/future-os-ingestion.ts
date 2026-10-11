@@ -56,7 +56,9 @@ export const Route = createFileRoute("/api/public/cron/future-os-ingestion")({
 
           // ARAD ingestion writes append-only evidence itself; isolate each set so
           // one invalid/unavailable set does not suppress the others.
-          for (const setId of DEFAULT_SET_IDS.split(",").map((s) => s.trim()).filter(Boolean)) {
+          for (const setId of DEFAULT_SET_IDS.split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)) {
             const setStartedAt = new Date().toISOString();
             try {
               const result = await importAradSet(setId);
@@ -108,27 +110,33 @@ export const Route = createFileRoute("/api/public/cron/future-os-ingestion")({
               const adapterId = adapterIds.get(r.adapterKey);
               if (!adapterId) return [];
               const failedResult = "error" in r && Boolean(r.error);
-              return [{
-                adapter_id: adapterId,
-                geography_type: "country",
-                geography_key: "CZ",
-                domain: "scheduled_ingestion" + ("setId" in r ? ":" + r.setId : ""),
-                period_start: null,
-                period_end: null,
-                availability_status: failedResult ? "MISSING" : r.fetched > 0 ? "AVAILABLE" : "PARTIAL",
-                provenance_quality: null,
-                last_checked_at: r.finishedAt,
-                details: {
-                  runStartedAt: r.startedAt,
-                  runFinishedAt: r.finishedAt,
-                  fetched: r.fetched,
-                  inserted: r.inserted,
-                  unchanged: r.unchanged,
-                  revised: r.revised,
-                  error: failedResult ? r.error : null,
-                  runStartedBy: "pg_cron_or_authenticated_operator",
+              return [
+                {
+                  adapter_id: adapterId,
+                  geography_type: "country",
+                  geography_key: "CZ",
+                  domain: "scheduled_ingestion" + ("setId" in r ? ":" + r.setId : ""),
+                  period_start: null,
+                  period_end: null,
+                  availability_status: failedResult
+                    ? "MISSING"
+                    : r.fetched > 0
+                      ? "AVAILABLE"
+                      : "PARTIAL",
+                  provenance_quality: null,
+                  last_checked_at: r.finishedAt,
+                  details: {
+                    runStartedAt: r.startedAt,
+                    runFinishedAt: r.finishedAt,
+                    fetched: r.fetched,
+                    inserted: r.inserted,
+                    unchanged: r.unchanged,
+                    revised: r.revised,
+                    error: failedResult ? r.error : null,
+                    runStartedBy: "pg_cron_or_authenticated_operator",
+                  },
                 },
-              }];
+              ];
             });
             if (coverageRows.length) {
               const { error: coverageError } = await supabaseAdmin
@@ -138,7 +146,10 @@ export const Route = createFileRoute("/api/public/cron/future-os-ingestion")({
             }
           } catch (error) {
             coverageHistoryError = error instanceof Error ? error.message : String(error);
-            console.error("[future-os-ingestion] coverage history write failed", coverageHistoryError);
+            console.error(
+              "[future-os-ingestion] coverage history write failed",
+              coverageHistoryError,
+            );
           }
 
           const summary = {
@@ -149,9 +160,11 @@ export const Route = createFileRoute("/api/public/cron/future-os-ingestion")({
             coverageHistoryError: coverageHistoryError ?? null,
             results,
             semantics: {
-              availableAt: "conservative retrieval cutoff unless publisher release time is independently verified",
+              availableAt:
+                "conservative retrieval cutoff unless publisher release time is independently verified",
               polling: "scheduler frequency does not change the source observation frequency",
-              persistence: "append-only evidence; inspect per-source result before treating a run as successful",
+              persistence:
+                "append-only evidence; inspect per-source result before treating a run as successful",
             },
           };
           console.info("[future-os-ingestion]", JSON.stringify(summary));
