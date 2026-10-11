@@ -3,8 +3,8 @@
 CREATE OR REPLACE FUNCTION public.guard_future_os_forecast_outcome_timing()
 RETURNS trigger
 LANGUAGE plpgsql
-SET search_path = public
-AS $$
+SET search_path = pg_catalog
+AS $
 DECLARE
   forecast_cutoff timestamptz;
   forecast_horizon integer;
