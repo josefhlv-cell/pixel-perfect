@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { evidenceContentHash } from "./evidence-hash.server";
 import {
   assertNoFutureEvidence,
+  isAvailableAt,
   computeDataQuality,
   getEvidenceAvailableAt,
 } from "./point-in-time";
@@ -127,4 +128,26 @@ describe("Future OS point-in-time integrity", () => {
     const q = computeDataQuality(rows);
     expect(q.independence).toBeLessThan(1);
   });
+  
+  it("rejects evidence with a missing or invalid availableAt timestamp", () => {
+    const missing = base({ availableAt: "" });
+    const invalid = base({ availableAt: "not-a-date" });
+    expect(isAvailableAt(missing, "2026-03-01T00:00:00Z")).toBe(false);
+    expect(isAvailableAt(invalid, "2026-03-01T00:00:00Z")).toBe(false);
+    expect(getEvidenceAvailableAt([missing, invalid], "2026-03-01T00:00:00Z")).toHaveLength(0);
+    expect(() => assertNoFutureEvidence([invalid], "2026-03-01T00:00:00Z")).toThrow(
+      /invalid availableAt timestamp/,
+    );
+  });
+
+  it("rejects an invalid point-in-time cutoff", () => {
+    expect(() => getEvidenceAvailableAt([base()], "not-a-date")).toThrow(
+      /Invalid point-in-time cutoff/,
+    );
+    expect(() => assertNoFutureEvidence([base()], "not-a-date")).toThrow(
+      /Invalid point-in-time cutoff/,
+    );
+    expect(() => isAvailableAt(base(), "not-a-date")).toThrow(/Invalid point-in-time cutoff/);
+  });
+
 });
