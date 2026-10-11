@@ -56,7 +56,7 @@ jobs:
             echo "::error::Expected the public npm registry, got: $registry"
             exit 1
           fi
-          if grep -nE 'pkg\\.dev|artifactregistry|packages\\.cloud\\.google' bun.lock; then
+          if grep -nE 'pkg\.dev|artifactregistry|packages\.cloud\.google' bun.lock; then
             echo "::error::bun.lock still contains a private package registry URL"
             exit 1
           fi
