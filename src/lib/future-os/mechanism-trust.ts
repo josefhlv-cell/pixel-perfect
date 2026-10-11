@@ -23,25 +23,30 @@ export function evaluateMechanismTrust(input: MechanismEvidence): MechanismTrust
   ) as MechanismEvidence;
 
   const weights: Record<keyof MechanismEvidence, number> = {
-    evidenceStrength: 0.10,
+    evidenceStrength: 0.1,
     predictiveStrength: 0.16,
     causalIdentification: 0.18,
     stability: 0.12,
-    regimeRobustness: 0.10,
+    regimeRobustness: 0.1,
     dataQuality: 0.08,
     sourceIndependence: 0.08,
     replication: 0.08,
-    outOfSamplePerformance: 0.10,
+    outOfSamplePerformance: 0.1,
   };
 
-  const score = (Object.keys(weights) as Array<keyof MechanismEvidence>)
-    .reduce((sum, key) => sum + dimensions[key] * weights[key], 0);
+  const score = (Object.keys(weights) as Array<keyof MechanismEvidence>).reduce(
+    (sum, key) => sum + dimensions[key] * weights[key],
+    0,
+  );
 
-  const weakestDimension = (Object.keys(dimensions) as Array<keyof MechanismEvidence>)
-    .sort((a, b) => dimensions[a] - dimensions[b])[0]!;
+  const weakestDimension = (Object.keys(dimensions) as Array<keyof MechanismEvidence>).sort(
+    (a, b) => dimensions[a] - dimensions[b],
+  )[0]!;
 
   const status =
-    score >= 0.82 && dimensions.causalIdentification >= 0.7 && dimensions.outOfSamplePerformance >= 0.75
+    score >= 0.82 &&
+    dimensions.causalIdentification >= 0.7 &&
+    dimensions.outOfSamplePerformance >= 0.75
       ? "ROBUST"
       : score >= 0.62 && dimensions.outOfSamplePerformance >= 0.6
         ? "SUPPORTED"

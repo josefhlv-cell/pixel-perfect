@@ -23,6 +23,13 @@ function mean(values: number[]) {
   return values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
 }
 
+function median(values: number[]) {
+  if (!values.length) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
+}
+
 function std(values: number[]) {
   if (values.length < 2) return 0;
   const m = mean(values);
@@ -41,14 +48,26 @@ export function detectTurningPoint(
 ): TurningPointResult {
   const ordered = [...signal.points].sort((a, b) => +new Date(a.date) - +new Date(b.date));
   if (ordered.length < baselineWindow + confirmationWindow + 2) {
-    return { key: signal.key, status: "QUIET", score: 0, changePointIndex: null, direction: 0, leadMagnitude: 0, persistence: 0 };
+    return {
+      key: signal.key,
+      status: "QUIET",
+      score: 0,
+      changePointIndex: null,
+      direction: 0,
+      leadMagnitude: 0,
+      persistence: 0,
+    };
   }
 
   const changes = ordered.slice(1).map((p, i) => p.value - ordered[i]!.value);
   const baseline = changes.slice(0, -confirmationWindow);
   const recent = changes.slice(-confirmationWindow);
-  const m = mean(baseline.slice(-baselineWindow));
-  const s = Math.max(std(baseline.slice(-baselineWindow)), 1e-9);
+  // Robust baseline (median + MAD): a regime shift that starts inside the
+  // baseline window must not contaminate the reference it is measured against.
+  const window = baseline.slice(-baselineWindow);
+  const m = median(window);
+  const mad = median(window.map((x) => Math.abs(x - m)));
+  const s = Math.max(1.4826 * mad, 0.5 * std(window), 1e-9);
   const recentMean = mean(recent);
   const z = (recentMean - m) / s;
   const direction: -1 | 0 | 1 = z > 0.5 ? 1 : z < -0.5 ? -1 : 0;
@@ -67,18 +86,33 @@ export function detectTurningPoint(
     if (Math.sign(cumulative) !== Math.sign(z) && Math.abs(cumulative) < threshold) cumulative = 0;
   }
 
-  const persistence = recent.filter(x => Math.sign(x - m) === direction).length / recent.length;
+  // No direction means nothing persists (sign(0) === 0 must not count as agreement).
+  const persistence =
+    direction === 0
+      ? 0
+      : recent.filter((x) => Math.sign(x - m) === direction).length / recent.length;
   const leadMagnitude = Math.min(1, Math.abs(z) / 4);
   const persistenceScore = Math.min(1, persistence);
   const score = Math.min(1, 0.55 * leadMagnitude + 0.45 * persistenceScore);
 
   const status =
-    score >= 0.82 && Math.abs(z) >= 2.5 && persistence >= 0.66 ? "BREAK"
-      : score >= 0.62 && Math.abs(z) >= 1.75 && persistence >= 0.66 ? "EARLY_WARNING"
-        : score >= 0.42 ? "WATCH"
+    score >= 0.82 && Math.abs(z) >= 2.5 && persistence >= 0.66
+      ? "BREAK"
+      : score >= 0.62 && Math.abs(z) >= 1.75 && persistence >= 0.66
+        ? "EARLY_WARNING"
+        : score >= 0.42
+          ? "WATCH"
           : "QUIET";
 
-  return { key: signal.key, status, score, changePointIndex, direction, leadMagnitude, persistence };
+  return {
+    key: signal.key,
+    status,
+    score,
+    changePointIndex,
+    direction,
+    leadMagnitude,
+    persistence,
+  };
 }
 
 export function fuseTurningPointSignals(
@@ -86,18 +120,33 @@ export function fuseTurningPointSignals(
   baselineWindow = 12,
   confirmationWindow = 3,
 ) {
-  const results = signals.map(signal => detectTurningPoint(signal, baselineWindow, confirmationWindow));
-  const weights = signals.map(signal => signal.weight ?? 1);
-  const totalWeight = Math.max(1e-9, weights.reduce((a, b) => a + b, 0));
-  const score = results.reduce((sum, result, i) => sum + result.score * weights[i]!, 0) / totalWeight;
-  const positive = results.reduce((sum, result, i) => sum + (result.direction > 0 ? weights[i]! : 0), 0);
-  const negative = results.reduce((sum, result, i) => sum + (result.direction < 0 ? weights[i]! : 0), 0);
+  const results = signals.map((signal) =>
+    detectTurningPoint(signal, baselineWindow, confirmationWindow),
+  );
+  const weights = signals.map((signal) => signal.weight ?? 1);
+  const totalWeight = Math.max(
+    1e-9,
+    weights.reduce((a, b) => a + b, 0),
+  );
+  const score =
+    results.reduce((sum, result, i) => sum + result.score * weights[i]!, 0) / totalWeight;
+  const positive = results.reduce(
+    (sum, result, i) => sum + (result.direction > 0 ? weights[i]! : 0),
+    0,
+  );
+  const negative = results.reduce(
+    (sum, result, i) => sum + (result.direction < 0 ? weights[i]! : 0),
+    0,
+  );
   const agreement = Math.max(positive, negative) / totalWeight;
   const direction: -1 | 0 | 1 = positive > negative ? 1 : negative > positive ? -1 : 0;
   const status =
-    score >= 0.78 && agreement >= 0.67 ? "BREAK"
-      : score >= 0.58 && agreement >= 0.60 ? "EARLY_WARNING"
-        : score >= 0.38 ? "WATCH"
+    score >= 0.78 && agreement >= 0.67
+      ? "BREAK"
+      : score >= 0.58 && agreement >= 0.6
+        ? "EARLY_WARNING"
+        : score >= 0.38
+          ? "WATCH"
           : "QUIET";
 
   return { status, score, agreement, direction, results };

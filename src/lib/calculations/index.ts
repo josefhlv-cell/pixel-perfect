@@ -16,7 +16,11 @@ const fromH = (h: number) => Math.round(h / HALER);
 const bpsToRate = (bps: Bps) => bps / 10_000;
 
 /** Monthly annuity payment (Czech mortgage: fixed monthly annuity). */
-export function calculateMortgagePayment(principal: CZK, annualRateBps: Bps, termMonths: number): CZK {
+export function calculateMortgagePayment(
+  principal: CZK,
+  annualRateBps: Bps,
+  termMonths: number,
+): CZK {
   if (principal <= 0 || termMonths <= 0) return 0;
   const r = bpsToRate(annualRateBps) / 12;
   const p = toH(principal);
@@ -34,7 +38,11 @@ export interface AmortizationRow {
 }
 
 /** Full amortization schedule (month-by-month). */
-export function calculateAmortization(principal: CZK, annualRateBps: Bps, termMonths: number): AmortizationRow[] {
+export function calculateAmortization(
+  principal: CZK,
+  annualRateBps: Bps,
+  termMonths: number,
+): AmortizationRow[] {
   const rows: AmortizationRow[] = [];
   if (principal <= 0 || termMonths <= 0) return rows;
   const r = bpsToRate(annualRateBps) / 12;
@@ -57,7 +65,12 @@ export function calculateAmortization(principal: CZK, annualRateBps: Bps, termMo
 }
 
 /** Remaining loan balance after n months. */
-export function calculateDebtBalance(principal: CZK, annualRateBps: Bps, termMonths: number, monthsPaid: number): CZK {
+export function calculateDebtBalance(
+  principal: CZK,
+  annualRateBps: Bps,
+  termMonths: number,
+  monthsPaid: number,
+): CZK {
   if (monthsPaid <= 0) return principal;
   const sched = calculateAmortization(principal, annualRateBps, termMonths);
   if (monthsPaid >= sched.length) return 0;
@@ -65,7 +78,12 @@ export function calculateDebtBalance(principal: CZK, annualRateBps: Bps, termMon
 }
 
 /** Principal repaid over the first n months. */
-export function calculateDebtPaydown(principal: CZK, annualRateBps: Bps, termMonths: number, months: number): CZK {
+export function calculateDebtPaydown(
+  principal: CZK,
+  annualRateBps: Bps,
+  termMonths: number,
+  months: number,
+): CZK {
   return principal - calculateDebtBalance(principal, annualRateBps, termMonths, months);
 }
 
@@ -98,7 +116,11 @@ export interface OperatingExpenseInput {
 /** Monthly operating expenses. */
 export function calculateOperatingExpenses(e: OperatingExpenseInput): CZK {
   const monthly =
-    (e.hoaFund ?? 0) + (e.insurance ?? 0) + (e.maintenance ?? 0) + (e.management ?? 0) + (e.other ?? 0);
+    (e.hoaFund ?? 0) +
+    (e.insurance ?? 0) +
+    (e.maintenance ?? 0) +
+    (e.management ?? 0) +
+    (e.other ?? 0);
   return monthly + Math.round((e.propertyTaxYearly ?? 0) / 12);
 }
 
@@ -121,7 +143,9 @@ export function calculateCashFlow(
   monthlyExpenses: CZK,
   monthlyMortgage: CZK,
 ): CZK {
-  return monthlyRent - calculateVacancy(monthlyRent, vacancyBps) - monthlyExpenses - monthlyMortgage;
+  return (
+    monthlyRent - calculateVacancy(monthlyRent, vacancyBps) - monthlyExpenses - monthlyMortgage
+  );
 }
 
 /** Annual pre-tax cash flow / cash invested, in bps. */
@@ -234,7 +258,12 @@ export function calculateTotalReturn(input: InvestmentInput): InvestmentResult {
   const cashInvested = downPayment + input.closingCosts + input.renovation;
   const totalCost = input.purchasePrice + input.closingCosts + input.renovation;
   const monthlyMortgage = calculateMortgagePayment(loan, input.interestRateBps, input.termMonths);
-  const monthlyCashFlow = calculateCashFlow(input.monthlyRent, input.vacancyBps, input.monthlyExpenses, monthlyMortgage);
+  const monthlyCashFlow = calculateCashFlow(
+    input.monthlyRent,
+    input.vacancyBps,
+    input.monthlyExpenses,
+    monthlyMortgage,
+  );
 
   const yearly: InvestmentResult["yearly"] = [];
   const flows: number[] = [-cashInvested];
@@ -242,10 +271,16 @@ export function calculateTotalReturn(input: InvestmentInput): InvestmentResult {
   const years = Math.max(1, Math.round(input.holdingYears));
   for (let y = 1; y <= years; y++) {
     const rent = calculateRentGrowth(input.monthlyRent, input.rentGrowthBps, y - 1);
-    const expenses = Math.round(input.monthlyExpenses * Math.pow(1 + bpsToRate(input.rentGrowthBps), y - 1));
+    const expenses = Math.round(
+      input.monthlyExpenses * Math.pow(1 + bpsToRate(input.rentGrowthBps), y - 1),
+    );
     const cf = calculateCashFlow(rent, input.vacancyBps, expenses, monthlyMortgage) * 12;
     cumulativeCash += cf;
-    const value = calculatePropertyValueGrowth(input.purchasePrice + input.renovation, input.appreciationBps, y);
+    const value = calculatePropertyValueGrowth(
+      input.purchasePrice + input.renovation,
+      input.appreciationBps,
+      y,
+    );
     const debt = calculateDebtBalance(loan, input.interestRateBps, input.termMonths, y * 12);
     yearly.push({ year: y, value, debt, equity: value - debt, cashFlow: cf, rent });
     flows.push(cf);
@@ -265,7 +300,12 @@ export function calculateTotalReturn(input: InvestmentInput): InvestmentResult {
     monthlyMortgage,
     monthlyCashFlow,
     grossYieldBps: calculateGrossYield(input.monthlyRent, input.purchasePrice),
-    netYieldBps: calculateNetYield(input.monthlyRent, input.vacancyBps, input.monthlyExpenses, totalCost),
+    netYieldBps: calculateNetYield(
+      input.monthlyRent,
+      input.vacancyBps,
+      input.monthlyExpenses,
+      totalCost,
+    ),
     cashOnCashBps: calculateCashOnCash(monthlyCashFlow, cashInvested),
     exitValue: last.value,
     exitDebt: last.debt,

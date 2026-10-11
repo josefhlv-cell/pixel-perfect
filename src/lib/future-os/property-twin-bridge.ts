@@ -25,7 +25,9 @@ export type PropertyTwinSnapshot = {
   decision: ReturnType<typeof buildPropertyFutureTwin>;
 };
 
-export function buildPropertyTwinSnapshot(context: PropertyTwinMarketContext): PropertyTwinSnapshot {
+export function buildPropertyTwinSnapshot(
+  context: PropertyTwinMarketContext,
+): PropertyTwinSnapshot {
   const input: PropertyTwinInput = {
     ...context,
     horizonMonths: context.horizonMonths ?? 60,

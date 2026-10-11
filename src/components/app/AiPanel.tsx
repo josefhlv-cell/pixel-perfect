@@ -20,11 +20,20 @@ function Claims({ title, items }: { title: string; items: Claim[] }) {
   if (!items.length) return null;
   return (
     <div>
-      <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h4>
+      <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </h4>
       <ul className="space-y-1.5">
         {items.map((c, i) => (
           <li key={i} className="flex gap-2 text-sm">
-            <span className={cn("mt-0.5 h-fit shrink-0 rounded-sm border px-1 font-mono text-[9px]", kindTone[c.kind])}>{c.kind}</span>
+            <span
+              className={cn(
+                "mt-0.5 h-fit shrink-0 rounded-sm border px-1 font-mono text-[9px]",
+                kindTone[c.kind],
+              )}
+            >
+              {c.kind}
+            </span>
             <span>{c.text}</span>
           </li>
         ))}
@@ -36,15 +45,35 @@ function List({ title, items }: { title: string; items: string[] }) {
   if (!items.length) return null;
   return (
     <div>
-      <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h4>
-      <ul className="list-disc space-y-1 pl-5 text-sm">{items.map((s, i) => <li key={i}>{s}</li>)}</ul>
+      <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </h4>
+      <ul className="list-disc space-y-1 pl-5 text-sm">
+        {items.map((s, i) => (
+          <li key={i}>{s}</li>
+        ))}
+      </ul>
     </div>
   );
 }
 
 export function AnalysisView({ a, focus }: { a: PropertyAnalysis; focus?: AiKind }) {
-  if (focus === "risks") return <div className="space-y-4"><Claims title="Rizika" items={a.risks} /><Claims title="Varovné signály" items={a.redFlags} /><List title="Chybějící informace" items={a.missingInfo} /></div>;
-  if (focus === "due_diligence") return <div className="space-y-4"><List title="Due diligence" items={a.dueDiligence} /><List title="Otázky na prodávajícího" items={a.sellerQuestions} /><List title="Chybějící informace" items={a.missingInfo} /></div>;
+  if (focus === "risks")
+    return (
+      <div className="space-y-4">
+        <Claims title="Rizika" items={a.risks} />
+        <Claims title="Varovné signály" items={a.redFlags} />
+        <List title="Chybějící informace" items={a.missingInfo} />
+      </div>
+    );
+  if (focus === "due_diligence")
+    return (
+      <div className="space-y-4">
+        <List title="Due diligence" items={a.dueDiligence} />
+        <List title="Otázky na prodávajícího" items={a.sellerQuestions} />
+        <List title="Chybějící informace" items={a.missingInfo} />
+      </div>
+    );
   return (
     <div className="space-y-4">
       <p className="text-sm leading-relaxed">{a.summary}</p>
@@ -61,7 +90,15 @@ export function AnalysisView({ a, focus }: { a: PropertyAnalysis; focus?: AiKind
   );
 }
 
-export function AiRunner({ kind, listingId, label }: { kind: AiKind; listingId?: string | undefined; label?: string | undefined }) {
+export function AiRunner({
+  kind,
+  listingId,
+  label,
+}: {
+  kind: AiKind;
+  listingId?: string | undefined;
+  label?: string | undefined;
+}) {
   const run = useServerFn(runAiAnalysis);
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState<Result | null>(null);
@@ -70,7 +107,12 @@ export function AiRunner({ kind, listingId, label }: { kind: AiKind; listingId?:
     try {
       setRes(await run({ data: { kind, listingId } }));
     } catch {
-      setRes({ ok: false, provider: "lovable", kind, error: "AI analýza je momentálně nedostupná. Výpočty a uložená data zůstávají dostupná." });
+      setRes({
+        ok: false,
+        provider: "lovable",
+        kind,
+        error: "AI analýza je momentálně nedostupná. Výpočty a uložená data zůstávají dostupná.",
+      });
     } finally {
       setBusy(false);
     }
@@ -79,12 +121,25 @@ export function AiRunner({ kind, listingId, label }: { kind: AiKind; listingId?:
     <div className="space-y-3">
       <Button onClick={go} disabled={busy} size="sm">
         <Sparkles className={cn("mr-1.5 h-4 w-4", busy && "animate-pulse")} />
-        {busy ? "Analyzuji…" : label ?? "Analyzovat AI"}
+        {busy ? "Analyzuji…" : (label ?? "Analyzovat AI")}
       </Button>
-      {res && !res.ok && <div className="rounded-md border border-warning/40 bg-warning/10 p-3 text-sm">{res.error}</div>}
-      {res?.ok && "analysis" in res && res.analysis && <AnalysisView a={res.analysis} focus={kind} />}
-      {res?.ok && "text" in res && <p className="whitespace-pre-line text-sm leading-relaxed">{res.text}</p>}
-      {res?.ok && <p className="text-[11px] text-muted-foreground">Provider: Lovable AI · Čísla pochází z výpočetního jádra, AI je nepřepočítává. Nejde o investiční poradenství.</p>}
+      {res && !res.ok && (
+        <div className="rounded-md border border-warning/40 bg-warning/10 p-3 text-sm">
+          {res.error}
+        </div>
+      )}
+      {res?.ok && "analysis" in res && res.analysis && (
+        <AnalysisView a={res.analysis} focus={kind} />
+      )}
+      {res?.ok && "text" in res && (
+        <p className="whitespace-pre-line text-sm leading-relaxed">{res.text}</p>
+      )}
+      {res?.ok && (
+        <p className="text-[11px] text-muted-foreground">
+          Provider: Lovable AI · Čísla pochází z výpočetního jádra, AI je nepřepočítává. Nejde o
+          investiční poradenství.
+        </p>
+      )}
     </div>
   );
 }

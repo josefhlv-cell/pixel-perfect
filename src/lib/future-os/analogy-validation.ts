@@ -13,11 +13,11 @@ export function validateHistoricalAnalogy(
   baselineLosses: number[],
   analogyModelLosses: number[],
 ): AnalogyValidation {
-  const analogs=findHistoricalAnalogs(current,history);
-  const predictiveValue=evaluateIncrementalPredictiveValue(baselineLosses,analogyModelLosses);
+  const analogs = findHistoricalAnalogs(current, history);
+  const predictiveValue = evaluateIncrementalPredictiveValue(baselineLosses, analogyModelLosses);
   return {
     analogs,
     predictiveValue,
-    accepted: predictiveValue.status==="USEFUL",
+    accepted: predictiveValue.status === "USEFUL",
   };
 }

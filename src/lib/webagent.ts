@@ -36,7 +36,8 @@ export function canonicalUrl(raw: string): string | null {
     if (u.protocol !== "https:" && u.protocol !== "http:") return null;
     u.hash = "";
     u.hostname = u.hostname.toLowerCase().replace(/^www\./, "");
-    for (const k of [...u.searchParams.keys()]) if (/^(utm_|fbclid|gclid|ref$|source$)/i.test(k)) u.searchParams.delete(k);
+    for (const k of [...u.searchParams.keys()])
+      if (/^(utm_|fbclid|gclid|ref$|source$)/i.test(k)) u.searchParams.delete(k);
     let s = u.toString();
     if (s.endsWith("/")) s = s.slice(0, -1);
     return s;
@@ -66,8 +67,14 @@ export function collectUrls(text: string, citations: string[] = []): string[] {
 
 /** Strip HTML to readable text; keeps JSON-LD and meta tags (often hold price/area). */
 export function htmlToText(html: string, max = 14000): string {
-  const ld = [...html.matchAll(/<script[^>]*application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)].map((m) => m[1]).join("\n");
-  const meta = [...html.matchAll(/<meta[^>]+(?:property|name)=["'](og:[^"']+|description)["'][^>]*content=["']([^"']*)["']/gi)]
+  const ld = [...html.matchAll(/<script[^>]*application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)]
+    .map((m) => m[1])
+    .join("\n");
+  const meta = [
+    ...html.matchAll(
+      /<meta[^>]+(?:property|name)=["'](og:[^"']+|description)["'][^>]*content=["']([^"']*)["']/gi,
+    ),
+  ]
     .map((m) => `${m[1]}: ${m[2]}`)
     .join("\n");
   const body = html
@@ -89,7 +96,8 @@ const num = (v: unknown): number | null => {
   }
   return null;
 };
-const str = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v.trim().slice(0, 4000) : null);
+const str = (v: unknown): string | null =>
+  typeof v === "string" && v.trim() ? v.trim().slice(0, 4000) : null;
 const bool = (v: unknown): boolean | null => (typeof v === "boolean" ? v : null);
 
 /** Normalize model output. Missing / invalid → null. Never invents values. */
@@ -126,7 +134,8 @@ export function normalizeExtraction(j: Record<string, unknown>, url: string): Ex
     description: str(j["description"]),
     published_at: validDate(j["published_at"]),
     updated_at: validDate(j["updated_at"]),
-    statusMarker: j["statusMarker"] === "SOLD" || j["statusMarker"] === "RESERVED" ? j["statusMarker"] : null,
+    statusMarker:
+      j["statusMarker"] === "SOLD" || j["statusMarker"] === "RESERVED" ? j["statusMarker"] : null,
     is_listing_detail: j["is_listing_detail"] === true,
   };
 }
@@ -143,7 +152,11 @@ export function isUsable(e: ExtractedListing): boolean {
 }
 
 /** Parse a free-text investor query into coarse filters (UI hints only). */
-export function parseQuery(q: string): { rooms: string | null; maxPrice: number | null; minYieldPct: number | null } {
+export function parseQuery(q: string): {
+  rooms: string | null;
+  maxPrice: number | null;
+  minYieldPct: number | null;
+} {
   const rooms = q.match(/\b(\d\+(?:kk|\d))\b/i)?.[1]?.toLowerCase() ?? null;
   const pm = q.match(/do\s+([\d\s\u00a0.,]+)\s*(mil|m|kč|czk)?/i);
   let maxPrice: number | null = null;
@@ -247,7 +260,7 @@ const CITY_CENTROIDS: Record<string, { lat: number; lng: number }> = {
   tabor: { lat: 49.4144, lng: 14.6578 },
   znojmo: { lat: 48.8555, lng: 16.0488 },
   pribram: { lat: 49.6899, lng: 14.0104 },
-  kolin: { lat: 50.028, lng: 15.200 },
+  kolin: { lat: 50.028, lng: 15.2 },
 };
 
 export function cityCentroid(city: string | null | undefined): { lat: number; lng: number } | null {
@@ -259,14 +272,26 @@ export function cityCentroid(city: string | null | undefined): { lat: number; ln
 /** From a search-results page, pick links that look like single-listing detail pages on the same site. */
 export function detailLinksFrom(pageUrl: string, links: string[], max = 4): string[] {
   let host: string;
-  try { host = new URL(pageUrl).hostname.replace(/^www\./, ""); } catch { return []; }
+  try {
+    host = new URL(pageUrl).hostname.replace(/^www\./, "");
+  } catch {
+    return [];
+  }
   const out = new Set<string>();
   for (const l of links) {
     let u: URL;
-    try { u = new URL(l); } catch { continue; }
+    try {
+      u = new URL(l);
+    } catch {
+      continue;
+    }
     if (u.hostname.replace(/^www\./, "") !== host) continue;
     const path = u.pathname.toLowerCase();
-    if (!/(detail|inzerat|nemovitost|nabidka|\/prodej-bytu|\/byt-)/.test(path) && !/\d{6,}/.test(path)) continue;
+    if (
+      !/(detail|inzerat|nemovitost|nabidka|\/prodej-bytu|\/byt-)/.test(path) &&
+      !/\d{6,}/.test(path)
+    )
+      continue;
     if (/(hledani|vyhledavani|\/s\/|search|prodane)/.test(path)) continue;
     const c = canonicalUrl(u.toString());
     if (c && c !== canonicalUrl(pageUrl)) out.add(c);

@@ -56,7 +56,10 @@ export class CurrentAIProvider implements AIProvider {
     try {
       text = await result.text;
       const usage = await result.usage;
-      this.lastUsage = { tokensInput: usage.inputTokens ?? null, tokensOutput: usage.outputTokens ?? null };
+      this.lastUsage = {
+        tokensInput: usage.inputTokens ?? null,
+        tokensOutput: usage.outputTokens ?? null,
+      };
     } catch (e) {
       streamError = streamError ?? e;
     }
@@ -95,7 +98,9 @@ export class CurrentAIProvider implements AIProvider {
       rooms: str(j["rooms"]),
       city: str(j["city"]),
       address: str(j["address"]),
-      statusMarker: (j["statusMarker"] === "SOLD" || j["statusMarker"] === "RESERVED" ? j["statusMarker"] : null) as "SOLD" | "RESERVED" | null,
+      statusMarker: (j["statusMarker"] === "SOLD" || j["statusMarker"] === "RESERVED"
+        ? j["statusMarker"]
+        : null) as "SOLD" | "RESERVED" | null,
     };
   }
 
@@ -105,7 +110,9 @@ export class CurrentAIProvider implements AIProvider {
       JSON.stringify(input),
     );
     const j = parseJsonLoose(text);
-    return Array.isArray(j?.["queries"]) ? (j!["queries"] as unknown[]).filter((q): q is string => typeof q === "string").slice(0, 8) : [];
+    return Array.isArray(j?.["queries"])
+      ? (j!["queries"] as unknown[]).filter((q): q is string => typeof q === "string").slice(0, 8)
+      : [];
   }
 
   async summarizeMarket(input: MarketSummaryInput) {

@@ -49,11 +49,7 @@ export function buildTimeMachineCheckpoints(
   };
 }
 
-export function buildWalkForwardDates(
-  start: string,
-  end: string,
-  stepDays = 90,
-): string[] {
+export function buildWalkForwardDates(start: string, end: string, stepDays = 90): string[] {
   const startMs = +new Date(start);
   const endMs = +new Date(end);
   const stepMs = stepDays * 86_400_000;

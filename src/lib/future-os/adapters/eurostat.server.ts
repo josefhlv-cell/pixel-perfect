@@ -5,12 +5,15 @@ const EUROSTAT_BASE = "https://ec.europa.eu/eurostat/api/dissemination/statistic
 type JsonStat = {
   id?: string[];
   size?: number[];
-  dimension?: Record<string, {
-    category?: {
-      index?: Record<string, number>;
-      label?: Record<string, string>;
-    };
-  }>;
+  dimension?: Record<
+    string,
+    {
+      category?: {
+        index?: Record<string, number>;
+        label?: Record<string, string>;
+      };
+    }
+  >;
   value?: Record<string, number> | number[];
   updated?: string;
   label?: string;
@@ -24,7 +27,10 @@ function valueAt(dataset: JsonStat, flatIndex: number): number | null {
 function cartesianIndices(size: number[]) {
   const out: number[][] = [];
   const walk = (prefix: number[]) => {
-    if (prefix.length === size.length) { out.push(prefix); return; }
+    if (prefix.length === size.length) {
+      out.push(prefix);
+      return;
+    }
     const dimension = size[prefix.length] ?? 0;
     for (let i = 0; i < dimension; i++) walk([...prefix, i]);
   };
@@ -70,12 +76,13 @@ export async function fetchEurostatHousePriceIndex(
     headers: { accept: "application/json" },
   });
   if (!response.ok) throw new Error(`Eurostat HTTP ${response.status}`);
-  const dataset = await response.json() as JsonStat;
+  const dataset = (await response.json()) as JsonStat;
   const ids = dataset.id ?? [];
   const size = dataset.size ?? [];
   const timeDimension = ids.indexOf("time");
   const geoDimension = ids.indexOf("geo");
-  if (timeDimension < 0 || geoDimension < 0) throw new Error("Eurostat response is missing time/geo dimensions.");
+  if (timeDimension < 0 || geoDimension < 0)
+    throw new Error("Eurostat response is missing time/geo dimensions.");
 
   const observations: EvidenceObservation[] = [];
   for (const positions of cartesianIndices(size)) {
@@ -87,7 +94,13 @@ export async function fetchEurostatHousePriceIndex(
     if (!geo || !observedAt) continue;
 
     const contentHash = [
-      "eurostat","prc_hpi_q","TOTAL","I15_Q",geo,period,String(value)
+      "eurostat",
+      "prc_hpi_q",
+      "TOTAL",
+      "I15_Q",
+      geo,
+      period,
+      String(value),
     ].join("|");
 
     observations.push({
@@ -108,7 +121,15 @@ export async function fetchEurostatHousePriceIndex(
       effectiveFrom: observedAt,
       effectiveTo: null,
       revision: 1,
-      value: { value, period, geo, unit: "I15_Q", purchase: "TOTAL", dataset: "prc_hpi_q", sourceUpdated: dataset.updated ?? null },
+      value: {
+        value,
+        period,
+        geo,
+        unit: "I15_Q",
+        purchase: "TOTAL",
+        dataset: "prc_hpi_q",
+        sourceUpdated: dataset.updated ?? null,
+      },
       unit: "index_2015_100",
       frequency: "quarterly",
       leadClass: "LAGGING" as LeadClass,

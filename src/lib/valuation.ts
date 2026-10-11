@@ -22,7 +22,10 @@ export interface ValuationEstimate {
   isSample: boolean;
 }
 
-export function estimateValue(areaM2: number | null, stat: MarketStat | undefined): ValuationEstimate | null {
+export function estimateValue(
+  areaM2: number | null,
+  stat: MarketStat | undefined,
+): ValuationEstimate | null {
   if (!areaM2 || !stat?.avg_asking_price_m2) return null;
   const v = Math.round(areaM2 * stat.avg_asking_price_m2);
   const n = stat.listings_count ?? 0;
@@ -59,7 +62,8 @@ export interface DealPriorityInput {
 
 /** 0–100. Unknown factors contribute 0 (no invented upside). */
 export function computeDealPriority(i: DealPriorityInput): number {
-  if (i.availability === "SOLD" || i.availability === "REMOVED" || i.availability === "EXPIRED") return 0;
+  if (i.availability === "SOLD" || i.availability === "REMOVED" || i.availability === "EXPIRED")
+    return 0;
   let s = 0;
   if (i.diffBps != null) s += Math.max(0, Math.min(35, -i.diffBps / 40)); // -14 % → 35
   if (i.grossYieldBps != null) s += Math.max(0, Math.min(30, (i.grossYieldBps - 300) / 13)); // 7 % → ~30

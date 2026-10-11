@@ -64,7 +64,8 @@ describe("ratios", () => {
   it("cash flow", () => expect(calculateCashFlow(18_500, 500, 3_000, 18_194)).toBe(-3_619));
   it("ROI", () => expect(calculateROI(500_000, 1_000_000)).toBe(5000));
   it("equity", () => expect(calculateEquity(5_000_000, 3_000_000)).toBe(2_000_000));
-  it("appreciation 3 % over 10y", () => expect(calculateAppreciation(1_000_000, 300, 10)).toBe(343_916));
+  it("appreciation 3 % over 10y", () =>
+    expect(calculateAppreciation(1_000_000, 300, 10)).toBe(343_916));
 });
 
 describe("IRR", () => {
@@ -88,7 +89,12 @@ describe("total return & stress", () => {
   });
   it("stress scenario is worse", () => {
     const b = calculateTotalReturn(base);
-    const s = calculateStressScenario(base, { rateShockBps: 200, rentShockBps: 1000, vacancyShockBps: 500, valueShockBps: 300 });
+    const s = calculateStressScenario(base, {
+      rateShockBps: 200,
+      rentShockBps: 1000,
+      vacancyShockBps: 500,
+      valueShockBps: 300,
+    });
     expect(s.monthlyCashFlow).toBeLessThan(b.monthlyCashFlow);
     expect(s.totalReturn).toBeLessThan(b.totalReturn);
   });

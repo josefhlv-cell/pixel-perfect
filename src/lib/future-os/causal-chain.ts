@@ -31,12 +31,15 @@ export function buildCausalChain(
     for (const edge of adjacency.get(current.key) ?? []) {
       queue.push({
         key: edge.to,
-        path: [...current.path, {
-          key: edge.to,
-          sign: edge.sign,
-          lagDays: edge.lagDays,
-          confidence: edge.confidence,
-        }],
+        path: [
+          ...current.path,
+          {
+            key: edge.to,
+            sign: edge.sign,
+            lagDays: edge.lagDays,
+            confidence: edge.confidence,
+          },
+        ],
       });
     }
   }

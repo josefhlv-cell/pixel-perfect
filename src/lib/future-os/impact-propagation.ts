@@ -47,5 +47,5 @@ export function propagateImpact(
     }
   }
 
-  return [...best.values()].sort((a,b) => b.confidence - a.confidence);
+  return [...best.values()].sort((a, b) => b.confidence - a.confidence);
 }

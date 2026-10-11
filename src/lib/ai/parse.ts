@@ -26,12 +26,22 @@ const claims = (v: unknown): Claim[] =>
         .filter((c): c is Claim => !!c)
         .slice(0, 8)
     : [];
-const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((s): s is string => typeof s === "string").slice(0, 8) : []);
+const strings = (v: unknown): string[] =>
+  Array.isArray(v) ? v.filter((s): s is string => typeof s === "string").slice(0, 8) : [];
 
 export function parseAnalysis(text: string): PropertyAnalysis {
   const j = parseJsonLoose(text);
   if (!j) {
-    return { summary: text.trim().slice(0, 1200), advantages: [], risks: [], missingInfo: [], sellerQuestions: [], dueDiligence: [], scenarios: [], redFlags: [] };
+    return {
+      summary: text.trim().slice(0, 1200),
+      advantages: [],
+      risks: [],
+      missingInfo: [],
+      sellerQuestions: [],
+      dueDiligence: [],
+      scenarios: [],
+      redFlags: [],
+    };
   }
   return {
     summary: typeof j["summary"] === "string" ? j["summary"] : "",

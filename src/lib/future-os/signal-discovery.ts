@@ -39,7 +39,9 @@ function pearson(a: number[], b: number[]): number | null {
 }
 
 function ranks(values: number[]): number[] {
-  const indexed = values.map((value, index) => ({ value, index })).sort((a, b) => a.value - b.value);
+  const indexed = values
+    .map((value, index) => ({ value, index }))
+    .sort((a, b) => a.value - b.value);
   const result = Array(values.length);
   let i = 0;
   while (i < indexed.length) {
@@ -85,14 +87,18 @@ function mutualInformation(a: number[], b: number[]): number | null {
 function pairByLag(signal: SignalPoint[], target: SignalPoint[], lagDays: number) {
   const sortedSignal = [...signal].sort((a, b) => +new Date(a.date) - +new Date(b.date));
   const sortedTarget = [...target].sort((a, b) => +new Date(a.date) - +new Date(b.date));
-  const s = [], t = [];
+  const s = [],
+    t = [];
   for (const point of sortedSignal) {
     const desired = +new Date(point.date) + lagDays * DAY;
     let best: SignalPoint | undefined;
     let bestDistance = Infinity;
     for (const candidate of sortedTarget) {
       const distance = Math.abs(+new Date(candidate.date) - desired);
-      if (distance < bestDistance) { best = candidate; bestDistance = distance; }
+      if (distance < bestDistance) {
+        best = candidate;
+        bestDistance = distance;
+      }
     }
     if (best && bestDistance <= Math.max(7 * DAY, lagDays * DAY * 0.15)) {
       s.push(point.value);
@@ -104,7 +110,8 @@ function pairByLag(signal: SignalPoint[], target: SignalPoint[], lagDays: number
 
 function directionalAccuracy(a: number[], b: number[]): number | null {
   if (a.length < 4) return null;
-  let hits = 0, count = 0;
+  let hits = 0,
+    count = 0;
   for (let i = 1; i < a.length; i++) {
     const da = Math.sign(a[i]! - a[i - 1]!);
     const db = Math.sign(b[i]! - b[i - 1]!);
@@ -128,29 +135,58 @@ export function evaluateLeadingSignal(input: LeadTestInput): LeadTestResult {
   const minSamples = input.minSamples ?? 10;
   const { s, t } = pairByLag(input.signal, input.target, input.lagDays);
   if (s.length < minSamples) {
-    return { sampleCount: s.length, correlation: null, rankCorrelation: null, directionalAccuracy: null, mutualInformation: null, stability: null, falseAlarmRate: null, leadScore: null, status: "REJECTED" };
+    return {
+      sampleCount: s.length,
+      correlation: null,
+      rankCorrelation: null,
+      directionalAccuracy: null,
+      mutualInformation: null,
+      stability: null,
+      falseAlarmRate: null,
+      leadScore: null,
+      status: "REJECTED",
+    };
   }
   const correlation = pearson(s, t);
   const rankCorrelation = pearson(ranks(s), ranks(t));
   const direction = directionalAccuracy(s, t);
   const mi = mutualInformation(s, t);
   const stability = stabilityByHalf(s, t);
-  const strong = s.map((x, i) => Math.abs(x) > 0 && Math.abs(t[i]!) > 0 && Math.sign(x) === Math.sign(t[i]!));
+  const strong = s.map(
+    (x, i) => Math.abs(x) > 0 && Math.abs(t[i]!) > 0 && Math.sign(x) === Math.sign(t[i]!),
+  );
   const falseAlarmRate = strong.length ? 1 - strong.filter(Boolean).length / strong.length : null;
   const absCorr = Math.abs(correlation ?? 0);
   const absRank = Math.abs(rankCorrelation ?? 0);
-  const leadScore = Math.max(0, Math.min(1,
-    absCorr * 0.30 +
-    absRank * 0.20 +
-    (direction ?? 0.5) * 0.15 +
-    Math.min(1, (mi ?? 0) / 0.5) * 0.10 +
-    (stability ?? 0) * 0.20 -
-    (falseAlarmRate ?? 0.5) * 0.15,
-  ));
-  const status = leadScore >= 0.68 && (stability ?? 0) >= 0.55 && absCorr >= 0.35 ? "VALIDATED"
-    : leadScore >= 0.45 ? "CANDIDATE"
-    : "REJECTED";
-  return { sampleCount: s.length, correlation, rankCorrelation, directionalAccuracy: direction, mutualInformation: mi, stability, falseAlarmRate, leadScore, status };
+  const leadScore = Math.max(
+    0,
+    Math.min(
+      1,
+      absCorr * 0.3 +
+        absRank * 0.2 +
+        (direction ?? 0.5) * 0.15 +
+        Math.min(1, (mi ?? 0) / 0.5) * 0.1 +
+        (stability ?? 0) * 0.2 -
+        (falseAlarmRate ?? 0.5) * 0.15,
+    ),
+  );
+  const status =
+    leadScore >= 0.68 && (stability ?? 0) >= 0.55 && absCorr >= 0.35
+      ? "VALIDATED"
+      : leadScore >= 0.45
+        ? "CANDIDATE"
+        : "REJECTED";
+  return {
+    sampleCount: s.length,
+    correlation,
+    rankCorrelation,
+    directionalAccuracy: direction,
+    mutualInformation: mi,
+    stability,
+    falseAlarmRate,
+    leadScore,
+    status,
+  };
 }
 
 export function discoverLeadingSignals(

@@ -40,14 +40,15 @@ export function calibrateAdaptiveInterval(input: AdaptiveIntervalInput): Adaptiv
   const maxSamples = Math.max(minSamples, input.maxCalibrationSamples ?? 120);
 
   const ordered = [...input.residuals].sort((a, b) => +new Date(a.asOf) - +new Date(b.asOf));
-  const regimePool = input.regime && !input.regimeChanged
-    ? ordered.filter(row => !row.regime || row.regime === input.regime)
-    : ordered;
+  const regimePool =
+    input.regime && !input.regimeChanged
+      ? ordered.filter((row) => !row.regime || row.regime === input.regime)
+      : ordered;
   const pool = regimePool.slice(-maxSamples);
   const reset = Boolean(input.regimeChanged);
 
   if (pool.length < minSamples) {
-    const fallback = pool.map(row => Math.abs(row.signedResidual));
+    const fallback = pool.map((row) => Math.abs(row.signedResidual));
     const width = fallback.length ? quantile(fallback, targetCoverage) : 0;
     return {
       p10: input.p50 - width,
@@ -62,7 +63,7 @@ export function calibrateAdaptiveInterval(input: AdaptiveIntervalInput): Adaptiv
     };
   }
 
-  const absoluteErrors = pool.map(row => Math.abs(row.signedResidual));
+  const absoluteErrors = pool.map((row) => Math.abs(row.signedResidual));
   const halfWidth = quantile(absoluteErrors, targetCoverage);
   return {
     p10: input.p50 - halfWidth,
@@ -88,7 +89,7 @@ function quantile(values: number[], q: number) {
 
 function empiricalCoverage(pool: CalibrationResidual[], halfWidth: number) {
   return pool.length
-    ? pool.filter(row => Math.abs(row.signedResidual) <= halfWidth).length / pool.length
+    ? pool.filter((row) => Math.abs(row.signedResidual) <= halfWidth).length / pool.length
     : null;
 }
 
@@ -96,10 +97,7 @@ function empiricalCoverage(pool: CalibrationResidual[], halfWidth: number) {
  * Exponentially weighted residual scale. Recent forecast errors receive more
  * weight, which makes the uncertainty layer react faster after drift.
  */
-export function exponentiallyWeightedResidualScale(
-  residuals: CalibrationResidual[],
-  decay = 0.94,
-) {
+export function exponentiallyWeightedResidualScale(residuals: CalibrationResidual[], decay = 0.94) {
   const ordered = [...residuals].sort((a, b) => +new Date(a.asOf) - +new Date(b.asOf));
   if (!ordered.length) return 0;
   const safeDecay = Math.min(0.9999, Math.max(0.5, decay));

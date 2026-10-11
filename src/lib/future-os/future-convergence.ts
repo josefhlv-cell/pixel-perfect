@@ -63,6 +63,9 @@ export function detectFutureConvergence(
 
   const paths: FutureConvergence["paths"] = [];
   for (const signal of signals) {
+    // A falling precursor reverses every downstream effect; a zero or invalid
+    // reading carries no directional information and is skipped.
+    if (!Number.isFinite(signal.value) || signal.value === 0) continue;
     walk(
       signal.node,
       target,
@@ -70,8 +73,8 @@ export function detectFutureConvergence(
       new Set<string>(),
       [],
       0,
-      1,
-      signal.reliability,
+      signal.value > 0 ? 1 : -1,
+      clamp(signal.reliability),
       signal.independenceGroup,
       maxDepth,
       paths,
@@ -86,51 +89,53 @@ export function detectFutureConvergence(
     grouped.set(key, list);
   }
 
-  return [...grouped.entries()].map(([key, group]) => {
-    const uniqueByGroup = new Map<string, (typeof paths)[number]>();
-    for (const path of group) {
-      const existing = uniqueByGroup.get(path.independenceGroup);
-      if (!existing || path.strength > existing.strength) {
-        uniqueByGroup.set(path.independenceGroup, path);
+  return [...grouped.entries()]
+    .map(([key, group]) => {
+      const uniqueByGroup = new Map<string, (typeof paths)[number]>();
+      for (const path of group) {
+        const existing = uniqueByGroup.get(path.independenceGroup);
+        if (!existing || path.strength > existing.strength) {
+          uniqueByGroup.set(path.independenceGroup, path);
+        }
       }
-    }
 
-    const independent = [...uniqueByGroup.values()]
-      .sort((a, b) => b.strength - a.strength)
-      .slice(0, 12);
+      const independent = [...uniqueByGroup.values()]
+        .sort((a, b) => b.strength - a.strength)
+        .slice(0, 12);
 
-    const pathCount = independent.length;
-    const strengthMass = independent.reduce((sum, path) => sum + path.strength, 0);
-    const directionAgreement = pathCount ? Math.min(1, pathCount / 4) : 0;
-    const convergenceScore = Math.min(
-      1,
-      (1 - Math.exp(-strengthMass)) * (0.45 + 0.55 * directionAgreement),
-    );
+      const pathCount = independent.length;
+      const strengthMass = independent.reduce((sum, path) => sum + path.strength, 0);
+      const directionAgreement = pathCount ? Math.min(1, pathCount / 4) : 0;
+      const convergenceScore = Math.min(
+        1,
+        (1 - Math.exp(-strengthMass)) * (0.45 + 0.55 * directionAgreement),
+      );
 
-    const impacts = independent.map(path => path.impactDays).sort((a, b) => a - b);
-    const medianImpactDays = impacts.length
-      ? impacts[Math.floor((impacts.length - 1) / 2)]
-      : null;
+      const impacts = independent.map((path) => path.impactDays).sort((a, b) => a - b);
+      const medianImpactDays = impacts.length
+        ? impacts[Math.floor((impacts.length - 1) / 2)]
+        : null;
 
-    // Fragility asks: how much of the supporting mass disappears if the
-    // strongest independent path is removed?
-    const total = independent.reduce((sum, path) => sum + path.strength, 0);
-    const strongest = independent[0]?.strength ?? 0;
-    const fragility = total ? Math.min(1, strongest / total) : 1;
+      // Fragility asks: how much of the supporting mass disappears if the
+      // strongest independent path is removed?
+      const total = independent.reduce((sum, path) => sum + path.strength, 0);
+      const strongest = independent[0]?.strength ?? 0;
+      const fragility = total ? Math.min(1, strongest / total) : 1;
 
-    return {
-      target,
-      direction: (key.endsWith(":1") ? 1 : -1) as 1 | -1,
-      independentPathCount: pathCount,
-      supportingPathCount: group.length,
-      convergenceScore,
-      earliestImpactDays: impacts[0] ?? null,
-      medianImpactDays: medianImpactDays ?? null,
-      fragility,
-      supportingGroups: independent.map(path => path.independenceGroup),
-      paths: independent,
-    };
-  }).sort((a, b) => b.convergenceScore - a.convergenceScore);
+      return {
+        target,
+        direction: (key.endsWith(":1") ? 1 : -1) as 1 | -1,
+        independentPathCount: pathCount,
+        supportingPathCount: group.length,
+        convergenceScore,
+        earliestImpactDays: impacts[0] ?? null,
+        medianImpactDays: medianImpactDays ?? null,
+        fragility,
+        supportingGroups: independent.map((path) => path.independenceGroup),
+        paths: independent,
+      };
+    })
+    .sort((a, b) => b.convergenceScore - a.convergenceScore);
 }
 
 function walk(
@@ -169,7 +174,7 @@ function walk(
       nextVisited,
       [...nodes, current],
       impactDays + Math.max(0, edge.lagDays),
-      direction === 1 ? edge.sign : (edge.sign === 1 ? -1 : 1),
+      direction === 1 ? edge.sign : edge.sign === 1 ? -1 : 1,
       strength * clamp(edge.strength),
       independenceGroup,
       remainingDepth - 1,
@@ -186,8 +191,14 @@ function clamp(value: number) {
  * Converts convergence into an operational early-warning level.
  * High convergence with low fragility is preferred over a single dominant path.
  */
-export function convergenceWarningLevel(result: FutureConvergence): "NONE" | "WATCH" | "EARLY_WARNING" | "BREAK" {
-  if (result.independentPathCount >= 3 && result.convergenceScore >= 0.72 && result.fragility <= 0.55) {
+export function convergenceWarningLevel(
+  result: FutureConvergence,
+): "NONE" | "WATCH" | "EARLY_WARNING" | "BREAK" {
+  if (
+    result.independentPathCount >= 3 &&
+    result.convergenceScore >= 0.72 &&
+    result.fragility <= 0.55
+  ) {
     return "EARLY_WARNING";
   }
   if (result.independentPathCount >= 2 && result.convergenceScore >= 0.48) {

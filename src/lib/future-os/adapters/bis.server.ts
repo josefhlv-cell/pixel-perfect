@@ -12,7 +12,9 @@ type Sdmx = {
 
 function quarterStart(period: string): string | null {
   const m = /^(\d{4})-Q([1-4])$/.exec(period);
-  return m ? m[1] + "-" + String((Number(m[2]) - 1) * 3 + 1).padStart(2, "0") + "-01T00:00:00.000Z" : null;
+  return m
+    ? m[1] + "-" + String((Number(m[2]) - 1) * 3 + 1).padStart(2, "0") + "-01T00:00:00.000Z"
+    : null;
 }
 
 function parseBIS(dataset: Sdmx, requestedGeos: string[]) {
@@ -29,7 +31,10 @@ function parseBIS(dataset: Sdmx, requestedGeos: string[]) {
   for (const [seriesKey, seriesData] of Object.entries(rawSeries)) {
     const indices = seriesKey.split(":").map(Number);
     const geo = seriesDimensions[geoIndex]?.values[indices[geoIndex] ?? -1]?.id;
-    const measure = measureIndex >= 0 ? seriesDimensions[measureIndex]?.values[indices[measureIndex] ?? -1]?.id ?? "" : "";
+    const measure =
+      measureIndex >= 0
+        ? (seriesDimensions[measureIndex]?.values[indices[measureIndex] ?? -1]?.id ?? "")
+        : "";
     if (!geo || (requestedGeos.length && !requestedGeos.includes(geo))) continue;
     for (const [obsKey, payload] of Object.entries(seriesData.observations ?? {})) {
       const timeIndex = Number(obsKey.split(":")[0]);
@@ -54,7 +59,10 @@ export async function fetchBisResidentialPropertyPrices(
   const key = "Q." + geos.join("+") + "." + measures.join("+");
   const url = BIS_BASE + "/" + encodeURIComponent(key) + "?format=jsondata";
   const retrievedAt = new Date().toISOString();
-  const response = await fetch(url, { signal: signal ?? null, headers: { accept: "application/vnd.sdmx.data+json;version=2.0.0" } });
+  const response = await fetch(url, {
+    signal: signal ?? null,
+    headers: { accept: "application/vnd.sdmx.data+json;version=2.0.0" },
+  });
   if (!response.ok) throw new Error("BIS HTTP " + response.status);
   const rows = parseBIS((await response.json()) as Sdmx, geos);
   const out: EvidenceObservation[] = [];
@@ -63,17 +71,31 @@ export async function fetchBisResidentialPropertyPrices(
     if (!observedAt) continue;
     out.push({
       id: `bis:${r.geo}:${r.measure}:${r.period}`,
-      sourceId: "bis-rpp", sourceName: "BIS Residential Property Prices", sourceType: "official_statistical",
-      sourceUrl: url, publisher: "Bank for International Settlements",
-      geographyType: "country", geographyKey: r.geo,
-      entityType: "series", entityKey: `residential_property_price_${r.measure || "unknown"}`,
-      observedAt, publishedAt: null, retrievedAt, availableAt: retrievedAt,
-      effectiveFrom: observedAt, effectiveTo: null, revision: 1,
+      sourceId: "bis-rpp",
+      sourceName: "BIS Residential Property Prices",
+      sourceType: "official_statistical",
+      sourceUrl: url,
+      publisher: "Bank for International Settlements",
+      geographyType: "country",
+      geographyKey: r.geo,
+      entityType: "series",
+      entityKey: `residential_property_price_${r.measure || "unknown"}`,
+      observedAt,
+      publishedAt: null,
+      retrievedAt,
+      availableAt: retrievedAt,
+      effectiveFrom: observedAt,
+      effectiveTo: null,
+      revision: 1,
       value: { value: r.value, period: r.period, measure: r.measure },
-      unit: null, frequency: "quarterly", leadClass: "UNKNOWN",
-      sourceReliability: 0.95, independenceGroup: "bis",
+      unit: null,
+      frequency: "quarterly",
+      leadClass: "UNKNOWN",
+      sourceReliability: 0.95,
+      independenceGroup: "bis",
       contentHash: ["bis", "WS_SPP", r.geo, r.measure, r.period, String(r.value)].join("|"),
-      isRevision: false, supersedesId: null,
+      isRevision: false,
+      supersedesId: null,
       metadata: { ingestionMode: "live", pointInTimeMode: "conservative_retrieval_cutoff" },
       createdAt: retrievedAt,
     });

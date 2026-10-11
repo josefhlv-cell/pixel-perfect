@@ -19,7 +19,11 @@ const HOUR = 3600_000;
 const DAY = 24 * HOUR;
 
 /** Freshness by time since last successful verification. */
-export function computeFreshnessStatus(lastVerifiedAt: Date | null, now: Date, publishedAt?: Date | null): FreshnessStatus {
+export function computeFreshnessStatus(
+  lastVerifiedAt: Date | null,
+  now: Date,
+  publishedAt?: Date | null,
+): FreshnessStatus {
   if (!lastVerifiedAt) return "UNKNOWN";
   const age = now.getTime() - lastVerifiedAt.getTime();
   if (age < 0) return "UNKNOWN";
@@ -30,7 +34,8 @@ export function computeFreshnessStatus(lastVerifiedAt: Date | null, now: Date, p
   else if (age <= 30 * DAY) status = "STALE";
   else status = "EXPIRED";
   // Listing published >30 days ago cannot be FRESH-ranked above RECENT.
-  if (publishedAt && now.getTime() - publishedAt.getTime() > 30 * DAY && status === "FRESH") status = "RECENT";
+  if (publishedAt && now.getTime() - publishedAt.getTime() > 30 * DAY && status === "FRESH")
+    status = "RECENT";
   return status;
 }
 
@@ -71,19 +76,37 @@ export function decideAvailability(input: VerificationInput): VerificationDecisi
   if (outcome.kind === "not_found") {
     // 404 means removed from source — NOT sold.
     events.push({ type: "not_found", http: outcome.http });
-    return { newStatus: "REMOVED", confidence: 0.7, verified: true, events, newPrice: previousPrice };
+    return {
+      newStatus: "REMOVED",
+      confidence: 0.7,
+      verified: true,
+      events,
+      newPrice: previousPrice,
+    };
   }
   if (outcome.kind === "temporary_error") {
     events.push({ type: "verification_failed", http: outcome.http });
     const downgraded: AvailabilityStatus =
       previousStatus === "ACTIVE_CONFIRMED" ? "ACTIVE_UNCONFIRMED" : previousStatus;
-    return { newStatus: downgraded, confidence: 0.4, verified: false, events, newPrice: previousPrice };
+    return {
+      newStatus: downgraded,
+      confidence: 0.4,
+      verified: false,
+      events,
+      newPrice: previousPrice,
+    };
   }
   if (outcome.kind === "blocked") {
     events.push({ type: "source_blocked", http: outcome.http });
     const downgraded: AvailabilityStatus =
       previousStatus === "ACTIVE_CONFIRMED" ? "ACTIVE_UNCONFIRMED" : previousStatus;
-    return { newStatus: downgraded, confidence: 0.3, verified: false, events, newPrice: previousPrice };
+    return {
+      newStatus: downgraded,
+      confidence: 0.3,
+      verified: false,
+      events,
+      newPrice: previousPrice,
+    };
   }
 
   // ok (200)
@@ -121,8 +144,14 @@ export function decideAvailability(input: VerificationInput): VerificationDecisi
 }
 
 /** Effective status for display: STALE/EXPIRED freshness never shows as confirmed-active. */
-export function effectiveAvailability(status: AvailabilityStatus, freshness: FreshnessStatus): AvailabilityStatus {
-  if (status === "ACTIVE_CONFIRMED" && (freshness === "STALE" || freshness === "EXPIRED" || freshness === "UNKNOWN")) {
+export function effectiveAvailability(
+  status: AvailabilityStatus,
+  freshness: FreshnessStatus,
+): AvailabilityStatus {
+  if (
+    status === "ACTIVE_CONFIRMED" &&
+    (freshness === "STALE" || freshness === "EXPIRED" || freshness === "UNKNOWN")
+  ) {
     return "ACTIVE_UNCONFIRMED";
   }
   return status;
@@ -130,8 +159,20 @@ export function effectiveAvailability(status: AvailabilityStatus, freshness: Fre
 
 /** Duplicate detection: same city + area within 2 % + same disposition + coords within ~150 m. */
 export function isLikelyDuplicate(
-  a: { city?: string | null; area_m2?: number | null; rooms?: string | null; lat?: number | null; lng?: number | null },
-  b: { city?: string | null; area_m2?: number | null; rooms?: string | null; lat?: number | null; lng?: number | null },
+  a: {
+    city?: string | null;
+    area_m2?: number | null;
+    rooms?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+  },
+  b: {
+    city?: string | null;
+    area_m2?: number | null;
+    rooms?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+  },
 ): boolean {
   if (!a.city || !b.city || a.city !== b.city) return false;
   if (a.rooms && b.rooms && a.rooms !== b.rooms) return false;

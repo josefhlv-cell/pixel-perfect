@@ -1,7 +1,8 @@
 export type SourceAdapterProfile = {
   adapterKey: string;
   sourceName: string;
-  latencyClass: "REALTIME" | "INTRADAY" | "DAILY" | "WEEKLY" | "MONTHLY" | "QUARTERLY" | "ANNUAL" | "UNKNOWN";
+  latencyClass:
+    "REALTIME" | "INTRADAY" | "DAILY" | "WEEKLY" | "MONTHLY" | "QUARTERLY" | "ANNUAL" | "UNKNOWN";
   frequencies: string[];
   dataDomains: string[];
   geographyScopes: string[];

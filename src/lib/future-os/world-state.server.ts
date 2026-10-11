@@ -41,7 +41,9 @@ export async function getWorldStateAt(
       .map((row) => row.id);
     const missingIds = evidenceIds.filter((id) => !(referenced ?? []).some((row) => row.id === id));
     if (futureIds.length || missingIds.length) {
-      throw new Error(`World-state snapshot has invalid provenance at ${cutoff}: future=[${futureIds.join(",")}] missing=[${missingIds.join(",")}]`);
+      throw new Error(
+        `World-state snapshot has invalid provenance at ${cutoff}: future=[${futureIds.join(",")}] missing=[${missingIds.join(",")}]`,
+      );
     }
   }
   assertNoFutureEvidence(evidence.rows, asOf);

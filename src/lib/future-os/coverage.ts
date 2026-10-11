@@ -29,7 +29,7 @@ export function summarizeCoverage(
 ): CoverageSnapshot[] {
   const groups = new Map<string, typeof rows>();
   for (const row of rows) {
-    const key = [row.geographyType,row.geographyKey,row.entityType,row.entityKey].join("|");
+    const key = [row.geographyType, row.geographyKey, row.entityType, row.entityKey].join("|");
     const list = groups.get(key) ?? [];
     list.push(row);
     groups.set(key, list);
@@ -37,7 +37,7 @@ export function summarizeCoverage(
 
   return [...groups.entries()].map(([key, group]) => {
     const [geographyType = "", geographyKey = "", entityType = "", entityKey = ""] = key.split("|");
-    const ordered = [...group].sort((a,b) => +new Date(a.availableAt) - +new Date(b.availableAt));
+    const ordered = [...group].sort((a, b) => +new Date(a.availableAt) - +new Date(b.availableAt));
     const missingRate = ordered.length
       ? ordered.filter((row) => row.value == null).length / ordered.length
       : 1;
@@ -52,8 +52,12 @@ export function summarizeCoverage(
       lastAvailableAt: ordered.at(-1)?.availableAt ?? null,
       observationCount: ordered.length,
       missingRate,
-      revisionRate: ordered.length ? ordered.filter((row) => row.isRevision).length / ordered.length : 0,
-      sourceReliability: ordered.length ? ordered.reduce((s,row) => s + row.sourceReliability,0) / ordered.length : 0,
+      revisionRate: ordered.length
+        ? ordered.filter((row) => row.isRevision).length / ordered.length
+        : 0,
+      sourceReliability: ordered.length
+        ? ordered.reduce((s, row) => s + row.sourceReliability, 0) / ordered.length
+        : 0,
     };
   });
 }

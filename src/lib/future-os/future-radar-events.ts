@@ -33,41 +33,67 @@ export function detectFutureRadarEvents(
         events.push({
           type: "UNCERTAINTY_SPIKE",
           severity: relative >= 0.5 ? "CRITICAL" : "WARNING",
-          key, before, after, delta,
+          key,
+          before,
+          after,
+          delta,
           explanation: "Nejistota Future Radar se významně změnila.",
         });
       } else if (key.toLowerCase().includes("regime") && Math.abs(delta) >= 0.25) {
         events.push({
           type: "REGIME_SHIFT",
           severity: "CRITICAL",
-          key, before, after, delta,
+          key,
+          before,
+          after,
+          delta,
           explanation: "Detekována významná změna režimového skóre.",
         });
       } else if (key.toLowerCase().includes("decision") && Math.abs(delta) >= 1) {
         events.push({
           type: "DECISION_FLIP",
           severity: "CRITICAL",
-          key, before, after, delta,
+          key,
+          before,
+          after,
+          delta,
           explanation: "Investiční rozhodnutí se změnilo.",
         });
       } else {
         events.push({
           type: "NEW_EVIDENCE",
           severity: relative >= 0.25 ? "WARNING" : "INFO",
-          key, before, after, delta,
+          key,
+          before,
+          after,
+          delta,
           explanation: "Do World State přibyla nebo se změnila informace.",
         });
       }
+    } else if (key.toLowerCase().includes("decision")) {
+      // Decisions are categorical (BUY/NEGOTIATE/WAIT/PASS), so a change is a flip.
+      events.push({
+        type: "DECISION_FLIP",
+        severity: "CRITICAL",
+        key,
+        before,
+        after,
+        delta: null,
+        explanation: "Investiční rozhodnutí se změnilo.",
+      });
     } else {
       events.push({
         type: "MODEL_FLIP",
         severity: "WARNING",
-        key, before, after, delta: null,
+        key,
+        before,
+        after,
+        delta: null,
         explanation: "Kategorický stav nebo modelový výstup se změnil.",
       });
     }
   }
-  return events.sort((a,b) => {
+  return events.sort((a, b) => {
     const rank = { CRITICAL: 3, WARNING: 2, INFO: 1 };
     return rank[b.severity] - rank[a.severity];
   });

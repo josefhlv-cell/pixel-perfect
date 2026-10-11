@@ -26,7 +26,9 @@ export const runAiAnalysis = createServerFn({ method: "POST" })
     let propertyId: string | null = null;
 
     const logUsage = async (result: unknown) => {
-      const usage = (ai as { lastUsage?: { tokensInput: number | null; tokensOutput: number | null } }).lastUsage;
+      const usage = (
+        ai as { lastUsage?: { tokensInput: number | null; tokensOutput: number | null } }
+      ).lastUsage;
       await supabase.from("ai_usage").insert({
         user_id: userId,
         provider: ai.name,
@@ -35,12 +37,22 @@ export const runAiAnalysis = createServerFn({ method: "POST" })
         tokens_output: usage?.tokensOutput ?? null,
         tool_calls: 0,
       });
-      await supabase.from("ai_analyses").insert({ user_id: userId, property_id: propertyId, kind: data.kind, provider: ai.name, model: ai.model, result: result as never });
+      await supabase.from("ai_analyses").insert({
+        user_id: userId,
+        property_id: propertyId,
+        kind: data.kind,
+        provider: ai.name,
+        model: ai.model,
+        result: result as never,
+      });
     };
 
     try {
       if (data.kind === "market") {
-        const { data: stats } = await supabase.from("market_statistics").select("city,period,avg_asking_price_m2,avg_rent_m2,listings_count,is_sample").order("period");
+        const { data: stats } = await supabase
+          .from("market_statistics")
+          .select("city,period,avg_asking_price_m2,avg_rent_m2,listings_count,is_sample")
+          .order("period");
         const r = await ai.summarizeMarket({ stats: (stats ?? []) as Record<string, unknown>[] });
         await logUsage(r);
         return { ok: true as const, provider: ai.name, kind: data.kind, text: r.insight };
@@ -52,8 +64,18 @@ export const runAiAnalysis = createServerFn({ method: "POST" })
         ]);
         const totals = portfolioTotals(p.data ?? [], v.data ?? []);
         const r = await ai.explainDeal({
-          property: { typ: "portfolio", nemovitosti: (p.data ?? []).map((x) => ({ name: x.name, city: x.city, area_m2: x.area_m2 })) },
-          metrics: { ...totals, poznamka: "Hodnoty v Kč, výnos v bps. Vypočteno výpočetním jádrem." },
+          property: {
+            typ: "portfolio",
+            nemovitosti: (p.data ?? []).map((x) => ({
+              name: x.name,
+              city: x.city,
+              area_m2: x.area_m2,
+            })),
+          },
+          metrics: {
+            ...totals,
+            poznamka: "Hodnoty v Kč, výnos v bps. Vypočteno výpočetním jádrem.",
+          },
           listingText: null,
         });
         await logUsage(r);
@@ -61,7 +83,11 @@ export const runAiAnalysis = createServerFn({ method: "POST" })
       }
 
       if (!data.listingId) throw new Error("Chybí nemovitost");
-      const { data: l } = await supabase.from("listings").select("*").eq("id", data.listingId).single();
+      const { data: l } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("id", data.listingId)
+        .single();
       if (!l) throw new Error("Nemovitost nenalezena");
       propertyId = l.property_id;
       const [{ data: prop }, { data: stats }, { data: snaps }] = await Promise.all([
@@ -70,16 +96,41 @@ export const runAiAnalysis = createServerFn({ method: "POST" })
         supabase.from("listing_snapshots").select("*").eq("listing_id", l.id),
       ]);
       const e = enrichListing(l, prop ?? null, latestStatsByCity(stats ?? []), snaps ?? []);
-      const calc = l.price && e.rent ? calculateTotalReturn(defaultInvestmentInput(l.price, e.rent)) : null;
+      const calc =
+        l.price && e.rent ? calculateTotalReturn(defaultInvestmentInput(l.price, e.rent)) : null;
       const property = {
-        title: l.title, city: e.city, address: l.address, price_czk: l.price, area_m2: l.area_m2, rooms: l.rooms,
-        type: l.property_type, condition: prop?.condition, energy_class: prop?.energy_class, floor: prop?.floor,
-        availability: l.availability_status, freshness: l.freshness_status, source: l.source_domain, is_sample: e.isSample,
+        title: l.title,
+        city: e.city,
+        address: l.address,
+        price_czk: l.price,
+        area_m2: l.area_m2,
+        rooms: l.rooms,
+        type: l.property_type,
+        condition: prop?.condition,
+        energy_class: prop?.energy_class,
+        floor: prop?.floor,
+        availability: l.availability_status,
+        freshness: l.freshness_status,
+        source: l.source_domain,
+        is_sample: e.isSample,
       };
       const metrics = {
-        price_per_m2: e.pricePerM2, estimated_value: e.estimate?.estimatedValue ?? null, estimate_confidence: e.estimate?.confidence ?? null,
-        diff_vs_estimate_bps: e.diffBps, estimated_rent: e.rent, gross_yield_bps: e.grossYieldBps, deal_priority: e.priority,
-        ...(calc && { monthly_mortgage: calc.monthlyMortgage, monthly_cash_flow: calc.monthlyCashFlow, net_yield_bps: calc.netYieldBps, cash_on_cash_bps: calc.cashOnCashBps, irr_bps: calc.irrBps, roi_bps: calc.roiBps, ltv_bps: calc.ltvBps }),
+        price_per_m2: e.pricePerM2,
+        estimated_value: e.estimate?.estimatedValue ?? null,
+        estimate_confidence: e.estimate?.confidence ?? null,
+        diff_vs_estimate_bps: e.diffBps,
+        estimated_rent: e.rent,
+        gross_yield_bps: e.grossYieldBps,
+        deal_priority: e.priority,
+        ...(calc && {
+          monthly_mortgage: calc.monthlyMortgage,
+          monthly_cash_flow: calc.monthlyCashFlow,
+          net_yield_bps: calc.netYieldBps,
+          cash_on_cash_bps: calc.cashOnCashBps,
+          irr_bps: calc.irrBps,
+          roi_bps: calc.roiBps,
+          ltv_bps: calc.ltvBps,
+        }),
         assumptions: "LTV 80 %, úrok 4,89 %, 30 let, neobsazenost 5 %, náklady 15 % nájmu",
       };
       const listingText = prop?.description ?? null;
@@ -93,9 +144,19 @@ export const runAiAnalysis = createServerFn({ method: "POST" })
       return { ok: true as const, provider: ai.name, kind: data.kind, analysis: r };
     } catch (err) {
       if (err instanceof AIUnavailableError) {
-        return { ok: false as const, provider: ai.name, kind: data.kind, error: "AI analýza je momentálně nedostupná. Výpočty a uložená data zůstávají dostupná." };
+        return {
+          ok: false as const,
+          provider: ai.name,
+          kind: data.kind,
+          error: "AI analýza je momentálně nedostupná. Výpočty a uložená data zůstávají dostupná.",
+        };
       }
       console.error("[ai] analysis failed", err);
-      return { ok: false as const, provider: ai.name, kind: data.kind, error: "Něco se nepovedlo. Zkuste to prosím znovu." };
+      return {
+        ok: false as const,
+        provider: ai.name,
+        kind: data.kind,
+        error: "Něco se nepovedlo. Zkuste to prosím znovu.",
+      };
     }
   });

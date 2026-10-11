@@ -23,7 +23,9 @@ function Forgot() {
   const [sent, setSent] = useState(false);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/reset-password` });
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
     if (error) return void toast.error(error.message);
     setSent(true);
   };
@@ -32,17 +34,29 @@ function Forgot() {
       <div className="w-full max-w-sm">
         <h1 className="text-xl font-semibold">Zapomenuté heslo</h1>
         {sent ? (
-          <p className="mt-4 text-sm text-muted-foreground">Pokud účet existuje, poslali jsme na {email} odkaz pro nastavení nového hesla.</p>
+          <p className="mt-4 text-sm text-muted-foreground">
+            Pokud účet existuje, poslali jsme na {email} odkaz pro nastavení nového hesla.
+          </p>
         ) : (
           <form onSubmit={submit} className="mt-6 space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="email">E-mail</Label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
-            <Button className="w-full" type="submit">Poslat odkaz</Button>
+            <Button className="w-full" type="submit">
+              Poslat odkaz
+            </Button>
           </form>
         )}
-        <Link to="/auth" className="mt-6 block text-sm text-primary hover:underline">Zpět na přihlášení</Link>
+        <Link to="/auth" className="mt-6 block text-sm text-primary hover:underline">
+          Zpět na přihlášení
+        </Link>
       </div>
     </div>
   );

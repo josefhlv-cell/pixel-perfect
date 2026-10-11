@@ -157,5 +157,13 @@
   }
 }
 
-.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
-.maplibregl-popup-content { background: var(--color-popover) !important; color: var(--color-popover-foreground); border: 1px solid var(--color-border); }
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.maplibregl-popup-content {
+  background: var(--color-popover) !important;
+  color: var(--color-popover-foreground);
+  border: 1px solid var(--color-border);
+}

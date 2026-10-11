@@ -26,7 +26,9 @@ export const notifQuery = {
 };
 
 export async function saveNotif(prefs: Record<string, boolean>) {
-  const { error } = await supabase.from("notification_settings").upsert({ user_id: await uid(), prefs, updated_at: new Date().toISOString() });
+  const { error } = await supabase
+    .from("notification_settings")
+    .upsert({ user_id: await uid(), prefs, updated_at: new Date().toISOString() });
   if (error) throw error;
 }
 
@@ -36,21 +38,36 @@ export function NotificationSettings() {
   const toggle = async (k: string, v: boolean) => {
     const next = { ...(prefs ?? {}), [k]: v };
     qc.setQueryData(notifQuery.queryKey, next);
-    try { await saveNotif(next); } catch { toast.error("Nastavení se nepodařilo uložit"); }
+    try {
+      await saveNotif(next);
+    } catch {
+      toast.error("Nastavení se nepodařilo uložit");
+    }
   };
   return (
     <div className="space-y-2.5">
       {ALERT_TYPES.map(([k, label]) => (
         <div key={k} className="flex items-center justify-between">
-          <Label htmlFor={`n-${k}`} className="text-sm font-normal">{label}</Label>
-          <Switch id={`n-${k}`} checked={prefs?.[k] ?? true} onCheckedChange={(c) => toggle(k, c)} />
+          <Label htmlFor={`n-${k}`} className="text-sm font-normal">
+            {label}
+          </Label>
+          <Switch
+            id={`n-${k}`}
+            checked={prefs?.[k] ?? true}
+            onCheckedChange={(c) => toggle(k, c)}
+          />
         </div>
       ))}
       <div className="flex items-center justify-between border-t pt-2.5">
-        <Label htmlFor="n-email" className="text-sm font-normal">Také e-mailem</Label>
-        <Switch id="n-email" checked={prefs?.["email"] ?? false} onCheckedChange={(c) => toggle("email", c)} />
+        <Label htmlFor="n-email" className="text-sm font-normal">
+          Také e-mailem
+        </Label>
+        <Switch
+          id="n-email"
+          checked={prefs?.["email"] ?? false}
+          onCheckedChange={(c) => toggle("email", c)}
+        />
       </div>
     </div>
   );
 }
-

@@ -22,9 +22,7 @@ function NotFoundComponent() {
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">Stránka nenalezena</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Hledaná stránka neexistuje.
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">Hledaná stránka neexistuje.</p>
         <div className="mt-6">
           <Link
             to="/"
@@ -51,9 +49,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           Stránku se nepodařilo načíst
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Něco se pokazilo. Zkuste to znovu.
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">Něco se pokazilo. Zkuste to znovu.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
@@ -82,7 +78,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Reality Investor — investiční inteligence pro české nemovitosti" },
-      { name: "description", content: "Analýza investičních nemovitostí v ČR: Deal Hunter, portfolio, kalkulačka výnosů a AI analytik." },
+      {
+        name: "description",
+        content:
+          "Analýza investičních nemovitostí v ČR: Deal Hunter, portfolio, kalkulačka výnosů a AI analytik.",
+      },
       { property: "og:title", content: "Reality Investor" },
       { property: "og:description", content: "Investiční inteligence pro české nemovitosti." },
       { property: "og:type", content: "website" },
@@ -96,7 +96,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap",
+      },
     ],
   }),
   shellComponent: RootShell,
