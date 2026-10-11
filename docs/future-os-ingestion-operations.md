@@ -8,7 +8,7 @@ The authenticated server route `POST /api/public/cron/future-os-ingestion` runs 
 - BIS residential property prices (`WS_SPP`, Czechia).
 - ČNB ARAD sets configured by `DEFAULT_SET_IDS` in `src/lib/future-os/adapters/cnb-arad.server.ts`.
 
-A source can fail while others succeed. Inspect the JSON response and server log event `[future-os-ingestion]`; do not interpret HTTP 200 as proof every source succeeded. The route returns 502 only when every attempted source reports an error.
+A source can fail while others succeed. Inspect the JSON response, server log event `[future-os-ingestion]`, and append-only rows written to `reality_data_coverage`; do not interpret HTTP 200 as proof every source succeeded. The coverage ledger records per-source/set attempt timestamps, counts, status, and any error when that write succeeds. The route returns 502 only when every attempted source reports an error.
 
 ## Schedule activation is an explicit deployment step
 
