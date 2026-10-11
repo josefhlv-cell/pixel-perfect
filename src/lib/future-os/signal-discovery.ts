@@ -189,6 +189,46 @@ export function evaluateLeadingSignal(input: LeadTestInput): LeadTestResult {
   };
 }
 
+/**
+ * Evidence values may arrive as a JSON number, numeric string, or a structured
+ * object produced by importers (for example { value: 123, raw: "123" }).
+ * Reject ambiguous/non-finite values instead of silently dropping valid rows
+ * or coercing booleans and empty strings to zero.
+ *
+ * Strings follow the ČNB rule: strip Unicode spaces, treat a comma as the
+ * decimal mark, and drop dots only when they are thousand separators
+ * ("1.234,5" → 1234.5). A lone dot stays a decimal point ("1.234" → 1.234).
+ */
+export function parseEvidenceNumericValue(value: unknown): number | null {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+
+  if (typeof value === "string") return parseNumericString(value);
+
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const record = value as Record<string, unknown>;
+    if ("value" in record) {
+      const parsed = parseEvidenceNumericValue(record.value);
+      if (parsed !== null) return parsed;
+    }
+    if ("raw" in record) return parseEvidenceNumericValue(record.raw);
+  }
+
+  return null;
+}
+
+function parseNumericString(value: string): number | null {
+  let normalized = value.trim().replace(/\s/g, "");
+  if (!normalized) return null;
+  if (normalized.includes(",") && normalized.includes(".")) {
+    normalized = normalized.replace(/\./g, "").replace(",", ".");
+  } else {
+    normalized = normalized.replace(",", ".");
+  }
+  if (!/^[-+]?\d+(\.\d+)?([eE][-+]?\d+)?$/.test(normalized)) return null;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export function discoverLeadingSignals(
   observations: EvidenceObservation[],
   targetEntityKey: string,
@@ -196,12 +236,13 @@ export function discoverLeadingSignals(
 ) {
   const byEntity = new Map<string, SignalPoint[]>();
   for (const row of observations) {
-    if (typeof row.value !== "number") continue;
+    const value = parseEvidenceNumericValue(row.value);
+    if (value === null) continue;
     const date = row.effectiveFrom ?? row.observedAt;
     if (!date) continue;
     const key = `${row.entityType}:${row.entityKey}`;
     const list = byEntity.get(key) ?? [];
-    list.push({ date, value: row.value, evidenceId: row.id });
+    list.push({ date, value, evidenceId: row.id });
     byEntity.set(key, list);
   }
   const target = byEntity.get(targetEntityKey) ?? [];

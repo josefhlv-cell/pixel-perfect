@@ -1,4 +1,5 @@
 import type { EvidenceObservation } from "./types";
+import { parseEvidenceNumericValue } from "./signal-discovery";
 
 export type CausalEdge = {
   edgeKey: string;
@@ -23,7 +24,7 @@ export function propagateCausalSignal(
   return edges.flatMap((edge) => {
     const parent = values.get(edge.parent);
     if (!parent) return [];
-    const raw = typeof parent.value === "number" ? parent.value : null;
+    const raw = parseEvidenceNumericValue(parent.value);
     if (raw == null) return [];
     const direction = raw === 0 ? 0 : edge.expectedSign;
     const confidence = (edge.confidence ?? 0.5) * (edge.strength ?? 0.5) * parent.sourceReliability;
