@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { discoverLeadingSignals, evaluateLeadingSignal, parseEvidenceNumericValue } from "./signal-discovery";
+import {
+  discoverLeadingSignals,
+  evaluateLeadingSignal,
+  parseEvidenceNumericValue,
+} from "./signal-discovery";
 
 function series(offset = 0) {
   return Array.from({ length: 24 }, (_, i) => ({
@@ -20,6 +24,15 @@ describe("Future OS leading-signal discovery", () => {
     expect(parseEvidenceNumericValue("")).toBeNull();
     expect(parseEvidenceNumericValue(true)).toBeNull();
     expect(parseEvidenceNumericValue(Number.NaN)).toBeNull();
+    expect(parseEvidenceNumericValue("1 234,5")).toBe(1234.5);
+    expect(parseEvidenceNumericValue("1\u00A0234,5")).toBe(1234.5);
+    expect(parseEvidenceNumericValue("1\u202F234,50")).toBe(1234.5);
+    expect(parseEvidenceNumericValue("1.234,5")).toBe(1234.5);
+    expect(parseEvidenceNumericValue("-1 234,5")).toBe(-1234.5);
+    expect(parseEvidenceNumericValue("1.234")).toBe(1.234);
+    expect(parseEvidenceNumericValue({ value: null, raw: "1 234,5" })).toBe(1234.5);
+    expect(parseEvidenceNumericValue("1 234,5 EUR")).toBeNull();
+    expect(parseEvidenceNumericValue("   ")).toBeNull();
   });
 
   it("rejects undersampled relationships", () => {
@@ -118,5 +131,63 @@ describe("Future OS leading-signal discovery", () => {
     const results = discoverLeadingSignals(observations, "series:target", [30, 90]);
     expect(results.length).toBeGreaterThan(0);
     expect(results[0]?.signalKey).toBe("series:signal_a");
+  });
+
+  it("discovers a lead from Czech grouped numbers stored only as raw text", () => {
+    const observations = Array.from({ length: 16 }, (_, i) => {
+      const date = new Date(Date.UTC(2021, i, 1)).toISOString();
+      const base = {
+        sourceId: "cnb",
+        sourceName: "ČNB",
+        sourceType: "official_statistical",
+        sourceUrl: null,
+        publisher: "ČNB",
+        geographyType: "country",
+        geographyKey: "CZ",
+        observedAt: date,
+        publishedAt: date,
+        retrievedAt: date,
+        availableAt: date,
+        effectiveFrom: date,
+        effectiveTo: null,
+        revision: 1,
+        unit: "index",
+        frequency: "monthly",
+        sourceReliability: 0.9,
+        independenceGroup: "cnb",
+        isRevision: false,
+        supersedesId: null,
+        metadata: {},
+        createdAt: date,
+      };
+      const level = 1000 + i * 10;
+      return [
+        {
+          ...base,
+          id: `rate-${i}`,
+          entityType: "macro_indicator",
+          entityKey: "rate",
+          leadClass: "LEADING" as const,
+          contentHash: `rate-${i}`,
+          value: { value: null, raw: `${level.toLocaleString("cs-CZ")}` },
+        },
+        {
+          ...base,
+          id: `hpi-${i}`,
+          entityType: "macro_indicator",
+          entityKey: "hpi",
+          leadClass: "LAGGING" as const,
+          contentHash: `hpi-${i}`,
+          observedAt: new Date(Date.UTC(2021, i, 1) + 90 * 86_400_000).toISOString(),
+          effectiveFrom: new Date(Date.UTC(2021, i, 1) + 90 * 86_400_000).toISOString(),
+          value: { value: null, raw: (level * 2).toLocaleString("cs-CZ") },
+        },
+      ];
+    }).flat();
+
+    const results = discoverLeadingSignals(observations, "macro_indicator:hpi", [90]);
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0]?.signalKey).toBe("macro_indicator:rate");
+    expect(results[0]?.status).not.toBe("REJECTED");
   });
 });

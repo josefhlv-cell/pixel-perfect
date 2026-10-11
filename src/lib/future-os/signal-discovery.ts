@@ -194,16 +194,15 @@ export function evaluateLeadingSignal(input: LeadTestInput): LeadTestResult {
  * object produced by importers (for example { value: 123, raw: "123" }).
  * Reject ambiguous/non-finite values instead of silently dropping valid rows
  * or coercing booleans and empty strings to zero.
+ *
+ * Strings follow the ČNB rule: strip Unicode spaces, treat a comma as the
+ * decimal mark, and drop dots only when they are thousand separators
+ * ("1.234,5" → 1234.5). A lone dot stays a decimal point ("1.234" → 1.234).
  */
 export function parseEvidenceNumericValue(value: unknown): number | null {
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
 
-  if (typeof value === "string") {
-    const normalized = value.trim().replace(/\\s/g, "").replace(",", ".");
-    if (!normalized) return null;
-    const parsed = Number(normalized);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
+  if (typeof value === "string") return parseNumericString(value);
 
   if (value && typeof value === "object" && !Array.isArray(value)) {
     const record = value as Record<string, unknown>;
@@ -215,6 +214,19 @@ export function parseEvidenceNumericValue(value: unknown): number | null {
   }
 
   return null;
+}
+
+function parseNumericString(value: string): number | null {
+  let normalized = value.trim().replace(/\s/g, "");
+  if (!normalized) return null;
+  if (normalized.includes(",") && normalized.includes(".")) {
+    normalized = normalized.replace(/\./g, "").replace(",", ".");
+  } else {
+    normalized = normalized.replace(",", ".");
+  }
+  if (!/^[-+]?\d+(\.\d+)?([eE][-+]?\d+)?$/.test(normalized)) return null;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 export function discoverLeadingSignals(
