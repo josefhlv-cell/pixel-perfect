@@ -3,13 +3,12 @@ import { decisionRegret, strategyRegret } from "./decision-regret";
 
 describe("Decision regret", () => {
   it("compares the chosen action with the best realized alternative", () => {
-    expect(decisionRegret(
-      { action: "BUY", expectedUtility: 8, realizedUtility: 5 },
-      [
+    expect(
+      decisionRegret({ action: "BUY", expectedUtility: 8, realizedUtility: 5 }, [
         { action: "WAIT", expectedUtility: 4, realizedUtility: 10 },
         { action: "PASS", expectedUtility: 2, realizedUtility: 7 },
-      ],
-    )).toBe(5);
+      ]),
+    ).toBe(5);
   });
 
   it("aggregates regret across historical decisions", () => {

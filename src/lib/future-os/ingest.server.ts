@@ -18,10 +18,7 @@ function hashObservation(row: EvidenceObservation) {
   return createHash("sha256").update(canonical).digest("hex");
 }
 
-export async function ingestEvidence(
-  adapterKey: string,
-  observations: EvidenceObservation[],
-) {
+export async function ingestEvidence(adapterKey: string, observations: EvidenceObservation[]) {
   const { data: adapter, error: adapterError } = await supabaseAdmin
     .from("reality_source_adapters")
     .select("source_id,source_name,publisher,canonical_url,reliability,independence_group")
@@ -71,40 +68,38 @@ export async function ingestEvidence(
     if (latestError) throw latestError;
 
     const revision = (latest?.revision ?? 0) + 1;
-    const { error: insertError } = await supabaseAdmin
-      .from("reality_evidence")
-      .insert({
-        source_id: adapter.source_id,
-        source_url: row.sourceUrl ?? adapter.canonical_url,
-        source_name: adapter.source_name,
-        source_type: row.sourceType,
-        publisher: row.publisher ?? adapter.publisher,
-        geography_type: row.geographyType,
-        geography_key: row.geographyKey,
-        entity_type: row.entityType,
-        entity_key: row.entityKey,
-        observed_at: row.observedAt,
-        published_at: row.publishedAt,
-        retrieved_at: row.retrievedAt,
-        available_at: row.availableAt,
-        effective_from: row.effectiveFrom,
-        effective_to: row.effectiveTo,
-        revision,
-        value: row.value as never,
-        unit: row.unit,
-        frequency: row.frequency,
-        lead_class: row.leadClass,
-        source_reliability: row.sourceReliability ?? adapter.reliability ?? 0.5,
-        independence_group: row.independenceGroup || adapter.independence_group,
-        content_hash: contentHash,
-        is_revision: revision > 1,
-        supersedes_id: latest?.id ?? null,
-        metadata: {
-          ...row.metadata,
-          adapterKey,
-          ingestionMode: "server_append_only",
-        },
-      });
+    const { error: insertError } = await supabaseAdmin.from("reality_evidence").insert({
+      source_id: adapter.source_id,
+      source_url: row.sourceUrl ?? adapter.canonical_url,
+      source_name: adapter.source_name,
+      source_type: row.sourceType,
+      publisher: row.publisher ?? adapter.publisher,
+      geography_type: row.geographyType,
+      geography_key: row.geographyKey,
+      entity_type: row.entityType,
+      entity_key: row.entityKey,
+      observed_at: row.observedAt,
+      published_at: row.publishedAt,
+      retrieved_at: row.retrievedAt,
+      available_at: row.availableAt,
+      effective_from: row.effectiveFrom,
+      effective_to: row.effectiveTo,
+      revision,
+      value: row.value as never,
+      unit: row.unit,
+      frequency: row.frequency,
+      lead_class: row.leadClass,
+      source_reliability: row.sourceReliability ?? adapter.reliability ?? 0.5,
+      independence_group: row.independenceGroup || adapter.independence_group,
+      content_hash: contentHash,
+      is_revision: revision > 1,
+      supersedes_id: latest?.id ?? null,
+      metadata: {
+        ...row.metadata,
+        adapterKey,
+        ingestionMode: "server_append_only",
+      },
+    });
     if (insertError) throw insertError;
 
     inserted++;

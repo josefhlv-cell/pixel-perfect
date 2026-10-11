@@ -30,7 +30,10 @@ describe("Property Future Twin", () => {
     const outcomes = runPropertyShockMatrix(input, [
       [],
       [{ key: "RATE", delta: 3 }],
-      [{ key: "LIQUIDITY", delta: -0.5 }, { key: "SUPPLY", delta: 0.08 }],
+      [
+        { key: "LIQUIDITY", delta: -0.5 },
+        { key: "SUPPLY", delta: 0.08 },
+      ],
     ]);
     const boundary = findDecisionBoundary(outcomes);
     expect(boundary.safeCount + boundary.unsafeCount).toBe(3);

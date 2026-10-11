@@ -17,7 +17,9 @@ export const runWebAgent = createServerFn({ method: "POST" })
       try {
         const { refreshLiveMarketStats } = await import("./market-refresh.server");
         await refreshLiveMarketStats();
-      } catch (e) { console.error("[webagent] market refresh", e); }
+      } catch (e) {
+        console.error("[webagent] market refresh", e);
+      }
     }
     return result;
   });

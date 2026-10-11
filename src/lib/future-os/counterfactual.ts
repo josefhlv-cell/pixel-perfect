@@ -19,5 +19,5 @@ export function explainCounterfactual(
   const total = raw.reduce((s, x) => s + x.contribution, 0);
   return raw
     .map((x) => ({ ...x, contribution: total ? x.contribution / total : 0 }))
-    .sort((a,b) => b.contribution - a.contribution);
+    .sort((a, b) => b.contribution - a.contribution);
 }

@@ -16,7 +16,11 @@ export const Route = createFileRoute("/_authenticated/alerts")({
   component: Alerts,
 });
 
-const sevTone: Record<string, string> = { opportunity: "border-l-positive", warning: "border-l-warning", info: "border-l-chart-3" };
+const sevTone: Record<string, string> = {
+  opportunity: "border-l-positive",
+  warning: "border-l-warning",
+  info: "border-l-chart-3",
+};
 
 function Alerts() {
   const { data } = useSuspenseQuery(alertsQuery);
@@ -28,18 +32,43 @@ function Alerts() {
   const label = (k: string) => ALERT_TYPES.find(([x]) => x === k)?.[1] ?? k;
   return (
     <div className="space-y-4">
-      <PageHeader title="Alert Center" actions={data.some((a) => !a.read_at) && <Button size="sm" variant="outline" onClick={markAll}>Označit vše jako přečtené</Button>} />
+      <PageHeader
+        title="Alert Center"
+        actions={
+          data.some((a) => !a.read_at) && (
+            <Button size="sm" variant="outline" onClick={markAll}>
+              Označit vše jako přečtené
+            </Button>
+          )
+        }
+      />
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <div className="space-y-2">
-          {data.length === 0 ? <Empty>{t("empty.alerts")}</Empty> : data.map((a) => (
-            <div key={a.id} className={cn("rounded-md border border-l-4 bg-card p-3", sevTone[a.severity], a.read_at && "opacity-60")}>
-              <div className="flex items-center justify-between text-xs text-muted-foreground"><span>{label(a.kind)}</span><span>{formatRelative(a.created_at)}</span></div>
-              <div className="mt-1 text-sm font-medium">{a.title}</div>
-              {a.body && <div className="text-sm text-muted-foreground">{a.body}</div>}
-            </div>
-          ))}
+          {data.length === 0 ? (
+            <Empty>{t("empty.alerts")}</Empty>
+          ) : (
+            data.map((a) => (
+              <div
+                key={a.id}
+                className={cn(
+                  "rounded-md border border-l-4 bg-card p-3",
+                  sevTone[a.severity],
+                  a.read_at && "opacity-60",
+                )}
+              >
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{label(a.kind)}</span>
+                  <span>{formatRelative(a.created_at)}</span>
+                </div>
+                <div className="mt-1 text-sm font-medium">{a.title}</div>
+                {a.body && <div className="text-sm text-muted-foreground">{a.body}</div>}
+              </div>
+            ))
+          )}
         </div>
-        <Section title="Nastavení notifikací"><NotificationSettings /></Section>
+        <Section title="Nastavení notifikací">
+          <NotificationSettings />
+        </Section>
       </div>
     </div>
   );

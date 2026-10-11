@@ -1,7 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { BellRing, Download, ExternalLink, Loader2, MapPin, Save, Search, Trash2, X } from "lucide-react";
+import {
+  BellRing,
+  Download,
+  ExternalLink,
+  Loader2,
+  MapPin,
+  Save,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -22,14 +32,31 @@ import { ComparePanel } from "@/components/app/ComparePanel";
 import { Empty, PageHeader, SampleBadge } from "@/components/app/shared";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cityCentroid, haversineKm, locationMatches, roomsMatch } from "@/lib/webagent";
 import { downloadCsv } from "@/lib/export";
-import { deleteFilterPreset, loadSavedFilters, saveFilterPreset, type DealFilters, type SavedFilter } from "@/lib/saved-filters";
+import {
+  deleteFilterPreset,
+  loadSavedFilters,
+  saveFilterPreset,
+  type DealFilters,
+  type SavedFilter,
+} from "@/lib/saved-filters";
 
 export const Route = createFileRoute("/_authenticated/deals")({
-  head: () => pageHead("Deal Hunter", "Potenciální investiční dealy s transparentním Deal Priority."),
-  loader: ({ context }) => Promise.all([context.queryClient.ensureQueryData(listingsQuery), context.queryClient.ensureQueryData(profileQuery)]),
+  head: () =>
+    pageHead("Deal Hunter", "Potenciální investiční dealy s transparentním Deal Priority."),
+  loader: ({ context }) =>
+    Promise.all([
+      context.queryClient.ensureQueryData(listingsQuery),
+      context.queryClient.ensureQueryData(profileQuery),
+    ]),
   component: DealHunter,
 });
 
@@ -53,14 +80,17 @@ function DealHunter() {
     maxLtv: inv?.ltv_bps ? String(inv.ltv_bps / 100) : "80",
     strategy: "priority",
   });
-  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value });
+  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setF({ ...f, [k]: e.target.value });
   const num = (s: string) => (s.trim() === "" ? null : Number(s.replace(",", ".")));
 
   const [origin, setOrigin] = useState<GeoPoint | null>(null);
   const [geoStatus, setGeoStatus] = useState<"idle" | "loading" | "ok" | "error">("idle");
   const [geoError, setGeoError] = useState("");
 
-  const [saved, setSaved] = useState<SavedFilter[]>(() => (typeof window !== "undefined" ? loadSavedFilters() : []));
+  const [saved, setSaved] = useState<SavedFilter[]>(() =>
+    typeof window !== "undefined" ? loadSavedFilters() : [],
+  );
   const [presetName, setPresetName] = useState("");
   const [compareIds, setCompareIds] = useState<string[]>([]);
 
@@ -125,7 +155,11 @@ function DealHunter() {
         }
         return {
           e,
-          cf: e.listing.price && e.rent ? calculateTotalReturn(defaultInvestmentInput(e.listing.price, e.rent, { ltvBps })).monthlyCashFlow : null,
+          cf:
+            e.listing.price && e.rent
+              ? calculateTotalReturn(defaultInvestmentInput(e.listing.price, e.rent, { ltvBps }))
+                  .monthlyCashFlow
+              : null,
           distanceKm,
         };
       })
@@ -136,12 +170,17 @@ function DealHunter() {
         } else if (f.location.trim()) {
           if (!locationMatches(e.city, f.location)) return false;
         }
-        if (f.type !== "all" && e.listing.property_type && e.listing.property_type !== f.type) return false;
+        if (f.type !== "all" && e.listing.property_type && e.listing.property_type !== f.type)
+          return false;
         if (f.rooms && !roomsMatch(e.listing.rooms, f.rooms)) return false;
-        const mp = num(f.maxPrice); if (mp != null && (e.listing.price ?? Infinity) > mp) return false;
-        const my = num(f.minYield); if (my != null && (e.grossYieldBps ?? -1) < my * 100) return false;
-        const md = num(f.minDiscount); if (md != null && (e.diffBps == null || -e.diffBps < md * 100)) return false;
-        const mc = num(f.minCashFlow); if (mc != null && (cf == null || cf < mc)) return false;
+        const mp = num(f.maxPrice);
+        if (mp != null && (e.listing.price ?? Infinity) > mp) return false;
+        const my = num(f.minYield);
+        if (my != null && (e.grossYieldBps ?? -1) < my * 100) return false;
+        const md = num(f.minDiscount);
+        if (md != null && (e.diffBps == null || -e.diffBps < md * 100)) return false;
+        const mc = num(f.minCashFlow);
+        if (mc != null && (cf == null || cf < mc)) return false;
         return true;
       })
       .sort((a, b) => {
@@ -157,7 +196,10 @@ function DealHunter() {
   }, [data, f, origin]);
 
   const compareItems = useMemo(
-    () => compareIds.map((id) => data.find((x) => x.listing.id === id)).filter(Boolean) as EnrichedListing[],
+    () =>
+      compareIds
+        .map((id) => data.find((x) => x.listing.id === id))
+        .filter(Boolean) as EnrichedListing[],
     [compareIds, data],
   );
 
@@ -208,7 +250,8 @@ function DealHunter() {
         sub="Nastavte kritéria. Každý výsledek ukazuje, proč se shoduje – i co mluví proti."
         actions={
           <Button size="sm" variant="outline" onClick={exportCsv} disabled={results.length === 0}>
-            <Download className="mr-1.5 h-4 w-4" />Export CSV
+            <Download className="mr-1.5 h-4 w-4" />
+            Export CSV
           </Button>
         }
       />
@@ -216,25 +259,57 @@ function DealHunter() {
       <WebAgentBox />
 
       <div className="grid grid-cols-2 gap-3 rounded-md border bg-card p-4 md:grid-cols-5">
-        <F label="Adresa / lokalita"><Input value={f.location} onChange={set("location")} placeholder="např. Pardubice, Zelené Předměstí" /></F>
+        <F label="Adresa / lokalita">
+          <Input
+            value={f.location}
+            onChange={set("location")}
+            placeholder="např. Pardubice, Zelené Předměstí"
+          />
+        </F>
         <F label="Vzdálenost (km)">
-          <Input value={f.radius} onChange={set("radius")} inputMode="numeric" placeholder="např. 15" disabled={!f.location.trim()} />
+          <Input
+            value={f.radius}
+            onChange={set("radius")}
+            inputMode="numeric"
+            placeholder="např. 15"
+            disabled={!f.location.trim()}
+          />
         </F>
         <F label="Typ">
           <Select value={f.type} onValueChange={(v) => setF({ ...f, type: v })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="all">Vše</SelectItem><SelectItem value="byt">Byt</SelectItem><SelectItem value="dum">Dům</SelectItem></SelectContent>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Vše</SelectItem>
+              <SelectItem value="byt">Byt</SelectItem>
+              <SelectItem value="dum">Dům</SelectItem>
+            </SelectContent>
           </Select>
         </F>
-        <F label="Dispozice"><Input value={f.rooms} onChange={set("rooms")} placeholder="2+kk" /></F>
-        <F label="Max. cena (Kč)"><Input value={f.maxPrice} onChange={set("maxPrice")} inputMode="numeric" /></F>
-        <F label="Min. výnos (%)"><Input value={f.minYield} onChange={set("minYield")} inputMode="decimal" /></F>
-        <F label="Min. sleva vs. odhad (%)"><Input value={f.minDiscount} onChange={set("minDiscount")} inputMode="decimal" /></F>
-        <F label="Min. cash-flow (Kč)"><Input value={f.minCashFlow} onChange={set("minCashFlow")} inputMode="numeric" /></F>
-        <F label="Max. LTV (%)"><Input value={f.maxLtv} onChange={set("maxLtv")} inputMode="decimal" /></F>
+        <F label="Dispozice">
+          <Input value={f.rooms} onChange={set("rooms")} placeholder="2+kk" />
+        </F>
+        <F label="Max. cena (Kč)">
+          <Input value={f.maxPrice} onChange={set("maxPrice")} inputMode="numeric" />
+        </F>
+        <F label="Min. výnos (%)">
+          <Input value={f.minYield} onChange={set("minYield")} inputMode="decimal" />
+        </F>
+        <F label="Min. sleva vs. odhad (%)">
+          <Input value={f.minDiscount} onChange={set("minDiscount")} inputMode="decimal" />
+        </F>
+        <F label="Min. cash-flow (Kč)">
+          <Input value={f.minCashFlow} onChange={set("minCashFlow")} inputMode="numeric" />
+        </F>
+        <F label="Max. LTV (%)">
+          <Input value={f.maxLtv} onChange={set("maxLtv")} inputMode="decimal" />
+        </F>
         <F label="Strategie">
           <Select value={f.strategy} onValueChange={(v) => setF({ ...f, strategy: v as Strategy })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="priority">Deal Priority</SelectItem>
               <SelectItem value="cashflow">Cash-flow</SelectItem>
@@ -250,15 +325,32 @@ function DealHunter() {
       <div className="flex flex-wrap items-end gap-2 rounded-md border bg-card p-3">
         <div className="min-w-[160px] flex-1 space-y-1">
           <Label className="text-xs text-muted-foreground">Uložit aktuální filtr jako</Label>
-          <Input value={presetName} onChange={(e) => setPresetName(e.target.value)} placeholder="např. Brno 2+kk do 5M" />
+          <Input
+            value={presetName}
+            onChange={(e) => setPresetName(e.target.value)}
+            placeholder="např. Brno 2+kk do 5M"
+          />
         </div>
-        <Button size="sm" variant="secondary" onClick={savePreset}><Save className="mr-1.5 h-4 w-4" />Uložit</Button>
+        <Button size="sm" variant="secondary" onClick={savePreset}>
+          <Save className="mr-1.5 h-4 w-4" />
+          Uložit
+        </Button>
         {saved.length > 0 && (
           <div className="flex w-full flex-wrap gap-1.5 pt-1">
             {saved.map((p) => (
-              <span key={p.id} className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs">
-                <button type="button" className="hover:text-primary" onClick={() => applyPreset(p)}>{p.name}</button>
-                <button type="button" className="text-muted-foreground hover:text-negative" aria-label="Smazat" onClick={() => setSaved(deleteFilterPreset(p.id))}>
+              <span
+                key={p.id}
+                className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs"
+              >
+                <button type="button" className="hover:text-primary" onClick={() => applyPreset(p)}>
+                  {p.name}
+                </button>
+                <button
+                  type="button"
+                  className="text-muted-foreground hover:text-negative"
+                  aria-label="Smazat"
+                  onClick={() => setSaved(deleteFilterPreset(p.id))}
+                >
                   <Trash2 className="h-3 w-3" />
                 </button>
               </span>
@@ -269,16 +361,29 @@ function DealHunter() {
 
       {f.location.trim() && num(f.radius) != null && num(f.radius)! > 0 && (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          {geoStatus === "loading" && <><Loader2 className="h-3.5 w-3.5 animate-spin" />Hledám polohu adresy…</>}
-          {geoStatus === "ok" && origin && (
-            <><MapPin className="h-3.5 w-3.5 text-primary" />Střed: <span className="font-medium text-foreground">{origin.displayName}</span> · do {num(f.radius)} km</>
+          {geoStatus === "loading" && (
+            <>
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Hledám polohu adresy…
+            </>
           )}
-          {geoStatus === "error" && <span className="text-negative">{geoError || "Adresu se nepodařilo najít."}</span>}
+          {geoStatus === "ok" && origin && (
+            <>
+              <MapPin className="h-3.5 w-3.5 text-primary" />
+              Střed: <span className="font-medium text-foreground">{origin.displayName}</span> · do{" "}
+              {num(f.radius)} km
+            </>
+          )}
+          {geoStatus === "error" && (
+            <span className="text-negative">{geoError || "Adresu se nepodařilo najít."}</span>
+          )}
         </div>
       )}
 
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Potential deals</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Potential deals
+        </h2>
         <span className="num text-xs text-muted-foreground">({results.length})</span>
         <SampleBadge />
         {compareIds.length > 0 && (
@@ -303,8 +408,9 @@ function DealHunter() {
         </div>
       )}
       <p className="text-xs text-muted-foreground">
-        Deal Priority = sleva (35) + výnos (30) + čerstvost (20) + dostupnost (10) + snížení ceny (5).
-        Zaškrtněte až 3 nabídky pro porovnání. Export CSV exportuje aktuálně vyfiltrované výsledky.
+        Deal Priority = sleva (35) + výnos (30) + čerstvost (20) + dostupnost (10) + snížení ceny
+        (5). Zaškrtněte až 3 nabídky pro porovnání. Export CSV exportuje aktuálně vyfiltrované
+        výsledky.
       </p>
 
       {compareItems.length >= 2 && (
@@ -319,7 +425,12 @@ function DealHunter() {
 }
 
 function F({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div className="space-y-1"><Label className="text-xs text-muted-foreground">{label}</Label>{children}</div>;
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs text-muted-foreground">{label}</Label>
+      {children}
+    </div>
+  );
 }
 
 function ago(iso: string | null) {
@@ -338,18 +449,34 @@ function WebAgentBox() {
   const [ids, setIds] = useState<string[]>([]);
   const [failed, setFailed] = useState<{ url: string; reason: string }[]>([]);
   const [scope, setScope] = useState<"city" | "area">("city");
-  const fullQuery = () => `${q.trim()}${scope === "area" ? ", včetně okolních obcí do 25 km" : ", přímo ve městě"}`.slice(0, 300);
+  const fullQuery = () =>
+    `${q.trim()}${scope === "area" ? ", včetně okolních obcí do 25 km" : ", přímo ve městě"}`.slice(
+      0,
+      300,
+    );
 
   const go = async () => {
-    setPhase("searching"); setMsg("Prohledávám hlavní realitní portály a analyzuji nabídky… (obvykle 2–4 minuty)"); setIds([]); setFailed([]);
+    setPhase("searching");
+    setMsg("Prohledávám hlavní realitní portály a analyzuji nabídky… (obvykle 2–4 minuty)");
+    setIds([]);
+    setFailed([]);
     try {
       const r = await run({ data: { query: fullQuery() } });
-      if (!r.ok) { setPhase("error"); setMsg(r.error); return; }
+      if (!r.ok) {
+        setPhase("error");
+        setMsg(r.error);
+        return;
+      }
       await qc.invalidateQueries();
-      setIds(r.listingIds); setFailed(r.failed); setPhase("done");
-      setMsg(`Našel jsem ${r.pagesFound} relevantních stránek, analyzoval ${r.analyzed}. Nalezeno ${r.listingIds.length} použitelných nabídek.`);
+      setIds(r.listingIds);
+      setFailed(r.failed);
+      setPhase("done");
+      setMsg(
+        `Našel jsem ${r.pagesFound} relevantních stránek, analyzoval ${r.analyzed}. Nalezeno ${r.listingIds.length} použitelných nabídek.`,
+      );
     } catch {
-      setPhase("error"); setMsg("Webové vyhledávání není momentálně dostupné.");
+      setPhase("error");
+      setMsg("Webové vyhledávání není momentálně dostupné.");
     }
   };
   const found = data.filter((e) => ids.includes(e.listing.id));
@@ -359,8 +486,13 @@ function WebAgentBox() {
   const watches = useQuery({ queryKey: ["watches"], queryFn: () => listW() });
   const watch = async () => {
     const r = await addW({ data: { query: fullQuery() } });
-    if (!r.ok) { toast.error(r.error); return; }
-    toast.success("Hledání se bude každý den opakovat. Nové nabídky a slevy uvidíte v Upozorněních.");
+    if (!r.ok) {
+      toast.error(r.error);
+      return;
+    }
+    toast.success(
+      "Hledání se bude každý den opakovat. Nové nabídky a slevy uvidíte v Upozorněních.",
+    );
     await qc.invalidateQueries({ queryKey: ["watches"] });
   };
   const unwatch = async (id: string) => {
@@ -371,42 +503,106 @@ function WebAgentBox() {
   return (
     <div className="space-y-3 rounded-md border bg-card p-4">
       <Label className="text-xs text-muted-foreground">AI Web Agent – co hledáš?</Label>
-      <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); void go(); }}>
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="2+kk Pardubice do 5 000 000 Kč" />
+      <form
+        className="flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void go();
+        }}
+      >
+        <Input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="2+kk Pardubice do 5 000 000 Kč"
+        />
         <Button type="submit" disabled={phase === "searching" || q.trim().length < 3}>
-          {phase === "searching" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}<span className="ml-1.5">Hledat</span>
+          {phase === "searching" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Search className="h-4 w-4" />
+          )}
+          <span className="ml-1.5">Hledat</span>
         </Button>
-        <Button type="button" variant="outline" title="Hlídat denně" disabled={q.trim().length < 3} onClick={() => void watch()}>
-          <BellRing className="h-4 w-4" /><span className="ml-1.5 hidden sm:inline">Hlídat denně</span>
+        <Button
+          type="button"
+          variant="outline"
+          title="Hlídat denně"
+          disabled={q.trim().length < 3}
+          onClick={() => void watch()}
+        >
+          <BellRing className="h-4 w-4" />
+          <span className="ml-1.5 hidden sm:inline">Hlídat denně</span>
         </Button>
       </form>
       <div className="flex gap-1 text-xs" role="group" aria-label="Rozsah hledání">
-        {([["city", "V městě"], ["area", "V okolí (25 km)"]] as const).map(([k, l]) => (
-          <Button key={k} type="button" size="sm" variant={scope === k ? "default" : "outline"} className="h-7 px-2.5 text-xs" onClick={() => setScope(k)}>{l}</Button>
+        {(
+          [
+            ["city", "V městě"],
+            ["area", "V okolí (25 km)"],
+          ] as const
+        ).map(([k, l]) => (
+          <Button
+            key={k}
+            type="button"
+            size="sm"
+            variant={scope === k ? "default" : "outline"}
+            className="h-7 px-2.5 text-xs"
+            onClick={() => setScope(k)}
+          >
+            {l}
+          </Button>
         ))}
-        <span className="ml-2 self-center text-muted-foreground">Výsledky se promítnou i do přehledu Trh.</span>
+        <span className="ml-2 self-center text-muted-foreground">
+          Výsledky se promítnou i do přehledu Trh.
+        </span>
       </div>
       {(watches.data?.length ?? 0) > 0 && (
         <div className="flex flex-wrap gap-2 text-xs">
           <span className="text-muted-foreground">Hlídací pes:</span>
           {watches.data!.map((w) => (
-            <span key={w.id} className="inline-flex items-center gap-1 rounded-sm border px-2 py-0.5">
-              {w.query}{w.last_run_at ? ` · ${new Date(w.last_run_at).toLocaleDateString("cs-CZ")}` : " · čeká"}
-              <button type="button" aria-label="Zrušit hlídání" onClick={() => void unwatch(w.id)}><X className="h-3 w-3" /></button>
+            <span
+              key={w.id}
+              className="inline-flex items-center gap-1 rounded-sm border px-2 py-0.5"
+            >
+              {w.query}
+              {w.last_run_at
+                ? ` · ${new Date(w.last_run_at).toLocaleDateString("cs-CZ")}`
+                : " · čeká"}
+              <button type="button" aria-label="Zrušit hlídání" onClick={() => void unwatch(w.id)}>
+                <X className="h-3 w-3" />
+              </button>
             </span>
           ))}
         </div>
       )}
-      {msg && <p className={phase === "error" ? "text-sm text-negative" : "text-sm text-muted-foreground"}>{msg}</p>}
+      {msg && (
+        <p
+          className={phase === "error" ? "text-sm text-negative" : "text-sm text-muted-foreground"}
+        >
+          {msg}
+        </p>
+      )}
       {found.length > 0 && (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {found.map((e) => (
             <div key={e.listing.id} className="space-y-2">
-              <span className="inline-block rounded-sm border border-positive/50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-positive">Live data</span>
+              <span className="inline-block rounded-sm border border-positive/50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-positive">
+                Live data
+              </span>
               <ListingCard e={e} showReasons />
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>{ago(e.listing.last_verified_at)}{e.listing.area_m2 ? ` · ${formatNumber(Number(e.listing.area_m2))} m²` : ""} · {formatCZK(e.listing.price)}</span>
-                <Button asChild size="sm" variant="outline"><a href={e.listing.source_url} target="_blank" rel="noopener noreferrer"><ExternalLink className="mr-1 h-3.5 w-3.5" />Otevřít inzerát</a></Button>
+                <span>
+                  {ago(e.listing.last_verified_at)}
+                  {e.listing.area_m2
+                    ? ` · ${formatNumber(Number(e.listing.area_m2))} m²`
+                    : ""} · {formatCZK(e.listing.price)}
+                </span>
+                <Button asChild size="sm" variant="outline">
+                  <a href={e.listing.source_url} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="mr-1 h-3.5 w-3.5" />
+                    Otevřít inzerát
+                  </a>
+                </Button>
               </div>
             </div>
           ))}
@@ -415,7 +611,13 @@ function WebAgentBox() {
       {failed.length > 0 && (
         <details className="text-xs text-muted-foreground">
           <summary>Nezpracované stránky ({failed.length})</summary>
-          <ul className="mt-1 space-y-0.5">{failed.map((f) => <li key={f.url} className="truncate">{f.reason} – {f.url}</li>)}</ul>
+          <ul className="mt-1 space-y-0.5">
+            {failed.map((f) => (
+              <li key={f.url} className="truncate">
+                {f.reason} – {f.url}
+              </li>
+            ))}
+          </ul>
         </details>
       )}
     </div>

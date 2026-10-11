@@ -27,15 +27,17 @@ export function propagateCausalSignal(
     if (raw == null) return [];
     const direction = raw === 0 ? 0 : edge.expectedSign;
     const confidence = (edge.confidence ?? 0.5) * (edge.strength ?? 0.5) * parent.sourceReliability;
-    return [{
-      edgeKey: edge.edgeKey,
-      parentEvidenceId: parent.id,
-      parentValue: raw,
-      child: edge.child,
-      direction: direction as -1 | 0 | 1,
-      lagMinDays: edge.lagMinDays,
-      lagMaxDays: edge.lagMaxDays,
-      confidence,
-    }];
+    return [
+      {
+        edgeKey: edge.edgeKey,
+        parentEvidenceId: parent.id,
+        parentValue: raw,
+        child: edge.child,
+        direction: direction as -1 | 0 | 1,
+        lagMinDays: edge.lagMinDays,
+        lagMaxDays: edge.lagMaxDays,
+        confidence,
+      },
+    ];
   });
 }

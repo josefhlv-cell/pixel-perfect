@@ -27,36 +27,43 @@ export function compareForecastToBenchmark(
   iterations = 1000,
 ) {
   if (samples.length < 20) return null;
-  const deltas = samples.map(s => metric(s, "candidate", kind) - metric(s, "benchmark", kind));
-  const mean = deltas.reduce((a,b)=>a+b,0) / deltas.length;
+  const deltas = samples.map((s) => metric(s, "candidate", kind) - metric(s, "benchmark", kind));
+  const mean = deltas.reduce((a, b) => a + b, 0) / deltas.length;
   let state = 0x9e3779b9;
   const random = () => {
-    state ^= state << 13; state >>>= 0; state ^= state >>> 17; state >>>= 0; state ^= state << 5; state >>>= 0;
+    state ^= state << 13;
+    state >>>= 0;
+    state ^= state >>> 17;
+    state >>>= 0;
+    state ^= state << 5;
+    state >>>= 0;
     return state / 0x100000000;
   };
-  const means:number[]=[];
-  const block=Math.max(1,Math.min(blockLength,deltas.length));
-  for(let k=0;k<iterations;k++){
-    let sum=0,count=0;
-    while(count<deltas.length){
-      const start=Math.floor(random()*deltas.length);
-      const take=Math.min(block,deltas.length-count);
-      for(let j=0;j<take;j++) sum+=deltas[(start+j)%deltas.length]!;
-      count+=take;
+  const means: number[] = [];
+  const block = Math.max(1, Math.min(blockLength, deltas.length));
+  for (let k = 0; k < iterations; k++) {
+    let sum = 0,
+      count = 0;
+    while (count < deltas.length) {
+      const start = Math.floor(random() * deltas.length);
+      const take = Math.min(block, deltas.length - count);
+      for (let j = 0; j < take; j++) sum += deltas[(start + j) % deltas.length]!;
+      count += take;
     }
-    means.push(sum/deltas.length);
+    means.push(sum / deltas.length);
   }
-  means.sort((a,b)=>a-b);
-  const q=(p:number)=>means[Math.floor((means.length-1)*p)];
-  const low=q(.025), high=q(.975);
+  means.sort((a, b) => a - b);
+  const q = (p: number) => means[Math.floor((means.length - 1) * p)];
+  const low = q(0.025),
+    high = q(0.975);
   return {
-    metric:kind,
-    candidateMean:samples.reduce((a,s)=>a+metric(s,"candidate",kind),0)/samples.length,
-    benchmarkMean:samples.reduce((a,s)=>a+metric(s,"benchmark",kind),0)/samples.length,
-    improvement:-mean,
-    confidenceLow:-high!,
-    confidenceHigh:-low!,
-    significant:high!<0,
-    bootstrapSamples:iterations,
+    metric: kind,
+    candidateMean: samples.reduce((a, s) => a + metric(s, "candidate", kind), 0) / samples.length,
+    benchmarkMean: samples.reduce((a, s) => a + metric(s, "benchmark", kind), 0) / samples.length,
+    improvement: -mean,
+    confidenceLow: -high!,
+    confidenceHigh: -low!,
+    significant: high! < 0,
+    bootstrapSamples: iterations,
   };
 }

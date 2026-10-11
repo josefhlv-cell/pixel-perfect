@@ -43,18 +43,23 @@ export async function getEvidenceAvailableAt(
   asOf: Date | string,
   filters: EvidenceFilters = {},
 ) {
-  const args: { p_as_of: string; p_geography_type?: string; p_geography_key?: string } = { p_as_of: new Date(asOf).toISOString() };
+  const args: { p_as_of: string; p_geography_type?: string; p_geography_key?: string } = {
+    p_as_of: new Date(asOf).toISOString(),
+  };
   if (filters.geographyType) args.p_geography_type = filters.geographyType;
   if (filters.geographyKey) args.p_geography_key = filters.geographyKey;
   const { data, error } = await supabase.rpc("get_reality_evidence_available_at", args);
   if (error) throw error;
 
-  const rows = (data ?? []).map(mapRow).filter((row) =>
-    (!filters.sourceId || row.sourceId === filters.sourceId) &&
-    (!filters.entityType || row.entityType === filters.entityType) &&
-    (!filters.entityKey || row.entityKey === filters.entityKey) &&
-    (!filters.leadClass || row.leadClass === filters.leadClass),
-  );
+  const rows = (data ?? [])
+    .map(mapRow)
+    .filter(
+      (row) =>
+        (!filters.sourceId || row.sourceId === filters.sourceId) &&
+        (!filters.entityType || row.entityType === filters.entityType) &&
+        (!filters.entityKey || row.entityKey === filters.entityKey) &&
+        (!filters.leadClass || row.leadClass === filters.leadClass),
+    );
   assertNoFutureEvidence(rows, asOf);
   return { rows, dataQuality: computeDataQuality(rows) };
 }

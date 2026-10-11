@@ -33,13 +33,22 @@ export function scoreHistoricalForecast(
   const predictedDirection = Math.sign(predictedChange);
   const actualDirection = Math.sign(actualChange);
   const directionalHit = predictedDirection === actualDirection;
-  const intervalCovered = outcome.realizedValue >= forecast.p10 && outcome.realizedValue <= forecast.p90;
+  const intervalCovered =
+    outcome.realizedValue >= forecast.p10 && outcome.realizedValue <= forecast.p90;
   const y = actualChange > 0 ? 1 : 0;
   const p = Math.min(1 - 1e-12, Math.max(1e-12, forecast.probabilityPositive));
   const brierScore = (p - y) ** 2;
   const logScore = -(y * Math.log(p) + (1 - y) * Math.log(1 - p));
   const regret = Math.max(0, Math.abs(actualChange) - Math.abs(predictedChange));
-  return { absoluteError, squaredError, directionalHit, intervalCovered, brierScore, logScore, regret };
+  return {
+    absoluteError,
+    squaredError,
+    directionalHit,
+    intervalCovered,
+    brierScore,
+    logScore,
+    regret,
+  };
 }
 
 export function aggregateHistoricalScores(scores: HistoricalScore[]) {

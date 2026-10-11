@@ -23,7 +23,8 @@ export const cs = {
     providerNotConnected: "Datový zdroj není připojen",
   },
   errors: {
-    aiUnavailable: "AI analýza je momentálně nedostupná. Výpočty a uložená data zůstávají dostupná.",
+    aiUnavailable:
+      "AI analýza je momentálně nedostupná. Výpočty a uložená data zůstávají dostupná.",
     discoveryUnavailable: "Vyhledávání se nepodařilo dokončit.",
     generic: "Něco se nepovedlo. Zkuste to prosím znovu.",
   },
@@ -47,7 +48,8 @@ export const cs = {
     UNKNOWN: "Neznámý stav",
   },
   empty: {
-    portfolio: "Zatím nemáte žádné nemovitosti v portfoliu. Přidejte první nemovitost nebo spusťte Deal Hunter.",
+    portfolio:
+      "Zatím nemáte žádné nemovitosti v portfoliu. Přidejte první nemovitost nebo spusťte Deal Hunter.",
     watchlist: "Watchlist je prázdný. Uložte si zajímavý deal z Deal Hunteru.",
     alerts: "Žádné alerty. Jakmile se změní cena nebo stav sledované nemovitosti, uvidíte to tady.",
   },

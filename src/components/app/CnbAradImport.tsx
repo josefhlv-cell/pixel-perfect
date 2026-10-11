@@ -24,25 +24,43 @@ export function CnbAradImport() {
       const ins = r.results.reduce((s, x) => s + (x.ok ? x.inserted : 0), 0);
       toast.success(`ČNB: uloženo ${ins} nových hodnot`);
       qc.invalidateQueries({ queryKey: ["cnb-arad-status"] });
-    } catch { toast.error("Import ČNB selhal."); }
-    finally { setBusy(false); }
+    } catch {
+      toast.error("Import ČNB selhal.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
     <div className="space-y-2">
       <Row k="Uložených hodnot" v={status.data ? String(status.data.count) : "…"} />
-      <Row k="Poslední stažení" v={status.data?.lastRetrievedAt ? new Date(status.data.lastRetrievedAt).toLocaleString("cs-CZ") : "—"} />
-      <Button size="sm" onClick={run} disabled={busy}>{busy ? "Stahuji z ČNB…" : "Stáhnout data ČNB (ARAD)"}</Button>
+      <Row
+        k="Poslední stažení"
+        v={
+          status.data?.lastRetrievedAt
+            ? new Date(status.data.lastRetrievedAt).toLocaleString("cs-CZ")
+            : "—"
+        }
+      />
+      <Button size="sm" onClick={run} disabled={busy}>
+        {busy ? "Stahuji z ČNB…" : "Stáhnout data ČNB (ARAD)"}
+      </Button>
       {res && (
         <ul className="space-y-1 text-xs text-muted-foreground">
           {res.results.map((x) => (
             <li key={x.setId}>
-              Sada {x.setId}: {x.ok ? `staženo ${x.fetched}, nových ${x.inserted} (z toho revizí ${x.revised}), přeskočeno ${x.skipped}` : x.error}
+              Sada {x.setId}:{" "}
+              {x.ok
+                ? `staženo ${x.fetched}, nových ${x.inserted} (z toho revizí ${x.revised}), přeskočeno ${x.skipped}`
+                : x.error}
             </li>
           ))}
         </ul>
       )}
-      <p className="text-xs text-muted-foreground">Data se jen přidávají, nikdy nepřepisují. Datum zveřejnění ČNB neuvádí, proto platí čas stažení.</p>
+      <p className="text-xs text-muted-foreground">
+        Data se jen přidávají, nikdy nepřepisují. Datum zveřejnění ČNB neuvádí, proto platí čas
+        stažení.
+      </p>
     </div>
   );
 }

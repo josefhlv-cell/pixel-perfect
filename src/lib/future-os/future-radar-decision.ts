@@ -1,6 +1,10 @@
 import { evaluateModelTrust } from "./model-trust";
 import { detectRegimeBreak, type DriftMetric } from "./drift";
-import { nextBestObservation, type Hypothesis, type ObservationCandidate } from "./hypothesis-engine";
+import {
+  nextBestObservation,
+  type Hypothesis,
+  type ObservationCandidate,
+} from "./hypothesis-engine";
 
 export type FutureRadarDecision = {
   status: "CLEAR" | "CONTESTED" | "DATA_STARVED" | "REGIME_BREAK";
@@ -27,7 +31,9 @@ export function buildFutureRadarDecision(input: {
     explanation.push("Radar je DATA_STARVED: chybí dostatečná evidence.");
   }
   if (regime.regime === "REGIME_BREAK") {
-    explanation.push("Byl detekován režimový zlom; historické vztahy mají sníženou přenositelnost.");
+    explanation.push(
+      "Byl detekován režimový zlom; historické vztahy mají sníženou přenositelnost.",
+    );
   }
   if (input.modelDisagreement >= 0.35) {
     explanation.push("Modely se významně rozcházejí.");
@@ -39,11 +45,13 @@ export function buildFutureRadarDecision(input: {
     explanation.push("Nejvyšší informační hodnotu má další pozorování: " + next.key + ".");
   }
 
-  const status =
-    !input.dataReady ? "DATA_STARVED" :
-    regime.regime === "REGIME_BREAK" ? "REGIME_BREAK" :
-    input.modelDisagreement >= 0.35 ? "CONTESTED" :
-    "CLEAR";
+  const status = !input.dataReady
+    ? "DATA_STARVED"
+    : regime.regime === "REGIME_BREAK"
+      ? "REGIME_BREAK"
+      : input.modelDisagreement >= 0.35
+        ? "CONTESTED"
+        : "CLEAR";
 
   return { status, modelTrust, regime, nextBestObservation: next, explanation };
 }

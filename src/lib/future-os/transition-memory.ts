@@ -34,7 +34,7 @@ export function scoreTransitionSimilarity(input: SurrogateWarningInput): Surroga
   }
 
   const candidates = input.historicalTransitions
-    .map(transition => {
+    .map((transition) => {
       const distances: number[] = [];
       for (const [key, currentSeries] of Object.entries(input.current)) {
         const historical = transition.features[key];
@@ -46,7 +46,7 @@ export function scoreTransitionSimilarity(input: SurrogateWarningInput): Surroga
         : Infinity;
       return { id: transition.id, distance };
     })
-    .filter(x => Number.isFinite(x.distance))
+    .filter((x) => Number.isFinite(x.distance))
     .sort((a, b) => a.distance - b.distance)
     .slice(0, 5);
 
@@ -54,16 +54,13 @@ export function scoreTransitionSimilarity(input: SurrogateWarningInput): Surroga
     return { probability: 0, nearestTransitionIds: [], featureAgreement: 0, status: "NO_SIGNAL" };
   }
 
-  const similarities = candidates.map(x => Math.exp(-x.distance));
-  const probability = Math.min(
-    0.99,
-    similarities.reduce((a, b) => a + b, 0) / similarities.length,
-  );
-  const featureAgreement = Math.min(1, similarities.filter(x => x >= 0.6).length / 3);
+  const similarities = candidates.map((x) => Math.exp(-x.distance));
+  const probability = Math.min(0.99, similarities.reduce((a, b) => a + b, 0) / similarities.length);
+  const featureAgreement = Math.min(1, similarities.filter((x) => x >= 0.6).length / 3);
 
   return {
     probability,
-    nearestTransitionIds: candidates.map(x => x.id),
+    nearestTransitionIds: candidates.map((x) => x.id),
     featureAgreement,
     status:
       probability >= 0.72 && featureAgreement >= 0.66
@@ -92,5 +89,5 @@ function zNormalize(values: number[]) {
   const mean = values.reduce((a, b) => a + b, 0) / values.length;
   const variance = values.reduce((s, x) => s + (x - mean) ** 2, 0) / values.length;
   const sd = Math.sqrt(variance) || 1;
-  return values.map(x => (x - mean) / sd);
+  return values.map((x) => (x - mean) / sd);
 }

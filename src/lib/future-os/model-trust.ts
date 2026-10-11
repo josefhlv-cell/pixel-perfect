@@ -10,7 +10,7 @@ export type TrustDecision = {
 export function evaluateModelTrust(
   driftMetrics: DriftMetric[],
   forecastHistory: Parameters<typeof evaluateForecastHealth>[0],
-) : TrustDecision {
+): TrustDecision {
   const regime = detectRegimeBreak(driftMetrics);
   const health = evaluateForecastHealth(forecastHistory);
   let trustScore = 1;
@@ -35,10 +35,13 @@ export function evaluateModelTrust(
 
   trustScore = Math.max(0, Math.min(1, trustScore));
   const action =
-    trustScore < 0.25 ? "RETRAIN" :
-    trustScore < 0.45 ? "DEMOTE_CHAMPION" :
-    trustScore < 0.7 ? "WATCH_CHAMPION" :
-    "KEEP_CHAMPION";
+    trustScore < 0.25
+      ? "RETRAIN"
+      : trustScore < 0.45
+        ? "DEMOTE_CHAMPION"
+        : trustScore < 0.7
+          ? "WATCH_CHAMPION"
+          : "KEEP_CHAMPION";
 
   return { trustScore, action, reasons };
 }

@@ -15,7 +15,12 @@ describe("Future OS drift detection", () => {
 
   it("does not call a stable series a regime break", () => {
     const result = detectRegimeBreak([
-      { key: "price", baseline: [100, 101, 99, 100, 102], recent: [101, 100, 102, 101, 103], threshold: 2 },
+      {
+        key: "price",
+        baseline: [100, 101, 99, 100, 102],
+        recent: [101, 100, 102, 101, 103],
+        threshold: 2,
+      },
       { key: "dom", baseline: [30, 31, 29, 30, 32], recent: [31, 30, 32, 31, 30], threshold: 2 },
     ]);
     expect(result.regime).toBe("STABLE");

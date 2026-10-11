@@ -15,7 +15,9 @@ export interface UniverseRow {
 
 export function pointInTimeDataset<T extends UniverseRow>(rows: T[], cutoff: string) {
   const c = new Date(cutoff).getTime();
-  const kept = rows.filter((r) => new Date(r.availableAt).getTime() <= c && new Date(r.eventTime).getTime() <= c);
+  const kept = rows.filter(
+    (r) => new Date(r.availableAt).getTime() <= c && new Date(r.eventTime).getTime() <= c,
+  );
   return { cutoff, rows: kept, excluded: rows.length - kept.length };
 }
 
@@ -24,5 +26,9 @@ export function auditAvailability<T extends UniverseRow>(rows: T[], cutoff: stri
   const c = new Date(cutoff).getTime();
   return rows
     .filter((r) => new Date(r.availableAt).getTime() > c)
-    .map((r) => ({ id: r.id, issue: "AVAILABLE_AFTER_CUTOFF" as const, availableAt: r.availableAt }));
+    .map((r) => ({
+      id: r.id,
+      issue: "AVAILABLE_AFTER_CUTOFF" as const,
+      availableAt: r.availableAt,
+    }));
 }

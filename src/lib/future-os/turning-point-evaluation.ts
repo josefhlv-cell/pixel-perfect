@@ -38,7 +38,9 @@ export function evaluateTurningPointEvents(
   evaluationEnd?: string,
 ): TurningPointEvaluation {
   const orderedEvents = [...events].sort((a, b) => +new Date(a.onset) - +new Date(b.onset));
-  const orderedDetections = [...detections].sort((a, b) => +new Date(a.detectedAt) - +new Date(b.detectedAt));
+  const orderedDetections = [...detections].sort(
+    (a, b) => +new Date(a.detectedAt) - +new Date(b.detectedAt),
+  );
   const matched = new Set<number>();
   const usedDetections = new Set<number>();
   const leads: number[] = [];
@@ -75,15 +77,20 @@ export function evaluateTurningPointEvents(
     return t >= startMs && t <= endMs;
   };
 
-  const falseAlarms = orderedDetections.filter((d, i) => inEvaluationWindow(d.detectedAt) && !usedDetections.has(i)).length;
-  const evaluationDays = Number.isFinite(startMs) && Number.isFinite(endMs)
-    ? Math.max(1, (endMs - startMs) / 86_400_000)
-    : Math.max(
-        1,
-        orderedDetections.length > 1
-          ? (+new Date(orderedDetections.at(-1)!.detectedAt) - +new Date(orderedDetections[0]!.detectedAt)) / 86_400_000
-          : 365,
-      );
+  const falseAlarms = orderedDetections.filter(
+    (d, i) => inEvaluationWindow(d.detectedAt) && !usedDetections.has(i),
+  ).length;
+  const evaluationDays =
+    Number.isFinite(startMs) && Number.isFinite(endMs)
+      ? Math.max(1, (endMs - startMs) / 86_400_000)
+      : Math.max(
+          1,
+          orderedDetections.length > 1
+            ? (+new Date(orderedDetections.at(-1)!.detectedAt) -
+                +new Date(orderedDetections[0]!.detectedAt)) /
+                86_400_000
+            : 365,
+        );
 
   const precision = orderedDetections.length ? matched.size / orderedDetections.length : 0;
   const recall = orderedEvents.length ? matched.size / orderedEvents.length : 0;
@@ -96,7 +103,7 @@ export function evaluateTurningPointEvents(
     falseAlarms,
     precision,
     recall,
-    falseAlarmsPerYear: falseAlarms * 365 / evaluationDays,
+    falseAlarmsPerYear: (falseAlarms * 365) / evaluationDays,
     meanLeadDays: leads.length ? leads.reduce((a, b) => a + b, 0) / leads.length : null,
   };
 }

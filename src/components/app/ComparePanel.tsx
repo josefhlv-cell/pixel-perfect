@@ -19,7 +19,11 @@ export function ComparePanel({
   const rows: { label: string; get: (e: EnrichedListing) => string }[] = [
     { label: "Cena", get: (e) => formatCZK(e.listing.price) },
     { label: "Kč/m²", get: (e) => formatCZK(e.pricePerM2) },
-    { label: "Plocha", get: (e) => (e.listing.area_m2 != null ? `${formatNumber(Number(e.listing.area_m2))} m²` : "—") },
+    {
+      label: "Plocha",
+      get: (e) =>
+        e.listing.area_m2 != null ? `${formatNumber(Number(e.listing.area_m2))} m²` : "—",
+    },
     { label: "Dispozice", get: (e) => e.listing.rooms ?? "—" },
     { label: "Město", get: (e) => e.city ?? "—" },
     { label: "Odhad hodnoty", get: (e) => formatCZK(e.estimate?.estimatedValue) },
@@ -48,14 +52,25 @@ export function ComparePanel({
                 {items.map((e) => (
                   <th key={e.listing.id} className="pb-2 pr-3 font-normal">
                     <div className="flex items-start justify-between gap-1">
-                      <Link to="/properties/$id" params={{ id: e.listing.id }} className="line-clamp-2 hover:text-primary">
+                      <Link
+                        to="/properties/$id"
+                        params={{ id: e.listing.id }}
+                        className="line-clamp-2 hover:text-primary"
+                      >
                         {e.listing.title ?? "Bez názvu"}
                       </Link>
-                      <button type="button" className="shrink-0 text-muted-foreground hover:text-foreground" onClick={() => onRemove(e.listing.id)} aria-label="Odebrat">
+                      <button
+                        type="button"
+                        className="shrink-0 text-muted-foreground hover:text-foreground"
+                        onClick={() => onRemove(e.listing.id)}
+                        aria-label="Odebrat"
+                      >
                         <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
-                    <div className="mt-1"><PriorityBadge value={e.priority} /></div>
+                    <div className="mt-1">
+                      <PriorityBadge value={e.priority} />
+                    </div>
                   </th>
                 ))}
               </tr>
@@ -65,7 +80,9 @@ export function ComparePanel({
                 <tr key={row.label} className="border-t border-border/50">
                   <td className="py-1.5 pr-3 text-xs text-muted-foreground">{row.label}</td>
                   {items.map((e) => (
-                    <td key={e.listing.id} className="num py-1.5 pr-3">{row.get(e)}</td>
+                    <td key={e.listing.id} className="num py-1.5 pr-3">
+                      {row.get(e)}
+                    </td>
                   ))}
                 </tr>
               ))}

@@ -16,7 +16,10 @@ export type SyncAdapter = (signal?: AbortSignal) => Promise<EvidenceObservation[
 export async function runSourceSync(
   adapterKey: string,
   adapter: SyncAdapter,
-  ingest: (adapterKey: string, rows: EvidenceObservation[]) => Promise<{ inserted: number; unchanged: number; revised: number }>,
+  ingest: (
+    adapterKey: string,
+    rows: EvidenceObservation[],
+  ) => Promise<{ inserted: number; unchanged: number; revised: number }>,
   signal?: AbortSignal,
 ): Promise<SourceSyncResult> {
   const startedAt = new Date().toISOString();

@@ -33,11 +33,12 @@ export function evaluateForecastHealth(
   const recentCoverage = recent.length
     ? recent.filter((row) => row.intervalCovered).length / recent.length
     : 0;
-  const status = maeRatio >= 1.75 || recentDirectionalAccuracy < 0.45
-    ? "BROKEN"
-    : maeRatio >= 1.25 || recentCoverage < 0.75
-      ? "DEGRADING"
-      : "HEALTHY";
+  const status =
+    maeRatio >= 1.75 || recentDirectionalAccuracy < 0.45
+      ? "BROKEN"
+      : maeRatio >= 1.25 || recentCoverage < 0.75
+        ? "DEGRADING"
+        : "HEALTHY";
   return {
     sampleCount: ordered.length,
     recentMae,

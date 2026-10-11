@@ -1,5 +1,9 @@
 import type { ListingRow, PropertyRow, MarketRow } from "../deals";
-import { buildPropertyFutureTwin, type PropertyTwinInput, type PropertyDecision } from "./property-future-twin";
+import {
+  buildPropertyFutureTwin,
+  type PropertyTwinInput,
+  type PropertyDecision,
+} from "./property-future-twin";
 
 export type PropertyTwinContext = {
   listing: ListingRow;
@@ -22,7 +26,8 @@ export type LivePropertyTwin = {
 
 export function buildLivePropertyTwin(context: PropertyTwinContext): LivePropertyTwin | null {
   const purchasePrice = Number(context.listing.price);
-  if (!Number.isFinite(purchasePrice) || purchasePrice <= 0 || !context.fairValue || !context.rent) return null;
+  if (!Number.isFinite(purchasePrice) || purchasePrice <= 0 || !context.fairValue || !context.rent)
+    return null;
 
   const input: PropertyTwinInput = {
     purchasePrice,

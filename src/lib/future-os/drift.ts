@@ -44,7 +44,12 @@ export function detectDrift(metric: DriftMetric): DriftResult {
   const qBase = quantile(metric.baseline, 0.9) - quantile(metric.baseline, 0.1);
   const qRecent = quantile(metric.recent, 0.9) - quantile(metric.recent, 0.1);
   const distributionShift = Math.abs(qRecent - qBase) / Math.max(metric.threshold, qBase, 1e-9);
-  const driftScore = Math.min(1, 0.45 * Math.min(1, meanShift) + 0.25 * Math.min(1, Math.abs(volatilityRatio - 1)) + 0.30 * Math.min(1, distributionShift));
+  const driftScore = Math.min(
+    1,
+    0.45 * Math.min(1, meanShift) +
+      0.25 * Math.min(1, Math.abs(volatilityRatio - 1)) +
+      0.3 * Math.min(1, distributionShift),
+  );
   const status = driftScore >= 0.72 ? "BREAK" : driftScore >= 0.42 ? "WATCH" : "STABLE";
   return { key: metric.key, meanShift, volatilityRatio, distributionShift, driftScore, status };
 }
@@ -54,5 +59,9 @@ export function detectRegimeBreak(metrics: DriftMetric[]) {
   const broken = results.filter((r) => r.status === "BREAK").length;
   const watched = results.filter((r) => r.status === "WATCH").length;
   const regime = broken >= 2 ? "REGIME_BREAK" : watched >= 2 ? "REGIME_WARNING" : "STABLE";
-  return { regime, results, confidence: Math.min(1, (broken * 0.45 + watched * 0.2) / Math.max(1, metrics.length)) };
+  return {
+    regime,
+    results,
+    confidence: Math.min(1, (broken * 0.45 + watched * 0.2) / Math.max(1, metrics.length)),
+  };
 }

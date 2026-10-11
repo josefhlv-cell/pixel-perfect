@@ -39,12 +39,25 @@ describe("Property Future Twin trajectory", () => {
   it("can expose decision sensitivity", async () => {
     const { buildPropertyFutureTwin } = await import("./property-future-twin");
     const input = {
-      purchasePrice: 5_000_000, fairValue: 6_000_000, fairValueP10: 5_700_000, fairValueP90: 6_200_000,
-      valuationConfidence: 0.9, monthlyRent: 25_000, monthlyCosts: 5_000, financingRate: 4,
-      loanAmount: 3_500_000, horizonMonths: 60, marketGrowthP50: 0.04, marketGrowthP10: -0.02,
-      marketGrowthP90: 0.08, liquidityScore: 0.8,
+      purchasePrice: 5_000_000,
+      fairValue: 6_000_000,
+      fairValueP10: 5_700_000,
+      fairValueP90: 6_200_000,
+      valuationConfidence: 0.9,
+      monthlyRent: 25_000,
+      monthlyCosts: 5_000,
+      financingRate: 4,
+      loanAmount: 3_500_000,
+      horizonMonths: 60,
+      marketGrowthP50: 0.04,
+      marketGrowthP10: -0.02,
+      marketGrowthP90: 0.08,
+      liquidityScore: 0.8,
     };
-    const sensitivity = explainDecisionSensitivity(input, { financingRate: 7, liquidityScore: 0.2 });
+    const sensitivity = explainDecisionSensitivity(input, {
+      financingRate: 7,
+      liquidityScore: 0.2,
+    });
     expect(sensitivity.length).toBe(2);
     expect(sensitivity.some((x) => x.changedDecision)).toBe(true);
   });

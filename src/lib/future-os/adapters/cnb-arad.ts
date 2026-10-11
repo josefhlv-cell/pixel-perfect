@@ -39,13 +39,19 @@ export function parseDelimited(text: string, delimiter = ";"): string[][] {
     const c = s[i]!;
     if (quoted) {
       if (c === '"') {
-        if (s[i + 1] === '"') { field += '"'; i++; } else quoted = false;
+        if (s[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else quoted = false;
       } else field += c;
     } else if (c === '"') quoted = true;
-    else if (c === delimiter) { row.push(field); field = ""; }
-    else if (c === "\n" || c === "\r") {
+    else if (c === delimiter) {
+      row.push(field);
+      field = "";
+    } else if (c === "\n" || c === "\r") {
       if (c === "\r" && s[i + 1] === "\n") i++;
-      row.push(field); field = "";
+      row.push(field);
+      field = "";
       if (row.some((f) => f.trim() !== "")) rows.push(row);
       row = [];
     } else field += c;
@@ -55,7 +61,17 @@ export function parseDelimited(text: string, delimiter = ";"): string[][] {
   return rows;
 }
 
-type CanonKey = "indicator_id" | "indicator_name" | "frequency_code" | "frequency_name" | "unit_mult_code" | "unit_mult_name" | "unit" | "snapshot_id" | "period" | "value";
+type CanonKey =
+  | "indicator_id"
+  | "indicator_name"
+  | "frequency_code"
+  | "frequency_name"
+  | "unit_mult_code"
+  | "unit_mult_name"
+  | "unit"
+  | "snapshot_id"
+  | "period"
+  | "value";
 type Canon = Partial<Record<CanonKey, string>>;
 const HEADER_ALIASES: Record<CanonKey, string[]> = {
   indicator_id: ["indicator_id", "id_ukazatele", "kod_ukazatele", "ukazatel_id", "indicator"],
@@ -71,16 +87,27 @@ const HEADER_ALIASES: Record<CanonKey, string[]> = {
 };
 
 function normHeader(h: string) {
-  return h.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s-]+/g, "_");
+  return h
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\s-]+/g, "_");
 }
 
 /** Rows as objects keyed by canonical names; `original` keeps every provider field verbatim. */
-export function toRecords(table: string[][]): { canonical: Canon; original: Record<string, string> }[] {
+export function toRecords(
+  table: string[][],
+): { canonical: Canon; original: Record<string, string> }[] {
   const [header, ...body] = table;
   if (!header) return [];
   const keys = header.map((h) => {
     const n = normHeader(h);
-    return (Object.entries(HEADER_ALIASES) as [CanonKey, string[]][]).find(([, al]) => al.includes(n))?.[0] ?? null;
+    return (
+      (Object.entries(HEADER_ALIASES) as [CanonKey, string[]][]).find(([, al]) =>
+        al.includes(n),
+      )?.[0] ?? null
+    );
   });
   return body.map((r) => {
     const canonical: Canon = {};
@@ -108,21 +135,42 @@ export function parseNumber(raw: string | undefined | null): number | null {
 }
 
 /** Only unambiguous formats are accepted; anything else → null (no guessed dates). */
-export function parsePeriod(raw: string | undefined | null): { iso: string; granularity: "day" | "month" | "year" } | null {
+export function parsePeriod(
+  raw: string | undefined | null,
+): { iso: string; granularity: "day" | "month" | "year" } | null {
   const s = (raw ?? "").trim();
-  let y: number, m = 1, d = 1, g: "day" | "month" | "year";
+  let y: number,
+    m = 1,
+    d = 1,
+    g: "day" | "month" | "year";
   let mt: RegExpMatchArray | null;
   if ((mt = /^(\d{4})(\d{2})(\d{2})$/.exec(s)) || (mt = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s))) {
-    y = +mt[1]!; m = +mt[2]!; d = +mt[3]!; g = "day";
+    y = +mt[1]!;
+    m = +mt[2]!;
+    d = +mt[3]!;
+    g = "day";
   } else if ((mt = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(s))) {
-    d = +mt[1]!; m = +mt[2]!; y = +mt[3]!; g = "day";
+    d = +mt[1]!;
+    m = +mt[2]!;
+    y = +mt[3]!;
+    g = "day";
   } else if ((mt = /^(\d{4})-?(\d{2})$/.exec(s))) {
-    y = +mt[1]!; m = +mt[2]!; g = "month";
+    y = +mt[1]!;
+    m = +mt[2]!;
+    g = "month";
   } else if ((mt = /^(\d{4})$/.exec(s))) {
-    y = +mt[1]!; g = "year";
+    y = +mt[1]!;
+    g = "year";
   } else return null;
   const dt = new Date(Date.UTC(y, m - 1, d));
-  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d || y < 1900 || y > 2200) return null;
+  if (
+    dt.getUTCFullYear() !== y ||
+    dt.getUTCMonth() !== m - 1 ||
+    dt.getUTCDate() !== d ||
+    y < 1900 ||
+    y > 2200
+  )
+    return null;
   return { iso: dt.toISOString(), granularity: g };
 }
 
@@ -152,9 +200,14 @@ export function parseIndicators(text: string): Map<string, AradIndicatorMeta> {
   for (const { canonical: c, original } of toRecords(parseDelimited(text))) {
     if (!c.indicator_id) continue;
     out.set(c.indicator_id, {
-      indicatorId: c.indicator_id, name: c.indicator_name || null,
-      frequencyCode: c.frequency_code || null, frequencyName: c.frequency_name || null,
-      unit: c.unit || null, unitMultCode: c.unit_mult_code || null, unitMultName: c.unit_mult_name || null, original,
+      indicatorId: c.indicator_id,
+      name: c.indicator_name || null,
+      frequencyCode: c.frequency_code || null,
+      frequencyName: c.frequency_name || null,
+      unit: c.unit || null,
+      unitMultCode: c.unit_mult_code || null,
+      unitMultName: c.unit_mult_name || null,
+      original,
     });
   }
   return out;
@@ -165,10 +218,18 @@ export function parseData(text: string): { rows: AradObservation[]; skipped: num
   let skipped = 0;
   for (const { canonical: c, original } of toRecords(parseDelimited(text))) {
     const value = parseNumber(c.value);
-    if (!c.indicator_id || value == null) { skipped++; continue; }
+    if (!c.indicator_id || value == null) {
+      skipped++;
+      continue;
+    }
     rows.push({
-      indicatorId: c.indicator_id, snapshotId: c.snapshot_id || null,
-      periodRaw: c.period ?? "", period: parsePeriod(c.period), value, valueRaw: c.value ?? "", original,
+      indicatorId: c.indicator_id,
+      snapshotId: c.snapshot_id || null,
+      periodRaw: c.period ?? "",
+      period: parsePeriod(c.period),
+      value,
+      valueRaw: c.value ?? "",
+      original,
     });
   }
   return { rows, skipped };

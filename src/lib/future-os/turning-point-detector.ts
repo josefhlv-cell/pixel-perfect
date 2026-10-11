@@ -41,7 +41,15 @@ export function detectTurningPoint(
 ): TurningPointResult {
   const ordered = [...signal.points].sort((a, b) => +new Date(a.date) - +new Date(b.date));
   if (ordered.length < baselineWindow + confirmationWindow + 2) {
-    return { key: signal.key, status: "QUIET", score: 0, changePointIndex: null, direction: 0, leadMagnitude: 0, persistence: 0 };
+    return {
+      key: signal.key,
+      status: "QUIET",
+      score: 0,
+      changePointIndex: null,
+      direction: 0,
+      leadMagnitude: 0,
+      persistence: 0,
+    };
   }
 
   const changes = ordered.slice(1).map((p, i) => p.value - ordered[i]!.value);
@@ -67,18 +75,29 @@ export function detectTurningPoint(
     if (Math.sign(cumulative) !== Math.sign(z) && Math.abs(cumulative) < threshold) cumulative = 0;
   }
 
-  const persistence = recent.filter(x => Math.sign(x - m) === direction).length / recent.length;
+  const persistence = recent.filter((x) => Math.sign(x - m) === direction).length / recent.length;
   const leadMagnitude = Math.min(1, Math.abs(z) / 4);
   const persistenceScore = Math.min(1, persistence);
   const score = Math.min(1, 0.55 * leadMagnitude + 0.45 * persistenceScore);
 
   const status =
-    score >= 0.82 && Math.abs(z) >= 2.5 && persistence >= 0.66 ? "BREAK"
-      : score >= 0.62 && Math.abs(z) >= 1.75 && persistence >= 0.66 ? "EARLY_WARNING"
-        : score >= 0.42 ? "WATCH"
+    score >= 0.82 && Math.abs(z) >= 2.5 && persistence >= 0.66
+      ? "BREAK"
+      : score >= 0.62 && Math.abs(z) >= 1.75 && persistence >= 0.66
+        ? "EARLY_WARNING"
+        : score >= 0.42
+          ? "WATCH"
           : "QUIET";
 
-  return { key: signal.key, status, score, changePointIndex, direction, leadMagnitude, persistence };
+  return {
+    key: signal.key,
+    status,
+    score,
+    changePointIndex,
+    direction,
+    leadMagnitude,
+    persistence,
+  };
 }
 
 export function fuseTurningPointSignals(
@@ -86,18 +105,33 @@ export function fuseTurningPointSignals(
   baselineWindow = 12,
   confirmationWindow = 3,
 ) {
-  const results = signals.map(signal => detectTurningPoint(signal, baselineWindow, confirmationWindow));
-  const weights = signals.map(signal => signal.weight ?? 1);
-  const totalWeight = Math.max(1e-9, weights.reduce((a, b) => a + b, 0));
-  const score = results.reduce((sum, result, i) => sum + result.score * weights[i]!, 0) / totalWeight;
-  const positive = results.reduce((sum, result, i) => sum + (result.direction > 0 ? weights[i]! : 0), 0);
-  const negative = results.reduce((sum, result, i) => sum + (result.direction < 0 ? weights[i]! : 0), 0);
+  const results = signals.map((signal) =>
+    detectTurningPoint(signal, baselineWindow, confirmationWindow),
+  );
+  const weights = signals.map((signal) => signal.weight ?? 1);
+  const totalWeight = Math.max(
+    1e-9,
+    weights.reduce((a, b) => a + b, 0),
+  );
+  const score =
+    results.reduce((sum, result, i) => sum + result.score * weights[i]!, 0) / totalWeight;
+  const positive = results.reduce(
+    (sum, result, i) => sum + (result.direction > 0 ? weights[i]! : 0),
+    0,
+  );
+  const negative = results.reduce(
+    (sum, result, i) => sum + (result.direction < 0 ? weights[i]! : 0),
+    0,
+  );
   const agreement = Math.max(positive, negative) / totalWeight;
   const direction: -1 | 0 | 1 = positive > negative ? 1 : negative > positive ? -1 : 0;
   const status =
-    score >= 0.78 && agreement >= 0.67 ? "BREAK"
-      : score >= 0.58 && agreement >= 0.60 ? "EARLY_WARNING"
-        : score >= 0.38 ? "WATCH"
+    score >= 0.78 && agreement >= 0.67
+      ? "BREAK"
+      : score >= 0.58 && agreement >= 0.6
+        ? "EARLY_WARNING"
+        : score >= 0.38
+          ? "WATCH"
           : "QUIET";
 
   return { status, score, agreement, direction, results };

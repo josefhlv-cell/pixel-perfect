@@ -35,9 +35,7 @@ export function buildFutureSuperposition(input: {
   const minimum = input.minimumProbability ?? 0.08;
   const candidates: FuturePath[] = input.convergence.map((item, index) => {
     const warning = convergenceWarningLevel(item);
-    const warningBoost =
-      warning === "EARLY_WARNING" ? 1.18 :
-      warning === "WATCH" ? 1.05 : 0.92;
+    const warningBoost = warning === "EARLY_WARNING" ? 1.18 : warning === "WATCH" ? 1.05 : 0.92;
     const turningBoost =
       input.turningPoint && input.turningPoint.direction === item.direction ? 1.12 : 1;
 
@@ -49,7 +47,9 @@ export function buildFutureSuperposition(input: {
         minimum,
         item.convergenceScore * warningBoost * turningBoost * (1 - item.fragility * 0.35),
       ),
-      mechanisms: item.paths.flatMap(path => path.nodes).filter((value, i, all) => all.indexOf(value) === i),
+      mechanisms: item.paths
+        .flatMap((path) => path.nodes)
+        .filter((value, i, all) => all.indexOf(value) === i),
       fragility: item.fragility,
     };
   });
@@ -60,8 +60,8 @@ export function buildFutureSuperposition(input: {
   }
 
   const paths = candidates
-    .map(path => ({ ...path, probability: path.probability / total }))
-    .filter(path => path.probability >= minimum)
+    .map((path) => ({ ...path, probability: path.probability / total }))
+    .filter((path) => path.probability >= minimum)
     .sort((a, b) => b.probability - a.probability);
 
   const entropy = -paths.reduce(
@@ -70,10 +70,13 @@ export function buildFutureSuperposition(input: {
   );
   const dominant = paths[0] ?? null;
   const agreement = dominant
-    ? paths.filter(path => path.direction === dominant.direction).reduce((sum, path) => sum + path.probability, 0)
+    ? paths
+        .filter((path) => path.direction === dominant.direction)
+        .reduce((sum, path) => sum + path.probability, 0)
     : 0;
 
-  const contested = paths.length > 1 && dominant && paths[1]!.probability >= dominant.probability * 0.7;
+  const contested =
+    paths.length > 1 && dominant && paths[1]!.probability >= dominant.probability * 0.7;
 
   return {
     dominant,

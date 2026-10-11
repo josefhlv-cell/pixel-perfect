@@ -22,10 +22,16 @@ export function runPropertyShockMatrix(
       if (shock.key === "RATE") adjusted.financingRate += shock.delta;
       if (shock.key === "SUPPLY") adjusted.marketGrowthP50 -= shock.delta;
       if (shock.key === "MIGRATION") adjusted.marketGrowthP50 += shock.delta;
-      if (shock.key === "LIQUIDITY") adjusted.liquidityScore = Math.max(0, Math.min(1, adjusted.liquidityScore + shock.delta));
+      if (shock.key === "LIQUIDITY")
+        adjusted.liquidityScore = Math.max(0, Math.min(1, adjusted.liquidityScore + shock.delta));
     }
     const twin = buildPropertyFutureTwin(adjusted);
-    return { shocks, action: twin.action, downside: twin.downside, maxSafePrice: twin.maxSafePrice };
+    return {
+      shocks,
+      action: twin.action,
+      downside: twin.downside,
+      maxSafePrice: twin.maxSafePrice,
+    };
   });
 }
 

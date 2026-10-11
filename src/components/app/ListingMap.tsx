@@ -16,9 +16,22 @@ export interface MapPoint {
   href?: string;
 }
 
-const COLORS: Record<MapPoint["layer"], string> = { listing: "#8b93a7", deal: "#e8b34a", portfolio: "#3fbf7f", watchlist: "#b07cf0" };
+const COLORS: Record<MapPoint["layer"], string> = {
+  listing: "#8b93a7",
+  deal: "#e8b34a",
+  portfolio: "#3fbf7f",
+  watchlist: "#b07cf0",
+};
 
-export default function ListingMap({ points, onOpen, height = 520 }: { points: MapPoint[]; onOpen?: (href: string) => void; height?: number }) {
+export default function ListingMap({
+  points,
+  onOpen,
+  height = 520,
+}: {
+  points: MapPoint[];
+  onOpen?: (href: string) => void;
+  height?: number;
+}) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const markers = useRef<maplibregl.Marker[]>([]);
@@ -60,7 +73,10 @@ export default function ListingMap({ points, onOpen, height = 520 }: { points: M
         b.onclick = () => onOpen(p.href!);
         box.append(b);
       }
-      return new maplibregl.Marker({ element: dot }).setLngLat([p.lng, p.lat]).setPopup(new maplibregl.Popup({ offset: 10 }).setDOMContent(box)).addTo(m);
+      return new maplibregl.Marker({ element: dot })
+        .setLngLat([p.lng, p.lat])
+        .setPopup(new maplibregl.Popup({ offset: 10 }).setDOMContent(box))
+        .addTo(m);
     });
   }, [points, onOpen]);
 

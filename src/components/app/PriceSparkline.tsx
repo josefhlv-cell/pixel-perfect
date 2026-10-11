@@ -8,7 +8,9 @@ export function PriceSparkline({
   width?: number;
   height?: number;
 }) {
-  const vals = points.map((p) => p.price).filter((p): p is number => p != null && Number.isFinite(p));
+  const vals = points
+    .map((p) => p.price)
+    .filter((p): p is number => p != null && Number.isFinite(p));
   if (vals.length < 2) return null;
   const min = Math.min(...vals);
   const max = Math.max(...vals);

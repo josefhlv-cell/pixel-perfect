@@ -15,7 +15,15 @@ export function evaluateIncrementalPredictiveValue(
 ): PredictiveComparison {
   const n = Math.min(baselineLosses.length, candidateLosses.length);
   if (n < 10) {
-    return { baselineLoss: 0, candidateLoss: 0, sampleCount: n, improvement: 0, stability: 0, incrementalValue: 0, status: "REJECT" };
+    return {
+      baselineLoss: 0,
+      candidateLoss: 0,
+      sampleCount: n,
+      improvement: 0,
+      stability: 0,
+      incrementalValue: 0,
+      status: "REJECT",
+    };
   }
 
   const base = baselineLosses.slice(0, n);
@@ -36,17 +44,28 @@ export function evaluateIncrementalPredictiveValue(
     improvements.push(bm > 0 ? (bm - cm) / bm : 0);
   }
 
-  const positiveWindows = improvements.filter((x) => x > 0).length / Math.max(1, improvements.length);
+  const positiveWindows =
+    improvements.filter((x) => x > 0).length / Math.max(1, improvements.length);
   const stability = improvements.length
-    ? positiveWindows * (1 - Math.min(1, Math.abs(Math.max(...improvements) - Math.min(...improvements))))
+    ? positiveWindows *
+      (1 - Math.min(1, Math.abs(Math.max(...improvements) - Math.min(...improvements))))
     : 0;
   const incrementalValue = Math.max(0, improvement) * (0.5 + 0.5 * stability);
 
-  const status = incrementalValue >= 0.10 && stability >= 0.5
-    ? "USEFUL"
-    : incrementalValue >= 0.03
-      ? "MARGINAL"
-      : "REJECT";
+  const status =
+    incrementalValue >= 0.1 && stability >= 0.5
+      ? "USEFUL"
+      : incrementalValue >= 0.03
+        ? "MARGINAL"
+        : "REJECT";
 
-  return { baselineLoss, candidateLoss, sampleCount: n, improvement, stability, incrementalValue, status };
+  return {
+    baselineLoss,
+    candidateLoss,
+    sampleCount: n,
+    improvement,
+    stability,
+    incrementalValue,
+    status,
+  };
 }

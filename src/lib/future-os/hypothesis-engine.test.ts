@@ -18,8 +18,20 @@ describe("Future OS hypothesis engine", () => {
         { key: "correction", prior: 0.5, evidenceFor: 0, evidenceAgainst: 1, modelConfidence: 1 },
       ],
       [
-        { key: "weak", reliability: 0.9, cost: 1, latencyDays: 1, discrimination: { recovery: 0.5, correction: 0.4 } },
-        { key: "strong", reliability: 0.9, cost: 1, latencyDays: 1, discrimination: { recovery: 1, correction: 0 } },
+        {
+          key: "weak",
+          reliability: 0.9,
+          cost: 1,
+          latencyDays: 1,
+          discrimination: { recovery: 0.5, correction: 0.4 },
+        },
+        {
+          key: "strong",
+          reliability: 0.9,
+          cost: 1,
+          latencyDays: 1,
+          discrimination: { recovery: 1, correction: 0 },
+        },
       ],
     );
     expect(result[0]!.key).toBe("strong");

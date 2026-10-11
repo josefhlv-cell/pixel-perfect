@@ -23,7 +23,7 @@ export interface PropertyAnalysis {
   redFlags: Claim[];
 }
 
-export interface DealAnalysisInput extends PropertyAnalysisInput {}
+export type DealAnalysisInput = PropertyAnalysisInput;
 export interface DealExplanation {
   explanation: string;
 }

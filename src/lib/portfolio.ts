@@ -1,12 +1,20 @@
 /** Portfolio aggregation built on the existing calculation engine primitives. */
-import { calculateCashFlow, calculateDebtBalance, calculateGrossYield, calculateMortgagePayment } from "./calculations";
+import {
+  calculateCashFlow,
+  calculateDebtBalance,
+  calculateGrossYield,
+  calculateMortgagePayment,
+} from "./calculations";
 import type { Database } from "@/integrations/supabase/types";
 
 export type PortfolioRow = Database["public"]["Tables"]["portfolio_properties"]["Row"];
 export type ValuationRow = Database["public"]["Tables"]["portfolio_valuations"]["Row"];
 
 function monthsBetween(from: Date, to: Date) {
-  return Math.max(0, (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth()));
+  return Math.max(
+    0,
+    (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth()),
+  );
 }
 
 /** Value at a date: latest valuation snapshot on/before date, else current_value (if date≥today), else purchase price. */
@@ -19,11 +27,17 @@ function valueAt(p: PortfolioRow, vals: ValuationRow[], at: Date): number {
 }
 
 export function propertyMetrics(p: PortfolioRow, vals: ValuationRow[], now = new Date()) {
-  const latestVal = vals.filter((v) => v.portfolio_property_id === p.id).sort((a, b) => b.valued_on.localeCompare(a.valued_on))[0];
+  const latestVal = vals
+    .filter((v) => v.portfolio_property_id === p.id)
+    .sort((a, b) => b.valued_on.localeCompare(a.valued_on))[0];
   const value = latestVal?.value ?? p.current_value ?? p.purchase_price;
   const paid = monthsBetween(new Date(p.purchase_date), now);
   const debt = calculateDebtBalance(p.mortgage_principal, p.interest_rate_bps, p.term_months, paid);
-  const mortgage = calculateMortgagePayment(p.mortgage_principal, p.interest_rate_bps, p.term_months);
+  const mortgage = calculateMortgagePayment(
+    p.mortgage_principal,
+    p.interest_rate_bps,
+    p.term_months,
+  );
   const cashFlow = calculateCashFlow(p.monthly_rent, p.vacancy_bps, p.monthly_expenses, mortgage);
   return {
     value,
@@ -61,22 +75,42 @@ export type RangeKey = keyof typeof RANGES;
 export function portfolioSeries(rows: PortfolioRow[], vals: ValuationRow[], range: RangeKey) {
   if (!rows.length) return [];
   const now = new Date();
-  const earliest = rows.reduce((d, r) => (new Date(r.purchase_date) < d ? new Date(r.purchase_date) : d), now);
+  const earliest = rows.reduce(
+    (d, r) => (new Date(r.purchase_date) < d ? new Date(r.purchase_date) : d),
+    now,
+  );
   const months = RANGES[range] || Math.max(1, monthsBetween(earliest, now));
   const out = [];
   for (let i = months; i >= 0; i--) {
     const at = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    let value = 0, debt = 0, rent = 0, cashFlow = 0;
+    let value = 0,
+      debt = 0,
+      rent = 0,
+      cashFlow = 0;
     for (const p of rows) {
       if (new Date(p.purchase_date) > at) continue;
       const v = i === 0 ? propertyMetrics(p, vals).value : valueAt(p, vals, at);
       const paid = monthsBetween(new Date(p.purchase_date), at);
-      const d = calculateDebtBalance(p.mortgage_principal, p.interest_rate_bps, p.term_months, paid);
+      const d = calculateDebtBalance(
+        p.mortgage_principal,
+        p.interest_rate_bps,
+        p.term_months,
+        paid,
+      );
       const m = calculateMortgagePayment(p.mortgage_principal, p.interest_rate_bps, p.term_months);
-      value += v; debt += d; rent += p.monthly_rent;
+      value += v;
+      debt += d;
+      rent += p.monthly_rent;
       cashFlow += calculateCashFlow(p.monthly_rent, p.vacancy_bps, p.monthly_expenses, m);
     }
-    out.push({ label: at.toLocaleDateString("cs-CZ", { month: "short", year: "2-digit" }), value, debt, equity: value - debt, rent, cashFlow });
+    out.push({
+      label: at.toLocaleDateString("cs-CZ", { month: "short", year: "2-digit" }),
+      value,
+      debt,
+      equity: value - debt,
+      rent,
+      cashFlow,
+    });
   }
   return out;
 }

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { evidenceContentHash } from "./evidence-hash.server";
-import { assertNoFutureEvidence, computeDataQuality, getEvidenceAvailableAt } from "./point-in-time";
+import {
+  assertNoFutureEvidence,
+  computeDataQuality,
+  getEvidenceAvailableAt,
+} from "./point-in-time";
 import type { EvidenceObservation } from "./types";
 
 const base = (overrides: Partial<EvidenceObservation> = {}): EvidenceObservation => ({
@@ -45,10 +49,12 @@ describe("Future OS point-in-time integrity", () => {
   });
 
   it("never silently accepts future evidence", () => {
-    expect(() => assertNoFutureEvidence(
-      [base({ availableAt: "2026-03-01T00:00:00Z" })],
-      "2026-02-15T00:00:00Z",
-    )).toThrow(/Point-in-time violation/);
+    expect(() =>
+      assertNoFutureEvidence(
+        [base({ availableAt: "2026-03-01T00:00:00Z" })],
+        "2026-02-15T00:00:00Z",
+      ),
+    ).toThrow(/Point-in-time violation/);
   });
 
   it("uses information availability rather than event time", () => {
@@ -60,17 +66,43 @@ describe("Future OS point-in-time integrity", () => {
   });
 
   it("preserves multiple periods of the same series", () => {
-    const q1 = base({ id: "q1", effectiveFrom: "2026-01-01T00:00:00Z", availableAt: "2026-02-01T00:00:00Z", value: 100 });
-    const q2 = base({ id: "q2", effectiveFrom: "2026-04-01T00:00:00Z", availableAt: "2026-05-01T00:00:00Z", value: 110 });
+    const q1 = base({
+      id: "q1",
+      effectiveFrom: "2026-01-01T00:00:00Z",
+      availableAt: "2026-02-01T00:00:00Z",
+      value: 100,
+    });
+    const q2 = base({
+      id: "q2",
+      effectiveFrom: "2026-04-01T00:00:00Z",
+      availableAt: "2026-05-01T00:00:00Z",
+      value: 110,
+    });
     const rows = getEvidenceAvailableAt([q1, q2], "2026-06-01T00:00:00Z");
     expect(rows.map((row) => row.value)).toEqual([100, 110]);
   });
 
   it("keeps the latest revision known by the cutoff", () => {
-    const original = base({ id: "r1", revision: 1, availableAt: "2026-02-01T00:00:00Z", value: 100 });
-    const revision = base({ id: "r2", revision: 2, availableAt: "2026-03-01T00:00:00Z", value: 110, isRevision: true, supersedesId: "r1" });
-    expect(getEvidenceAvailableAt([original, revision], "2026-02-15T00:00:00Z")[0]?.value).toBe(100);
-    expect(getEvidenceAvailableAt([original, revision], "2026-03-15T00:00:00Z")[0]?.value).toBe(110);
+    const original = base({
+      id: "r1",
+      revision: 1,
+      availableAt: "2026-02-01T00:00:00Z",
+      value: 100,
+    });
+    const revision = base({
+      id: "r2",
+      revision: 2,
+      availableAt: "2026-03-01T00:00:00Z",
+      value: 110,
+      isRevision: true,
+      supersedesId: "r1",
+    });
+    expect(getEvidenceAvailableAt([original, revision], "2026-02-15T00:00:00Z")[0]?.value).toBe(
+      100,
+    );
+    expect(getEvidenceAvailableAt([original, revision], "2026-03-15T00:00:00Z")[0]?.value).toBe(
+      110,
+    );
   });
 
   it("produces deterministic content hashes independent of object key order", () => {

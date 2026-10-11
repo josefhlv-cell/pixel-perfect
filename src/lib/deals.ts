@@ -3,7 +3,14 @@
  * EXISTING valuation / deal-priority / calculation engines. No math lives in UI.
  */
 import { calculateTotalReturn, DEFAULT_ASSUMPTIONS, type InvestmentInput } from "./calculations";
-import { computeDealPriority, estimateRent, estimateValue, grossYieldFor, priceDifferenceBps, type MarketStat } from "./valuation";
+import {
+  computeDealPriority,
+  estimateRent,
+  estimateValue,
+  grossYieldFor,
+  priceDifferenceBps,
+  type MarketStat,
+} from "./valuation";
 import type { Database } from "@/integrations/supabase/types";
 
 export type ListingRow = Database["public"]["Tables"]["listings"]["Row"];
@@ -44,7 +51,11 @@ export function latestStatsByCity(rows: MarketRow[]): Map<string, MarketStat> {
 }
 
 /** Default investment input for a listing (price, estimated rent, Czech defaults). */
-export function defaultInvestmentInput(price: number, rent: number, overrides: Partial<InvestmentInput> = {}): InvestmentInput {
+export function defaultInvestmentInput(
+  price: number,
+  rent: number,
+  overrides: Partial<InvestmentInput> = {},
+): InvestmentInput {
   return {
     purchasePrice: price,
     closingCosts: Math.round((price * DEFAULT_ASSUMPTIONS.closingCostsBps) / 10_000),
@@ -70,7 +81,12 @@ export function enrichListing(
   snapshots: SnapshotRow[],
 ): EnrichedListing {
   const city = property?.city ?? listing.location ?? null;
-  const area = listing.area_m2 != null ? Number(listing.area_m2) : property?.area_m2 != null ? Number(property.area_m2) : null;
+  const area =
+    listing.area_m2 != null
+      ? Number(listing.area_m2)
+      : property?.area_m2 != null
+        ? Number(property.area_m2)
+        : null;
   // Live listings often carry "City, District" (e.g. "Pardubice, Zelené Předměstí"); fall back to the base city.
   const stat = city ? (stats.get(city) ?? stats.get(city.split(/[,–-]/)[0]!.trim())) : undefined;
   const estimate = estimateValue(area, stat);
@@ -83,7 +99,10 @@ export function enrichListing(
     .map((s) => ({ at: s.observed_at, price: s.price }));
   const prices = history.map((h) => h.price).filter((p): p is number => p != null);
   const priceDropped = prices.length >= 2 && prices[prices.length - 1]! < prices[0]!;
-  const monthlyCashFlow = listing.price && rent ? calculateTotalReturn(defaultInvestmentInput(listing.price, rent)).monthlyCashFlow : null;
+  const monthlyCashFlow =
+    listing.price && rent
+      ? calculateTotalReturn(defaultInvestmentInput(listing.price, rent)).monthlyCashFlow
+      : null;
   const priority = computeDealPriority({
     diffBps,
     grossYieldBps,
@@ -93,17 +112,39 @@ export function enrichListing(
   });
 
   const reasons: Reason[] = [];
-  if (diffBps != null && diffBps < -300) reasons.push({ positive: true, text: `Cena ${Math.abs(diffBps / 100).toFixed(1)} % pod odhadem z nabídkových cen` });
-  if (diffBps != null && diffBps > 500) reasons.push({ positive: false, text: `Cena ${(diffBps / 100).toFixed(1)} % nad odhadem z nabídkových cen` });
-  if (grossYieldBps != null && grossYieldBps >= 500) reasons.push({ positive: true, text: `Vysoký odhadovaný hrubý výnos ${(grossYieldBps / 100).toFixed(2)} %` });
-  if (grossYieldBps != null && grossYieldBps < 400) reasons.push({ positive: false, text: `Nízký odhadovaný hrubý výnos ${(grossYieldBps / 100).toFixed(2)} %` });
-  if (listing.freshness_status === "FRESH") reasons.push({ positive: true, text: "Čerstvá nabídka" });
-  if (listing.freshness_status === "STALE" || listing.freshness_status === "AGING") reasons.push({ positive: false, text: "Nabídka dlouho neověřena" });
-  if (listing.availability_status === "ACTIVE_CONFIRMED") reasons.push({ positive: true, text: "Dostupnost ověřena" });
-  if (listing.availability_status === "ACTIVE_UNCONFIRMED") reasons.push({ positive: false, text: "Dostupnost neověřena" });
+  if (diffBps != null && diffBps < -300)
+    reasons.push({
+      positive: true,
+      text: `Cena ${Math.abs(diffBps / 100).toFixed(1)} % pod odhadem z nabídkových cen`,
+    });
+  if (diffBps != null && diffBps > 500)
+    reasons.push({
+      positive: false,
+      text: `Cena ${(diffBps / 100).toFixed(1)} % nad odhadem z nabídkových cen`,
+    });
+  if (grossYieldBps != null && grossYieldBps >= 500)
+    reasons.push({
+      positive: true,
+      text: `Vysoký odhadovaný hrubý výnos ${(grossYieldBps / 100).toFixed(2)} %`,
+    });
+  if (grossYieldBps != null && grossYieldBps < 400)
+    reasons.push({
+      positive: false,
+      text: `Nízký odhadovaný hrubý výnos ${(grossYieldBps / 100).toFixed(2)} %`,
+    });
+  if (listing.freshness_status === "FRESH")
+    reasons.push({ positive: true, text: "Čerstvá nabídka" });
+  if (listing.freshness_status === "STALE" || listing.freshness_status === "AGING")
+    reasons.push({ positive: false, text: "Nabídka dlouho neověřena" });
+  if (listing.availability_status === "ACTIVE_CONFIRMED")
+    reasons.push({ positive: true, text: "Dostupnost ověřena" });
+  if (listing.availability_status === "ACTIVE_UNCONFIRMED")
+    reasons.push({ positive: false, text: "Dostupnost neověřena" });
   if (priceDropped) reasons.push({ positive: true, text: "Cena byla snížena" });
-  if (monthlyCashFlow != null && monthlyCashFlow < 0) reasons.push({ positive: false, text: "Záporné cash-flow při 80% LTV" });
-  if (rent != null) reasons.push({ positive: false, text: "Nájem je odhad z průměru lokality – nízká jistota" });
+  if (monthlyCashFlow != null && monthlyCashFlow < 0)
+    reasons.push({ positive: false, text: "Záporné cash-flow při 80% LTV" });
+  if (rent != null)
+    reasons.push({ positive: false, text: "Nájem je odhad z průměru lokality – nízká jistota" });
   if (estimate == null) reasons.push({ positive: false, text: "Chybí data pro odhad hodnoty" });
 
   return {
@@ -125,14 +166,43 @@ export function enrichListing(
 }
 
 /** Explains Deal Priority score components transparently (mirrors computeDealPriority weights). */
-export function priorityBreakdown(e: EnrichedListing): { label: string; points: number; max: number }[] {
+export function priorityBreakdown(
+  e: EnrichedListing,
+): { label: string; points: number; max: number }[] {
   const dead = ["SOLD", "REMOVED", "EXPIRED"].includes(e.listing.availability_status);
   if (dead) return [{ label: "Nabídka není aktivní", points: 0, max: 100 }];
   return [
-    { label: "Sleva vůči odhadu", points: e.diffBps != null ? Math.round(Math.max(0, Math.min(35, -e.diffBps / 40))) : 0, max: 35 },
-    { label: "Hrubý výnos", points: e.grossYieldBps != null ? Math.round(Math.max(0, Math.min(30, (e.grossYieldBps - 300) / 13))) : 0, max: 30 },
-    { label: "Čerstvost", points: ({ FRESH: 20, RECENT: 14, AGING: 7, STALE: 2 } as Record<string, number>)[e.listing.freshness_status] ?? 0, max: 20 },
-    { label: "Ověřená dostupnost", points: e.listing.availability_status === "ACTIVE_CONFIRMED" ? 10 : e.listing.availability_status === "ACTIVE_UNCONFIRMED" ? 4 : 0, max: 10 },
+    {
+      label: "Sleva vůči odhadu",
+      points: e.diffBps != null ? Math.round(Math.max(0, Math.min(35, -e.diffBps / 40))) : 0,
+      max: 35,
+    },
+    {
+      label: "Hrubý výnos",
+      points:
+        e.grossYieldBps != null
+          ? Math.round(Math.max(0, Math.min(30, (e.grossYieldBps - 300) / 13)))
+          : 0,
+      max: 30,
+    },
+    {
+      label: "Čerstvost",
+      points:
+        ({ FRESH: 20, RECENT: 14, AGING: 7, STALE: 2 } as Record<string, number>)[
+          e.listing.freshness_status
+        ] ?? 0,
+      max: 20,
+    },
+    {
+      label: "Ověřená dostupnost",
+      points:
+        e.listing.availability_status === "ACTIVE_CONFIRMED"
+          ? 10
+          : e.listing.availability_status === "ACTIVE_UNCONFIRMED"
+            ? 4
+            : 0,
+      max: 10,
+    },
     { label: "Snížení ceny", points: e.priceDropped ? 5 : 0, max: 5 },
   ];
 }

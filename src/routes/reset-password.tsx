@@ -35,9 +35,17 @@ function Reset() {
         <h1 className="text-xl font-semibold">Nové heslo</h1>
         <div className="space-y-1.5">
           <Label htmlFor="pw">Nové heslo</Label>
-          <Input id="pw" type="password" value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="new-password" />
+          <Input
+            id="pw"
+            type="password"
+            value={pw}
+            onChange={(e) => setPw(e.target.value)}
+            autoComplete="new-password"
+          />
         </div>
-        <Button className="w-full" type="submit">Uložit heslo</Button>
+        <Button className="w-full" type="submit">
+          Uložit heslo
+        </Button>
       </form>
     </div>
   );

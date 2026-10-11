@@ -7,7 +7,10 @@ export type DecisionScenario = {
 };
 
 export function decisionRegret(chosen: DecisionScenario, alternatives: DecisionScenario[]): number {
-  const bestRealized = Math.max(chosen.realizedUtility, ...alternatives.map((scenario) => scenario.realizedUtility));
+  const bestRealized = Math.max(
+    chosen.realizedUtility,
+    ...alternatives.map((scenario) => scenario.realizedUtility),
+  );
   return Math.max(0, bestRealized - chosen.realizedUtility);
 }
 
