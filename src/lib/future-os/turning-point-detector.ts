@@ -23,6 +23,13 @@ function mean(values: number[]) {
   return values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
 }
 
+function median(values: number[]) {
+  if (!values.length) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
+}
+
 function std(values: number[]) {
   if (values.length < 2) return 0;
   const m = mean(values);
@@ -55,8 +62,12 @@ export function detectTurningPoint(
   const changes = ordered.slice(1).map((p, i) => p.value - ordered[i]!.value);
   const baseline = changes.slice(0, -confirmationWindow);
   const recent = changes.slice(-confirmationWindow);
-  const m = mean(baseline.slice(-baselineWindow));
-  const s = Math.max(std(baseline.slice(-baselineWindow)), 1e-9);
+  // Robust baseline (median + MAD): a regime shift that starts inside the
+  // baseline window must not contaminate the reference it is measured against.
+  const window = baseline.slice(-baselineWindow);
+  const m = median(window);
+  const mad = median(window.map((x) => Math.abs(x - m)));
+  const s = Math.max(1.4826 * mad, 0.5 * std(window), 1e-9);
   const recentMean = mean(recent);
   const z = (recentMean - m) / s;
   const direction: -1 | 0 | 1 = z > 0.5 ? 1 : z < -0.5 ? -1 : 0;
@@ -75,7 +86,11 @@ export function detectTurningPoint(
     if (Math.sign(cumulative) !== Math.sign(z) && Math.abs(cumulative) < threshold) cumulative = 0;
   }
 
-  const persistence = recent.filter((x) => Math.sign(x - m) === direction).length / recent.length;
+  // No direction means nothing persists (sign(0) === 0 must not count as agreement).
+  const persistence =
+    direction === 0
+      ? 0
+      : recent.filter((x) => Math.sign(x - m) === direction).length / recent.length;
   const leadMagnitude = Math.min(1, Math.abs(z) / 4);
   const persistenceScore = Math.min(1, persistence);
   const score = Math.min(1, 0.55 * leadMagnitude + 0.45 * persistenceScore);
