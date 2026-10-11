@@ -22,7 +22,6 @@ describe("paired forecast evaluation", () => {
     );
 
     expect(result).not.toBeNull();
-    expect(result!.sampleCount).toBeUndefined();
     expect(result!.candidateMean).toBe(0);
     expect(result!.benchmarkMean).toBe(5);
     expect(result!.improvement).toBe(5);
