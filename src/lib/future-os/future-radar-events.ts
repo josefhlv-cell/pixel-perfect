@@ -70,6 +70,17 @@ export function detectFutureRadarEvents(
           explanation: "Do World State přibyla nebo se změnila informace.",
         });
       }
+    } else if (key.toLowerCase().includes("decision")) {
+      // Decisions are categorical (BUY/NEGOTIATE/WAIT/PASS), so a change is a flip.
+      events.push({
+        type: "DECISION_FLIP",
+        severity: "CRITICAL",
+        key,
+        before,
+        after,
+        delta: null,
+        explanation: "Investiční rozhodnutí se změnilo.",
+      });
     } else {
       events.push({
         type: "MODEL_FLIP",
