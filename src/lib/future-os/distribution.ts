@@ -35,17 +35,25 @@ export function analyzeForecastDistribution(values: number[]): DistributionCompa
     sorted.length % 2
       ? sorted[Math.floor(sorted.length / 2)]
       : (sorted[sorted.length / 2 - 1]! + sorted[sorted.length / 2]!) / 2;
-  const q10 = sorted[Math.max(0, Math.floor((sorted.length - 1) * 0.1))];
-  const q90 = sorted[Math.max(0, Math.floor((sorted.length - 1) * 0.9))];
+  // Linear-interpolated quantiles (floor indexing biased q90 downward on small samples).
+  const quantile = (q: number) => {
+    const pos = (sorted.length - 1) * q;
+    const lo = Math.floor(pos);
+    const hi = Math.min(sorted.length - 1, lo + 1);
+    return sorted[lo]! + (sorted[hi]! - sorted[lo]!) * (pos - lo);
+  };
+  const q10 = quantile(0.1);
+  const q90 = quantile(0.9);
   const dispersion = q90! - q10!;
-  const tailRisk = Math.abs(q10! - median!) / Math.max(1, dispersion);
+  // Share of the 10–90 range lying below the median: 0.5 = symmetric, >0.75 = downside tail ≥3× upside.
+  const tailRisk = dispersion > 0 ? (median! - q10) / dispersion : 0;
   const skewProxy = (q90! - median! - (median! - q10!)) / Math.max(1, dispersion);
   const sameSign = values.filter((x) => Math.sign(x) === Math.sign(median!)).length / values.length;
   const concentration = sameSign;
   const interpretation =
     dispersion > Math.max(5, Math.abs(median!) * 2)
       ? "HETEROGENEOUS"
-      : tailRisk > 0.65
+      : tailRisk > 0.75
         ? "TAIL_DRIVEN"
         : concentration > 0.75
           ? "BROAD_BASED"
