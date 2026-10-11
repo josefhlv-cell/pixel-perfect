@@ -36,7 +36,7 @@ $$;
 DROP TRIGGER IF EXISTS reality_forecast_outcome_timing_guard
   ON public.reality_forecast_outcomes;
 CREATE TRIGGER reality_forecast_outcome_timing_guard
-  BEFORE INSERT ON public.reality_forecast_outcomes
+  BEFORE INSERT OR UPDATE ON public.reality_forecast_outcomes
   FOR EACH ROW
   EXECUTE FUNCTION public.guard_future_os_forecast_outcome_timing();
 
