@@ -2,19 +2,73 @@ name: Future OS CI
 
 on:
   push:
-    branches: [main]
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: future-os-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   verify:
+    name: Lint, test, and production build
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.5
-      - run: bun install --frozen-lockfile
-      - run: bun run lint
-      - run: bun run test
-      - run: bun run build
+
+      - name: Record runtime versions
+        run: |
+          {
+            echo "## Runtime"
+            echo '---'
+            bun --version
+            node --version
+            echo '---'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Install locked dependencies
+        id: install
+        run: bun install --frozen-lockfile
+
+      - name: ESLint
+        id: lint
+        run: bun run lint
+
+      - name: Unit and contract tests
+        id: test
+        run: bun run test
+
+      - name: Production build
+        id: build
+        run: bun run build
+
+      - name: Write check summary
+        if: always()
+        env:
+          INSTALL_OUTCOME: ${{ steps.install.outcome }}
+          LINT_OUTCOME: ${{ steps.lint.outcome }}
+          TEST_OUTCOME: ${{ steps.test.outcome }}
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          {
+            echo "## Future OS CI result"
+            echo
+            echo "- Commit: $COMMIT_SHA"
+            echo "- Dependency install: **$INSTALL_OUTCOME**"
+            echo "- ESLint: **$LINT_OUTCOME**"
+            echo "- Tests: **$TEST_OUTCOME**"
+            echo "- Production build: **$BUILD_OUTCOME**"
+            echo
+            echo "A skipped step is not a pass. Inspect the corresponding step log for the first failure."
+          } >> "$GITHUB_STEP_SUMMARY"
