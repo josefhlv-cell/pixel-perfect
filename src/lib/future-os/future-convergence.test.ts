@@ -17,7 +17,9 @@ describe("future convergence", () => {
         {
           from: "credit",
           to: "price",
-          sign: -1,
+          // Less credit → lower prices (positive co-movement). The previous
+          // fixture used -1 here, which made higher rates *raise* prices.
+          sign: 1,
           strength: 0.9,
           lagDays: 60,
           independenceGroup: "monetary",
@@ -57,6 +59,28 @@ describe("future convergence", () => {
     const rising = result.find((r) => r.direction === 1);
     expect(falling?.independentPathCount).toBeGreaterThanOrEqual(2);
     expect(rising?.independentPathCount).toBe(1);
-    expect(falling && convergenceWarningLevel(falling)).toBe("EARLY_WARNING");
+    expect(falling && convergenceWarningLevel(falling)).toBe("WATCH"); // 2 paths: EARLY_WARNING requires ≥3 independent paths
+  });
+
+  it("reverses direction for a falling precursor and ignores zero readings", () => {
+    const edges = [
+      {
+        from: "inventory",
+        to: "price",
+        sign: -1 as const,
+        strength: 0.8,
+        lagDays: 40,
+        independenceGroup: "supply",
+      },
+    ];
+    const down = detectFutureConvergence("price", edges, [
+      { node: "inventory", value: -1, reliability: 0.9, independenceGroup: "supply" },
+    ]);
+    expect(down[0]?.direction).toBe(1);
+    expect(
+      detectFutureConvergence("price", edges, [
+        { node: "inventory", value: 0, reliability: 0.9, independenceGroup: "supply" },
+      ]),
+    ).toHaveLength(0);
   });
 });

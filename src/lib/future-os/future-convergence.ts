@@ -63,6 +63,9 @@ export function detectFutureConvergence(
 
   const paths: FutureConvergence["paths"] = [];
   for (const signal of signals) {
+    // A falling precursor reverses every downstream effect; a zero or invalid
+    // reading carries no directional information and is skipped.
+    if (!Number.isFinite(signal.value) || signal.value === 0) continue;
     walk(
       signal.node,
       target,
@@ -70,8 +73,8 @@ export function detectFutureConvergence(
       new Set<string>(),
       [],
       0,
-      1,
-      signal.reliability,
+      signal.value > 0 ? 1 : -1,
+      clamp(signal.reliability),
       signal.independenceGroup,
       maxDepth,
       paths,
