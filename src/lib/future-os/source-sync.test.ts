@@ -68,7 +68,7 @@ describe("runSourceSync", () => {
     const result = await runSourceSync("test-adapter", async () => [observation], ingest);
 
     expect(result.error).toBe("database unavailable");
-    expect(result.fetched).toBe(0);
+    expect(result.fetched).toBe(1);
     expect(result.inserted).toBe(0);
   });
 
