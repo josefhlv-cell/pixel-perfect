@@ -8,6 +8,7 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { authenticateCronRequest } from "@/integrations/supabase/cron-auth";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { runSourceSync } from "@/lib/future-os/source-sync";
 import { ingestEvidence } from "@/lib/future-os/ingest.server";
 import { fetchEurostatHousePriceIndex } from "@/lib/future-os/adapters/eurostat.server";
@@ -92,11 +93,60 @@ export const Route = createFileRoute("/api/public/cron/future-os-ingestion")({
             })),
           ];
           const failed = results.filter((r) => "error" in r && Boolean(r.error)).length;
+          const finishedAt = new Date().toISOString();
+          let coverageHistoryError: string | undefined;
+          try {
+            const adapterKeys = [...new Set(results.map((r) => r.adapterKey))];
+            const { data: adapters, error: adapterLookupError } = await supabaseAdmin
+              .from("reality_source_adapters")
+              .select("id,adapter_key")
+              .in("adapter_key", adapterKeys);
+            if (adapterLookupError) throw adapterLookupError;
+
+            const adapterIds = new Map((adapters ?? []).map((a) => [a.adapter_key, a.id]));
+            const coverageRows = results.flatMap((r) => {
+              const adapterId = adapterIds.get(r.adapterKey);
+              if (!adapterId) return [];
+              const failedResult = "error" in r && Boolean(r.error);
+              return [{
+                adapter_id: adapterId,
+                geography_type: "country",
+                geography_key: "CZ",
+                domain: "scheduled_ingestion" + ("setId" in r ? ":" + r.setId : ""),
+                period_start: null,
+                period_end: null,
+                availability_status: failedResult ? "MISSING" : r.fetched > 0 ? "AVAILABLE" : "PARTIAL",
+                provenance_quality: null,
+                last_checked_at: r.finishedAt,
+                details: {
+                  runStartedAt: r.startedAt,
+                  runFinishedAt: r.finishedAt,
+                  fetched: r.fetched,
+                  inserted: r.inserted,
+                  unchanged: r.unchanged,
+                  revised: r.revised,
+                  error: failedResult ? r.error : null,
+                  runStartedBy: "pg_cron_or_authenticated_operator",
+                },
+              }];
+            });
+            if (coverageRows.length) {
+              const { error: coverageError } = await supabaseAdmin
+                .from("reality_data_coverage")
+                .insert(coverageRows as never);
+              if (coverageError) throw coverageError;
+            }
+          } catch (error) {
+            coverageHistoryError = error instanceof Error ? error.message : String(error);
+            console.error("[future-os-ingestion] coverage history write failed", coverageHistoryError);
+          }
+
           const summary = {
             startedAt,
-            finishedAt: new Date().toISOString(),
+            finishedAt,
             sourcesAttempted: results.length,
             sourcesFailed: failed,
+            coverageHistoryError: coverageHistoryError ?? null,
             results,
             semantics: {
               availableAt: "conservative retrieval cutoff unless publisher release time is independently verified",
