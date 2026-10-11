@@ -14,6 +14,9 @@ export type ResearchAction = {
 };
 
 export function prioritizeResearch(state: ResearchState): ResearchAction[] {
+  // Mechanism tests, backtests and retraining can only be as informative as the
+  // data they run on, so their value is discounted by data quality.
+  const q = Math.max(0, Math.min(1, Number.isFinite(state.dataQuality) ? state.dataQuality : 0));
   const actions: ResearchAction[] = [
     {
       priority: 0,
@@ -25,13 +28,13 @@ export function prioritizeResearch(state: ResearchState): ResearchAction[] {
       priority: 0,
       action: "TEST_MECHANISM",
       reason: "Konkurenční mechanismy nejsou dostatečně rozlišené.",
-      expectedValue: state.modelDisagreement * state.uncertainty,
+      expectedValue: state.modelDisagreement * state.uncertainty * q,
     },
     {
       priority: 0,
       action: "RUN_BACKTEST",
       reason: "Nejistota vyžaduje ověření proti historickým out-of-sample výsledkům.",
-      expectedValue: state.uncertainty * 0.8,
+      expectedValue: state.uncertainty * 0.8 * q,
     },
     {
       priority: 0,
@@ -43,7 +46,7 @@ export function prioritizeResearch(state: ResearchState): ResearchAction[] {
       priority: 0,
       action: "RETRAIN",
       reason: "Rozpor modelů nebo režimový zlom může znamenat ztrátu relevance Champion modelu.",
-      expectedValue: Math.max(state.modelDisagreement, state.regimeRisk) * 0.9,
+      expectedValue: Math.max(state.modelDisagreement, state.regimeRisk) * 0.9 * q,
     },
   ];
   return actions
