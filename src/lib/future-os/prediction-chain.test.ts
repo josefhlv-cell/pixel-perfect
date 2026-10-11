@@ -192,4 +192,48 @@ describe("Future OS prediction chain without a database", () => {
     expect(parseEvidenceNumericValue(radar.currentState["macro_indicator:hpi"])).toBe(2060);
     expect(radar.modelReady).toBe(false);
   });
+  
+  it("selects the newest effective parent observation regardless of input order", () => {
+    const older = row(0, "rate", 1000, month(0));
+    const newer = row(2, "rate", 1020, month(3));
+    const effects = propagateCausalSignal(
+      [{
+        edgeKey: "rate-to-hpi",
+        parent: "macro_indicator:rate",
+        child: "macro_indicator:hpi",
+        expectedSign: 1,
+        lagMinDays: 30,
+        lagMaxDays: 90,
+        strength: 0.8,
+        confidence: 0.5,
+        modelVersion: "local-chain-check",
+      }],
+      [newer, older],
+      month(4),
+    );
+    expect(effects).toHaveLength(1);
+    expect(effects[0]?.parentEvidenceId).toBe(newer.id);
+    expect(effects[0]?.parentValue).toBe(1020);
+  });
+
+  it("does not propagate evidence from a future availability date", () => {
+    const future = row(2, "rate", 1020, month(6));
+    const effects = propagateCausalSignal(
+      [{
+        edgeKey: "rate-to-hpi",
+        parent: "macro_indicator:rate",
+        child: "macro_indicator:hpi",
+        expectedSign: 1,
+        lagMinDays: 30,
+        lagMaxDays: 90,
+        strength: 0.8,
+        confidence: 0.5,
+        modelVersion: "local-chain-check",
+      }],
+      [future],
+      month(4),
+    );
+    expect(effects).toHaveLength(0);
+  });
+
 });
