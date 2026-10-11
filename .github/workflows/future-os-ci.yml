@@ -17,6 +17,10 @@ jobs:
     name: Lint, test, and production build
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      NPM_CONFIG_FUND: false
+      NPM_CONFIG_AUDIT: false
+      HUSKY: 0
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,31 +30,53 @@ jobs:
         with:
           bun-version: 1.3.5
 
-      - name: Record runtime versions
+      - name: Show environment and tool versions
+        shell: bash
         run: |
-          {
-            echo "## Runtime"
-            echo '---'
-            bun --version
-            node --version
-            echo '---'
-          } >> "$GITHUB_STEP_SUMMARY"
+          set -euxo pipefail
+          echo "## Runtime"
+          echo "---"
+          echo "Node: $(node --version)"
+          echo "Bun: $(bun --version)"
+          echo "OS: $(uname -a)"
+          echo "PWD: $(pwd)"
+          echo "---"
+          echo "npm config"
+          npm config get registry || true
+          echo "bun config"
+          bun pm --help >/dev/null || true
 
       - name: Install locked dependencies
         id: install
-        run: bun install --frozen-lockfile
+        shell: bash
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euxo pipefail
+          echo "Using registry: $(npm config get registry)"
+          echo "NPM_TOKEN present: ${NPM_TOKEN:+yes}"
+          bun install --frozen-lockfile --verbose
 
       - name: ESLint
         id: lint
-        run: bun run lint
+        shell: bash
+        run: |
+          set -euxo pipefail
+          bun run lint
 
       - name: Unit and contract tests
         id: test
-        run: bun run test
+        shell: bash
+        run: |
+          set -euxo pipefail
+          bun run test
 
       - name: Production build
         id: build
-        run: bun run build
+        shell: bash
+        run: |
+          set -euxo pipefail
+          bun run build
 
       - name: Write check summary
         if: always()
