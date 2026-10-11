@@ -4,7 +4,7 @@ CREATE OR REPLACE FUNCTION public.schedule_future_os_ingestion(_secret text)
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, cron, net
+SET search_path = pg_catalog
 AS $$
 BEGIN
   IF _secret IS NULL OR length(_secret) < 32 THEN
