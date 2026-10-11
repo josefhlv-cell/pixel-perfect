@@ -47,3 +47,8 @@ Never activate this job before the route is deployed and authentication is confi
 - Verify each adapter independently with a controlled manual run and inspect the result.
 - Only then activate the pg_cron job.
 - Roll back by unscheduling the job first, then revert the application/migration through the normal migration policy. Do not delete evidence history to roll back code.
+
+
+## Forecast outcome integrity
+
+Migration `0012_guard_forecast_outcome_timing.sql` adds a database trigger that rejects an outcome whose `outcome_as_of` is earlier than `data_cutoff + horizon_days`, or later than the current time. This is a guardrail, not a substitute for verifying that the outcome timestamp came from the publisher's real availability time. Apply it only through the approved migration process after reviewing existing scoring semantics and testing representative horizons.
