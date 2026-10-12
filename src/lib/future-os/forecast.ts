@@ -21,17 +21,28 @@ export type ForecastScore = {
 };
 
 export function validateForecastInput(input: ForecastInput): void {
+  // NaN/Infinity silently pass ordering comparisons, so reject them explicitly.
+  if (![input.p10, input.p50, input.p90].every(Number.isFinite)) {
+    throw new Error("Forecast quantiles must be finite numbers.");
+  }
   if (input.p10 > input.p50 || input.p50 > input.p90) {
     throw new Error("Forecast quantiles must satisfy p10 <= p50 <= p90.");
   }
-  if (input.probabilityPositive < 0 || input.probabilityPositive > 1) {
-    throw new Error("Forecast probability must be within [0,1].");
+  if (
+    !Number.isFinite(input.probabilityPositive) ||
+    input.probabilityPositive < 0 ||
+    input.probabilityPositive > 1
+  ) {
+    throw new Error("Forecast probability must be a finite number within [0,1].");
   }
   assertNoFutureEvidence(input.evidence, input.dataCutoff);
 }
 
 export function scoreForecast(input: ForecastInput, realized: number): ForecastScore {
   validateForecastInput(input);
+  if (!Number.isFinite(realized)) {
+    throw new Error("Realized outcome must be a finite number.");
+  }
   const insideInterval = realized >= input.p10 && realized <= input.p90;
   const directionalHit = input.p50 >= 0 ? realized >= 0 : realized < 0;
   const probability = Math.min(

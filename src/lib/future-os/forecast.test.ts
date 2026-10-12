@@ -61,6 +61,20 @@ describe("Future OS forecast integrity", () => {
     expect(score.brierScore).toBeCloseTo(0.09);
     expect(score.absoluteError).toBe(1);
   });
+  it("rejects NaN or infinite quantiles", () => {
+    expect(() => validateForecastInput({ ...input, p50: Number.NaN })).toThrow(/finite/);
+    expect(() => validateForecastInput({ ...input, p90: Infinity })).toThrow(/finite/);
+  });
+  it("rejects NaN or out-of-range probability", () => {
+    expect(() => validateForecastInput({ ...input, probabilityPositive: Number.NaN })).toThrow();
+    expect(() => validateForecastInput({ ...input, probabilityPositive: 1.2 })).toThrow();
+  });
+  it("rejects a non-finite realized outcome when scoring", () => {
+    expect(() => scoreForecast(input, Number.NaN)).toThrow(/Realized/);
+  });
+  it("rejects an invalid data cutoff", () => {
+    expect(() => validateForecastInput({ ...input, dataCutoff: "bad" })).toThrow(/cutoff/);
+  });
   it("reports DATA_STARVED rather than fabricating a future", () => {
     const radar = buildFutureRadarFoundation([], "2026-02-03T00:00:00Z", ["price_growth"]);
     expect(radar.status).toBe("DATA_STARVED");
