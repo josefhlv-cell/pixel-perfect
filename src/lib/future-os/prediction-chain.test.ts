@@ -152,7 +152,11 @@ describe("Future OS prediction chain without a database", () => {
         p90: draft.p90,
         probabilityPositive: draft.probability_positive,
       },
-      { realizedValue: realizedLevel, baselineValue: baseline },
+      {
+        realizedValue: realizedLevel,
+        baselineValue: baseline,
+        outcomeObservedAt: "2025-05-15T00:00:00.000Z",
+      },
     );
     expect(point.insideInterval).toBe(true);
     expect(point.absoluteError).toBe(0);
