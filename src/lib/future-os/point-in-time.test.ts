@@ -128,7 +128,7 @@ describe("Future OS point-in-time integrity", () => {
     const q = computeDataQuality(rows);
     expect(q.independence).toBeLessThan(1);
   });
-  
+
   it("rejects evidence with a missing or invalid availableAt timestamp", () => {
     const missing = base({ availableAt: "" });
     const invalid = base({ availableAt: "not-a-date" });
@@ -149,5 +149,4 @@ describe("Future OS point-in-time integrity", () => {
     );
     expect(() => isAvailableAt(base(), "not-a-date")).toThrow(/Invalid point-in-time cutoff/);
   });
-
 });
