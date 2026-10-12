@@ -38,7 +38,9 @@ export function propagateCausalSignal(
 
     // An edge has no geography/source selector. Refuse to silently mix distinct
     // geographic series; callers must disambiguate them before causal propagation.
-    const geographies = new Set(candidates.map((row) => row.geographyType + ":" + row.geographyKey));
+    const geographies = new Set(
+      candidates.map((row) => row.geographyType + ":" + row.geographyKey),
+    );
     if (geographies.size !== 1) return [];
 
     // Select the newest effective period, then latest available revision for that period.
