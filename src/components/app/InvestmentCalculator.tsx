@@ -118,6 +118,7 @@ export function InvestmentCalculator({
   };
 
   const paydown = r.loan - r.exitDebt;
+  const dscr = r.debtServiceCoverageRatio == null ? null : r.debtServiceCoverageRatio.toLocaleString("cs-CZ", { maximumFractionDigits: 2 }) + "×";
   return (
     <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
       <div className="space-y-3 self-start">
