@@ -266,10 +266,7 @@ export function calculateTotalReturn(input: InvestmentInput): InvestmentResult {
   const monthlyCashFlow = monthlyNOI - monthlyMortgage;
   const debtServiceCoverageRatio =
     monthlyMortgage > 0 ? Math.round((monthlyNOI / monthlyMortgage) * 100) / 100 : null;
-  const occupancyRate = Math.max(
-    0,
-    1 - bpsToRate(Math.min(10_000, Math.max(0, input.vacancyBps))),
-  );
+  const occupancyRate = Math.max(0, 1 - bpsToRate(Math.min(10_000, Math.max(0, input.vacancyBps))));
   const breakEvenRent =
     occupancyRate > 0 ? Math.ceil((input.monthlyExpenses + monthlyMortgage) / occupancyRate) : 0;
 
