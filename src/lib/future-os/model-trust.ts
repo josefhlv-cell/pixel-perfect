@@ -24,6 +24,11 @@ export function evaluateModelTrust(
     trustScore -= 0.4;
     reasons.push("Byl detekován režimový zlom trhu.");
   }
+  if (health.status === "INSUFFICIENT_DATA") {
+    // Lack of evidence is not evidence of good performance.
+    trustScore = Math.min(trustScore, 0.65);
+    reasons.push("Pro ověření predikční výkonnosti není dostatek platných výsledků.");
+  }
   if (health.status === "DEGRADING") {
     trustScore -= 0.2;
     reasons.push("Predikční chyba se zhoršuje.");
