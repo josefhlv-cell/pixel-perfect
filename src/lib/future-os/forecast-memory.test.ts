@@ -30,21 +30,21 @@ function outcome(errorSnapshot: Record<string, unknown>): ForecastMemoryOutcome 
 describe("forecast memory lessons", () => {
   it("does not treat absent error metrics as zero error", () => {
     const result = buildForecastLesson(forecast, outcome({}));
-    expect(result.lessonSnapshot.meanAbsError).toBeNull();
-    expect(result.lessonSnapshot.validErrorCount).toBe(0);
+    expect(result.lessonSnapshot["meanAbsError"]).toBeNull();
+    expect(result.lessonSnapshot["validErrorCount"]).toBe(0);
   });
 
   it("ignores non-finite error values", () => {
     const result = buildForecastLesson(forecast, outcome({ a: 2, b: Number.NaN, c: Infinity }));
-    expect(result.lessonSnapshot.meanAbsError).toBe(2);
-    expect(result.lessonSnapshot.validErrorCount).toBe(1);
+    expect(result.lessonSnapshot["meanAbsError"]).toBe(2);
+    expect(result.lessonSnapshot["validErrorCount"]).toBe(1);
   });
 
   it("preserves provenance and computes forecast age", () => {
     const result = buildForecastLesson(forecast, outcome({ absoluteError: -3 }));
-    expect(result.lessonSnapshot.provenanceHash).toBe("sha256:example");
-    expect(result.lessonSnapshot.forecastAgeDays).toBe(2);
-    expect(result.lessonSnapshot.meanAbsError).toBe(3);
+    expect(result.lessonSnapshot["provenanceHash"]).toBe("sha256:example");
+    expect(result.lessonSnapshot["forecastAgeDays"]).toBe(2);
+    expect(result.lessonSnapshot["meanAbsError"]).toBe(3);
   });
 
   it("does not emit NaN age for malformed timestamps", () => {
@@ -52,6 +52,6 @@ describe("forecast memory lessons", () => {
       { ...forecast, recordedAt: "bad-date" },
       outcome({ absoluteError: 1 }),
     );
-    expect(result.lessonSnapshot.forecastAgeDays).toBeNull();
+    expect(result.lessonSnapshot["forecastAgeDays"]).toBeNull();
   });
 });
