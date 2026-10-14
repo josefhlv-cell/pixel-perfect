@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { evaluateProbabilisticForecasts, type ProbabilisticForecastObservation } from "./probabilistic-metrics";
+import {
+  evaluateProbabilisticForecasts,
+  type ProbabilisticForecastObservation,
+} from "./probabilistic-metrics";
 
-function row(overrides: Partial<ProbabilisticForecastObservation> = {}): ProbabilisticForecastObservation {
+function row(
+  overrides: Partial<ProbabilisticForecastObservation> = {},
+): ProbabilisticForecastObservation {
   return {
     issuedAt: "2025-01-01T00:00:00Z",
     outcomeObservedAt: "2025-02-01T00:00:00Z",
@@ -32,34 +37,34 @@ describe("probabilistic forecast diagnostics", () => {
   });
 
   it("excludes outcomes that were not known at the evaluation cutoff", () => {
-    const result = evaluateProbabilisticForecasts([
-      row(),
-      row({ outcomeObservedAt: "2025-04-01T00:00:00Z", actual: 100 }),
-    ], "2025-03-01T00:00:00Z");
+    const result = evaluateProbabilisticForecasts(
+      [row(), row({ outcomeObservedAt: "2025-04-01T00:00:00Z", actual: 100 })],
+      "2025-03-01T00:00:00Z",
+    );
     expect(result.sampleCount).toBe(1);
     expect(result.mae).toBe(0);
   });
 
   it("penalizes observations outside the prediction interval", () => {
     const covered = evaluateProbabilisticForecasts([row()], "2025-03-01T00:00:00Z");
-    const missed = evaluateProbabilisticForecasts([
-      row({ actual: 10 }),
-    ], "2025-03-01T00:00:00Z");
+    const missed = evaluateProbabilisticForecasts([row({ actual: 10 })], "2025-03-01T00:00:00Z");
     expect(missed.intervalCoverage80).toBe(0);
-    expect(missed.intervalScore80).toBeGreaterThan(covered.intervalScore80);
+    expect(missed.intervalScore80).toBeGreaterThan(covered.intervalScore80 ?? 0);
   });
 
   it("ignores malformed rows instead of corrupting aggregate metrics", () => {
-    const result = evaluateProbabilisticForecasts([
-      row(),
-      row({ probabilityPositive: 2 }),
-      row({ p10: Number.NaN }),
-    ], "2025-03-01T00:00:00Z");
+    const result = evaluateProbabilisticForecasts(
+      [row(), row({ probabilityPositive: 2 }), row({ p10: Number.NaN })],
+      "2025-03-01T00:00:00Z",
+    );
     expect(result.sampleCount).toBe(1);
   });
 
   it("does not invent directional accuracy when every forecast predicts no change", () => {
-    const result = evaluateProbabilisticForecasts([row({ p50: 1, baselineValue: 1 })], "2025-03-01T00:00:00Z");
+    const result = evaluateProbabilisticForecasts(
+      [row({ p50: 1, baselineValue: 1 })],
+      "2025-03-01T00:00:00Z",
+    );
     expect(result.directionalSampleCount).toBe(0);
     expect(result.directionalAccuracy).toBeNull();
   });
@@ -73,8 +78,14 @@ describe("probabilistic forecast diagnostics", () => {
     expect(result.calibrationBins[0]?.meanPredictedProbability).toBeNull();
     expect(result.calibrationBins[0]?.observedFrequency).toBeNull();
     expect(() => evaluateProbabilisticForecasts([], "bad-date")).toThrow(/asOf/);
-    expect(() => evaluateProbabilisticForecasts([], "2025-03-01T00:00:00Z", { binCount: 0 })).toThrow(/binCount/);
-    expect(() => evaluateProbabilisticForecasts([], "2025-03-01T00:00:00Z", { alpha: 1 })).toThrow(/alpha/);
-    expect(() => evaluateProbabilisticForecasts([], "2025-03-01T00:00:00Z", { alpha: 0.1 })).toThrow(/alpha/);
+    expect(() =>
+      evaluateProbabilisticForecasts([], "2025-03-01T00:00:00Z", { binCount: 0 }),
+    ).toThrow(/binCount/);
+    expect(() => evaluateProbabilisticForecasts([], "2025-03-01T00:00:00Z", { alpha: 1 })).toThrow(
+      /alpha/,
+    );
+    expect(() =>
+      evaluateProbabilisticForecasts([], "2025-03-01T00:00:00Z", { alpha: 0.1 }),
+    ).toThrow(/alpha/);
   });
 });

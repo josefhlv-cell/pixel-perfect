@@ -50,7 +50,7 @@ function validateObservation(row: ProbabilisticForecastObservation): boolean {
     Number.isFinite(row.probabilityPositive) &&
     row.probabilityPositive >= 0 &&
     row.probabilityPositive <= 1 &&
-    Number.isFinite(row.baselineValue)
+    Number.isFinite(row.baselineValue),
   );
 }
 
@@ -67,7 +67,9 @@ export function evaluateProbabilisticForecasts(
     throw new RangeError("binCount must be an integer between 1 and 100");
   }
   if (alpha !== 0.2) {
-    throw new RangeError("alpha must be 0.2 because these metrics are defined for the p10-p90 80% interval");
+    throw new RangeError(
+      "alpha must be 0.2 because these metrics are defined for the p10-p90 80% interval",
+    );
   }
 
   const rows = observations
@@ -127,7 +129,9 @@ export function evaluateProbabilisticForecasts(
     const upperProbability = (i + 1) / binCount;
     const bin = rows.filter((row) => {
       const p = row.probabilityPositive;
-      return p >= lowerProbability && (i === binCount - 1 ? p <= upperProbability : p < upperProbability);
+      return (
+        p >= lowerProbability && (i === binCount - 1 ? p <= upperProbability : p < upperProbability)
+      );
     });
     return {
       lowerProbability,
