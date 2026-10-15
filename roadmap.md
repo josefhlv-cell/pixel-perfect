@@ -9,3 +9,6 @@
 - [x] #6 forecast.ts / forecast-evaluation.ts — interval calibration, finite samples, no credit for a flat direction
 - [x] #3, #5 superseded — ČNB adapter is on main; old server file is not restored
 - [ ] #2 → #8, #1 — do not merge wholesale; split review incl. migrations/RLS
+- [x] #2 part 1: walk-forward runner, prediction journal, runner state, experiment config/integrity, trajectory graph, vintage as-of/audit/snapshot, backtest metrics (pure, tested)
+- [ ] #2 rest: baseline-forecast(s) (strict-type fixes), house-price server fn + UI, dashboard/market edits, migrations
+- [ ] Real-data walk-forward backtest vs naive baseline (needs evidence history with vintages)
