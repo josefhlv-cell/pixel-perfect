@@ -22,13 +22,23 @@ describe("baseline forecasts", () => {
 
   it("drift extrapolates the average step", () => {
     const history = [q(0, 100), q(1, 102), q(2, 104)];
-    const r = forecastBaseline({ history, origin: history[2]!.availableAt, horizonSteps: 2, method: "DRIFT" });
+    const r = forecastBaseline({
+      history,
+      origin: history[2]!.availableAt,
+      horizonSteps: 2,
+      method: "DRIFT",
+    });
     expect(r.prediction).toBe(108);
   });
 
   it("refuses to forecast with no available data", () => {
     expect(() =>
-      forecastBaseline({ history: [q(5, 1)], origin: "2019-01-01", horizonSteps: 1, method: "LAST_VALUE" }),
+      forecastBaseline({
+        history: [q(5, 1)],
+        origin: "2019-01-01",
+        horizonSteps: 1,
+        method: "LAST_VALUE",
+      }),
     ).toThrow();
   });
 

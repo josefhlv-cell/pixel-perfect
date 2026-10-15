@@ -51,7 +51,8 @@ export function forecastBaseline(input: {
     prediction = last.value + perStep * input.horizonSteps;
   } else {
     const window = input.rollingWindow ?? 4;
-    if (!Number.isInteger(window) || window < 1) throw new Error("rollingWindow must be a positive integer.");
+    if (!Number.isInteger(window) || window < 1)
+      throw new Error("rollingWindow must be a positive integer.");
     const tail = history.slice(-window);
     prediction = tail.reduce((s, p) => s + p.value, 0) / tail.length;
   }
