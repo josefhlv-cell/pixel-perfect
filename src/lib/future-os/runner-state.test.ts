@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assertRevealState, transitionRunner } from "./runner-state";
+import { assertRevealState, transitionRunner, type RunnerState } from "./runner-state";
 
 describe("runner state machine", () => {
   it("permits reveal only after prediction commit", () => {
