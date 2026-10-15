@@ -8,7 +8,7 @@ describe("runner state machine", () => {
   });
 
   it("follows the preregistered prediction/reveal ordering", () => {
-    let state = "INIT" as const;
+    let state: RunnerState = "INIT";
     state = transitionRunner(state, "FIT_COMPLETE");
     state = transitionRunner(state, "PREDICTION_CREATED");
     state = transitionRunner(state, "PREDICTION_COMMITTED");
