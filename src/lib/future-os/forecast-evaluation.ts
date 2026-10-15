@@ -7,6 +7,33 @@ export type ForecastEvaluationSample = {
 
 export type PairedMetric = "MAE" | "BRIER" | "LOG_LOSS" | "DIRECTIONAL_ERROR";
 
+function validateSamples(samples: ForecastEvaluationSample[]): void {
+  for (const [index, sample] of samples.entries()) {
+    for (const [name, value] of [
+      ["actual", sample.actual],
+      ["baselineActual", sample.baselineActual],
+      ["candidate.p50", sample.candidate?.p50],
+      ["benchmark.p50", sample.benchmark?.p50],
+      ["candidate.probabilityPositive", sample.candidate?.probabilityPositive],
+      ["benchmark.probabilityPositive", sample.benchmark?.probabilityPositive],
+    ] as const) {
+      if (!Number.isFinite(value)) {
+        throw new RangeError(`Invalid evaluation sample at index ${index}: ${name} must be finite`);
+      }
+    }
+    for (const [name, probability] of [
+      ["candidate.probabilityPositive", sample.candidate.probabilityPositive],
+      ["benchmark.probabilityPositive", sample.benchmark.probabilityPositive],
+    ] as const) {
+      if (probability < 0 || probability > 1) {
+        throw new RangeError(
+          `Invalid evaluation sample at index ${index}: ${name} must be between 0 and 1`,
+        );
+      }
+    }
+  }
+}
+
 function metric(s: ForecastEvaluationSample, side: "candidate" | "benchmark", kind: PairedMetric) {
   const f = s[side];
   const actualChange = s.actual - s.baselineActual;
@@ -16,7 +43,9 @@ function metric(s: ForecastEvaluationSample, side: "candidate" | "benchmark", ki
   const y = actualChange > 0 ? 1 : 0;
   if (kind === "BRIER") return (p - y) ** 2;
   if (kind === "LOG_LOSS") return -(y * Math.log(p) + (1 - y) * Math.log(1 - p));
-  return Math.sign(predictedChange) === Math.sign(actualChange) ? 0 : 1;
+  const predictedDirection = Math.sign(predictedChange);
+  const actualDirection = Math.sign(actualChange);
+  return predictedDirection !== 0 && predictedDirection === actualDirection ? 0 : 1;
 }
 
 /** Paired block bootstrap; preserves short-range serial dependence. */
@@ -26,7 +55,17 @@ export function compareForecastToBenchmark(
   blockLength = 4,
   iterations = 1000,
 ) {
+  if (!["MAE", "BRIER", "LOG_LOSS", "DIRECTIONAL_ERROR"].includes(kind)) {
+    throw new RangeError("kind must be a supported paired metric");
+  }
+  validateSamples(samples);
   if (samples.length < 20) return null;
+  if (!Number.isInteger(iterations) || iterations < 100) {
+    throw new RangeError("iterations must be an integer >= 100");
+  }
+  if (!Number.isInteger(blockLength) || blockLength < 1) {
+    throw new RangeError("blockLength must be an integer >= 1");
+  }
   const deltas = samples.map((s) => metric(s, "candidate", kind) - metric(s, "benchmark", kind));
   const mean = deltas.reduce((a, b) => a + b, 0) / deltas.length;
   let state = 0x9e3779b9;

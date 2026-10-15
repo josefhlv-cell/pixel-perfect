@@ -33,6 +33,26 @@ describe("paired forecast evaluation", () => {
     expect(result!.significant).toBe(true);
   });
 
+  it("rejects a non-finite sample instead of scoring it", () => {
+    expect(() =>
+      compareForecastToBenchmark(
+        Array.from({ length: 20 }, () => ({ ...sample(110, 105), actual: Number.NaN })),
+        "MAE",
+      ),
+    ).toThrow(/must be finite/);
+  });
+
+  it("does not treat a zero predicted move as a correct direction", () => {
+    const result = compareForecastToBenchmark(
+      Array.from({ length: 20 }, () => sample(100, 105)),
+      "DIRECTIONAL_ERROR",
+      4,
+      200,
+    );
+    expect(result).not.toBeNull();
+    expect(result!.candidateMean).toBe(1);
+  });
+
   it("keeps probabilistic scores bounded for extreme probabilities", () => {
     const samples = Array.from({ length: 20 }, () => ({
       ...sample(110, 110),
