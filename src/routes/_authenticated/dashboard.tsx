@@ -18,6 +18,7 @@ import {
 } from "@/components/app/shared";
 import { ValueChart, SERIES } from "@/components/app/Charts";
 import { AiRunner } from "@/components/app/AiPanel";
+import { HousePriceForecast } from "@/components/app/HousePriceForecast";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -92,6 +93,8 @@ function Dashboard() {
         />
         <Kpi label="Watchlist" value={wl.length} />
       </div>
+
+      <HousePriceForecast compact />
 
       <Section
         title="Vývoj portfolia"
