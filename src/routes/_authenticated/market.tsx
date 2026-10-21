@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { marketQuery } from "@/lib/queries";
 import { formatCZK } from "@/lib/format";
 import { pageHead } from "@/lib/head";
-import { Kpi, PageHeader, SampleBadge, Section } from "@/components/app/shared";
+import { Kpi, PageHeader, Section, Empty } from "@/components/app/shared";
 import { Bars, MultiLine } from "@/components/app/Charts";
 import { AiRunner } from "@/components/app/AiPanel";
 import { cn } from "@/lib/utils";
@@ -45,22 +45,32 @@ function Market() {
   const latest = data.filter((r) => r.period === latestPeriod);
   const first = (c: string) =>
     filtered.filter((r) => r.city === c).sort((a, b) => a.period.localeCompare(b.period))[0];
-  const avg = Math.round(
-    latest.reduce((a, r) => a + (r.avg_asking_price_m2 ?? 0), 0) / Math.max(1, latest.length),
-  );
-  const avgRent = Math.round(
-    latest.reduce((a, r) => a + (r.avg_rent_m2 ?? 0), 0) / Math.max(1, latest.length),
-  );
+  const avg = latest.length
+    ? Math.round(latest.reduce((a, r) => a + (r.avg_asking_price_m2 ?? 0), 0) / latest.length)
+    : null;
+  const avgRent = latest.length
+    ? Math.round(latest.reduce((a, r) => a + (r.avg_rent_m2 ?? 0), 0) / latest.length)
+    : null;
+  const gross =
+    avg && avgRent ? `${(((avgRent * 12) / avg) * 100).toFixed(2).replace(".", ",")} %` : "—";
+
+  if (data.length === 0) {
+    return (
+      <div className="space-y-5">
+        <PageHeader title="Trh" sub="Ostrý provoz. Ukázkové řady se nezobrazují." />
+        <Empty>
+          Živé tržní statistiky zatím nejsou. Vzniknou z neukázkových nabídek po běhu Deal Hunteru
+          nebo watchdogu.
+        </Empty>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
       <PageHeader
         title="Trh"
-        sub={
-          <span className="inline-flex items-center gap-2">
-            Zdroj: <SampleBadge /> · připraveno pro napojení skutečných datových providerů
-          </span>
-        }
+        sub="Cena a nájem jen z živých, neukázkových statistik. Prázdný trh znamená, že je ještě nikdo nesesbíral."
         actions={
           <div className="flex gap-0.5 rounded-md border p-0.5">
             {(Object.keys(RANGE) as R[]).map((r) => (
@@ -79,13 +89,13 @@ function Market() {
         }
       />
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-        <Kpi label="Prům. nabídková cena" value={`${formatCZK(avg)}/m²`} sub="napříč městy" />
-        <Kpi label="Prům. nájem" value={`${formatCZK(avgRent)}/m²`} />
         <Kpi
-          label="Hrubý výnos trhu"
-          value={`${(((avgRent * 12) / avg) * 100).toFixed(2).replace(".", ",")} %`}
-          sub="nájem×12 / cena"
+          label="Prům. nabídková cena"
+          value={avg == null ? "—" : `${formatCZK(avg)}/m²`}
+          sub="napříč městy"
         />
+        <Kpi label="Prům. nájem" value={avgRent == null ? "—" : `${formatCZK(avgRent)}/m²`} />
+        <Kpi label="Hrubý výnos trhu" value={gross} sub="nájem×12 / cena" />
         <Kpi label="Sledovaná města" value={cities.length} />
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
@@ -158,8 +168,8 @@ function Market() {
             </table>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            Změna za zvolené období. Ukázková data pokrývají 3 kvartály – delší rozsahy zobrazí vše
-            dostupné.
+            Změna za zvolené období. Delší rozsah ukáže jen období, pro která existuje živá
+            statistika.
           </p>
         </Section>
       </div>

@@ -40,12 +40,21 @@ export interface EnrichedListing {
   isSample: boolean;
 }
 
-/** Latest market stat per city. */
+/** Latest market stat per city. A live row always beats a sample row for the same city. */
 export function latestStatsByCity(rows: MarketRow[]): Map<string, MarketStat> {
   const m = new Map<string, MarketRow>();
   for (const r of rows) {
     const cur = m.get(r.city);
-    if (!cur || cur.period < r.period) m.set(r.city, r);
+    if (!cur) {
+      m.set(r.city, r);
+      continue;
+    }
+    if (!cur.is_sample && r.is_sample) continue;
+    if (cur.is_sample && !r.is_sample) {
+      m.set(r.city, r);
+      continue;
+    }
+    if (cur.period < r.period) m.set(r.city, r);
   }
   return new Map([...m].map(([k, r]) => [k, r as MarketStat]));
 }

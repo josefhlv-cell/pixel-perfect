@@ -29,7 +29,7 @@ import { isActive } from "@/lib/freshness";
 import { pageHead } from "@/lib/head";
 import { ListingCard } from "@/components/app/ListingCard";
 import { ComparePanel } from "@/components/app/ComparePanel";
-import { Empty, PageHeader, SampleBadge } from "@/components/app/shared";
+import { Empty, PageHeader } from "@/components/app/shared";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -385,7 +385,6 @@ function DealHunter() {
           Potential deals
         </h2>
         <span className="num text-xs text-muted-foreground">({results.length})</span>
-        <SampleBadge />
         {compareIds.length > 0 && (
           <span className="text-xs text-muted-foreground">Porovnání: {compareIds.length}/3</span>
         )}

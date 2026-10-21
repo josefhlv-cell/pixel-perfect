@@ -52,6 +52,7 @@ export const runAiAnalysis = createServerFn({ method: "POST" })
         const { data: stats } = await supabase
           .from("market_statistics")
           .select("city,period,avg_asking_price_m2,avg_rent_m2,listings_count,is_sample")
+          .eq("is_sample", false)
           .order("period");
         const r = await ai.summarizeMarket({ stats: (stats ?? []) as Record<string, unknown>[] });
         await logUsage(r);
@@ -89,10 +90,11 @@ export const runAiAnalysis = createServerFn({ method: "POST" })
         .eq("id", data.listingId)
         .single();
       if (!l) throw new Error("Nemovitost nenalezena");
+      if (l.is_sample) throw new Error("Ukázková nabídka není součástí ostrého provozu.");
       propertyId = l.property_id;
       const [{ data: prop }, { data: stats }, { data: snaps }] = await Promise.all([
         supabase.from("properties").select("*").eq("id", l.property_id).maybeSingle(),
-        supabase.from("market_statistics").select("*"),
+        supabase.from("market_statistics").select("*").eq("is_sample", false),
         supabase.from("listing_snapshots").select("*").eq("listing_id", l.id),
       ]);
       const e = enrichListing(l, prop ?? null, latestStatsByCity(stats ?? []), snaps ?? []);

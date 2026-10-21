@@ -83,7 +83,8 @@ export async function runAgentPipeline(
   const { data: existingProps } = await supabase
     .from("properties")
     .select("id,city,area_m2,disposition,latitude,longitude")
-    .or(`created_by.eq.${userId},is_sample.eq.true`);
+    .eq("created_by", userId)
+    .eq("is_sample", false);
   let newCount = 0;
 
   // Process candidates sequentially. This prevents concurrent searches from

@@ -8,14 +8,7 @@ import { formatBps, formatCZK, formatRelative } from "@/lib/format";
 import { isActive } from "@/lib/freshness";
 import { pageHead } from "@/lib/head";
 import { t } from "@/lib/i18n";
-import {
-  Empty,
-  Kpi,
-  PageHeader,
-  PriorityBadge,
-  SampleBadge,
-  Section,
-} from "@/components/app/shared";
+import { Empty, Kpi, PageHeader, PriorityBadge, Section } from "@/components/app/shared";
 import { ValueChart, SERIES } from "@/components/app/Charts";
 import { AiRunner } from "@/components/app/AiPanel";
 import { Button } from "@/components/ui/button";
@@ -81,15 +74,7 @@ function Dashboard() {
           value={totals.yieldBps == null ? "—" : formatBps(totals.yieldBps)}
           sub="hrubý, z kupní ceny"
         />
-        <Kpi
-          label="Aktivní dealy"
-          value={active.length}
-          sub={
-            <span className="inline-flex items-center gap-1">
-              vč. <SampleBadge />
-            </span>
-          }
-        />
+        <Kpi label="Aktivní dealy" value={active.length} sub="jen živé nabídky" />
         <Kpi label="Watchlist" value={wl.length} />
       </div>
 
@@ -148,29 +133,32 @@ function Dashboard() {
             </Link>
           }
         >
-          <div className="mb-2 text-xs text-muted-foreground">
-            Zdroj: <SampleBadge /> – datový zdroj není připojen.
-          </div>
-          <ul className="divide-y">
-            {top.map((e) => (
-              <li key={e.listing.id}>
-                <Link
-                  to="/properties/$id"
-                  params={{ id: e.listing.id }}
-                  className="flex items-center gap-3 py-2 hover:text-primary"
-                >
-                  <PriorityBadge value={e.priority} />
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm">{e.listing.title}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {e.city} · výnos {formatBps(e.grossYieldBps)}
+          {top.length === 0 ? (
+            <Empty>
+              Žádné živé nabídky. Deal Hunter je stáhne z portálů; ukázkové inzeráty se nezobrazují.
+            </Empty>
+          ) : (
+            <ul className="divide-y">
+              {top.map((e) => (
+                <li key={e.listing.id}>
+                  <Link
+                    to="/properties/$id"
+                    params={{ id: e.listing.id }}
+                    className="flex items-center gap-3 py-2 hover:text-primary"
+                  >
+                    <PriorityBadge value={e.priority} />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm">{e.listing.title}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {e.city} · výnos {formatBps(e.grossYieldBps)}
+                      </div>
                     </div>
-                  </div>
-                  <div className="num text-sm">{formatCZK(e.listing.price)}</div>
-                </Link>
-              </li>
-            ))}
-          </ul>
+                    <div className="num text-sm">{formatCZK(e.listing.price)}</div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </Section>
         <Section
           title="Watchlist · poslední změny"
@@ -204,29 +192,43 @@ function Dashboard() {
             </ul>
           )}
         </Section>
-        <Section title="Trh · cena za m²" right={<SampleBadge />}>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs text-muted-foreground">
-                <th className="pb-1 font-normal">Město</th>
-                <th className="pb-1 text-right font-normal">Kč/m²</th>
-                <th className="pb-1 text-right font-normal">Nájem Kč/m²</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stats.map((s) => (
-                <tr key={s.city} className="border-t border-border/50">
-                  <td className="py-1.5">{s.city}</td>
-                  <td className="num text-right">{formatCZK(s.avg_asking_price_m2)}</td>
-                  <td className="num text-right">{formatCZK(s.avg_rent_m2)}</td>
+        <Section
+          title="Trh · cena za m²"
+          right={
+            stats.length === 0 ? null : (
+              <span className="text-xs text-muted-foreground">živé statistiky</span>
+            )
+          }
+        >
+          {stats.length === 0 ? (
+            <Empty>
+              Živá cena za m² zatím není. Vznikne z vlastních neukázkových nabídek, ne z demo
+              katalogu.
+            </Empty>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-muted-foreground">
+                  <th className="pb-1 font-normal">Město</th>
+                  <th className="pb-1 text-right font-normal">Kč/m²</th>
+                  <th className="pb-1 text-right font-normal">Nájem Kč/m²</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {stats.map((s) => (
+                  <tr key={s.city} className="border-t border-border/50">
+                    <td className="py-1.5">{s.city}</td>
+                    <td className="num text-right">{formatCZK(s.avg_asking_price_m2)}</td>
+                    <td className="num text-right">{formatCZK(s.avg_rent_m2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </Section>
         <Section title="AI Insight">
           <p className="mb-3 text-sm text-muted-foreground">
-            Krátké shrnutí trhu z dostupných (ukázkových) dat.
+            Shrnutí jen z živých statistik. Když žádné nejsou, insight to řekne a nic neodhadne.
           </p>
           <AiRunner kind="market" label="Vygenerovat insight" />
         </Section>

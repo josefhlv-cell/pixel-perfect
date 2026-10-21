@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { listingsQuery, portfolioQuery, watchlistQuery } from "@/lib/queries";
 import { formatCZK } from "@/lib/format";
 import { pageHead } from "@/lib/head";
-import { PageHeader, SampleBadge } from "@/components/app/shared";
+import { PageHeader } from "@/components/app/shared";
 import { MapLazy, type MapPoint } from "@/components/app/MapLazy";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -84,11 +84,7 @@ function MapPage() {
     <div className="space-y-4">
       <PageHeader
         title="Mapa"
-        sub={
-          <span className="inline-flex items-center gap-2">
-            Klikněte na bod pro kartu nemovitosti · <SampleBadge />
-          </span>
-        }
+        sub="Klikněte na bod pro kartu nemovitosti. Na mapě jsou jen živé nabídky, portfolio a watchlist."
       />
       <div className="flex flex-wrap gap-4 rounded-md border bg-card p-3">
         {LAYERS.map((l) => (

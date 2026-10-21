@@ -13,9 +13,13 @@ export const listingsQuery = queryOptions({
   queryKey: ["listings"],
   queryFn: async () => {
     const [l, p, m, s] = await Promise.all([
-      supabase.from("listings").select("*").order("created_at", { ascending: false }),
-      supabase.from("properties").select("*"),
-      supabase.from("market_statistics").select("*"),
+      supabase
+        .from("listings")
+        .select("*")
+        .eq("is_sample", false)
+        .order("created_at", { ascending: false }),
+      supabase.from("properties").select("*").eq("is_sample", false),
+      supabase.from("market_statistics").select("*").eq("is_sample", false),
       supabase
         .from("listing_snapshots")
         .select("id,listing_id,price,availability_status,observed_at"),
@@ -34,7 +38,11 @@ export const listingsQuery = queryOptions({
 export const marketQuery = queryOptions({
   queryKey: ["market"],
   queryFn: async () => {
-    const { data, error } = await supabase.from("market_statistics").select("*").order("period");
+    const { data, error } = await supabase
+      .from("market_statistics")
+      .select("*")
+      .eq("is_sample", false)
+      .order("period");
     if (error) throw error;
     return data;
   },
