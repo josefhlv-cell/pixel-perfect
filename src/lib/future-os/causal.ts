@@ -1,3 +1,5 @@
+import { readNumericEvidenceValue } from "./numeric-value";
+import { getEvidenceAvailableAt } from "./point-in-time";
 import type { EvidenceObservation } from "./types";
 
 export type CausalEdge = {
@@ -17,13 +19,20 @@ export function propagateCausalSignal(
   evidence: EvidenceObservation[],
   asOf: Date | string,
 ) {
-  const cutoff = new Date(asOf).getTime();
-  const usable = evidence.filter((row) => new Date(row.availableAt).getTime() <= cutoff);
-  const values = new Map(usable.map((row) => [row.entityType + ":" + row.entityKey, row]));
+  const usable = getEvidenceAvailableAt(evidence, asOf);
+  const latest = new Map<string, EvidenceObservation>();
+  for (const row of usable) {
+    const key = row.entityType + ":" + row.entityKey;
+    const current = latest.get(key);
+    const period = row.effectiveFrom ?? row.observedAt ?? "";
+    const currentPeriod = current ? (current.effectiveFrom ?? current.observedAt ?? "") : "";
+    if (!current || period > currentPeriod) latest.set(key, row);
+  }
+  const values = latest;
   return edges.flatMap((edge) => {
     const parent = values.get(edge.parent);
     if (!parent) return [];
-    const raw = typeof parent.value === "number" ? parent.value : null;
+    const raw = readNumericEvidenceValue(parent.value);
     if (raw == null) return [];
     const direction = raw === 0 ? 0 : edge.expectedSign;
     const confidence = (edge.confidence ?? 0.5) * (edge.strength ?? 0.5) * parent.sourceReliability;
