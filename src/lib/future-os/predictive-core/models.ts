@@ -1,4 +1,4 @@
-export type ForecastModelId = "ZERO" | "PERSIST" | "AR1" | "RATE_LAG";
+export type ForecastModelId = "ZERO" | "PERSIST" | "MEAN" | "LOCAL" | "DAMPED" | "AR1" | "RATE_LAG";
 
 export type DistributionForecast = {
   modelId: ForecastModelId;
@@ -17,6 +17,8 @@ export type TrainingPair = {
 };
 
 const MIN_PAIRS = 8;
+const LOCAL_WINDOW = 8;
+const PERSISTENCE_WEIGHT = 0.5;
 
 export function fitModels(
   pairs: readonly TrainingPair[],
@@ -37,6 +39,34 @@ export function fitModels(
       pairs.map((pair) => pair.futureReturn - pair.lagReturn),
     ),
   ];
+
+  const futureReturns = pairs.map((pair) => pair.futureReturn);
+  const historicalMean = average(futureReturns);
+  forecasts.push(
+    fromPoint(
+      "MEAN",
+      historicalMean,
+      futureReturns.map((value) => value - historicalMean),
+    ),
+  );
+
+  const recent = futureReturns.slice(-LOCAL_WINDOW);
+  const recentMean = average(recent);
+  forecasts.push(
+    fromPoint(
+      "LOCAL",
+      recentMean,
+      recent.map((value) => value - recentMean),
+    ),
+  );
+
+  forecasts.push(
+    fromPoint(
+      "DAMPED",
+      damped(historicalMean, lagReturnNow),
+      pairs.map((pair) => pair.futureReturn - damped(historicalMean, pair.lagReturn)),
+    ),
+  );
 
   const ar = fitLine(
     pairs.map((pair) => pair.lagReturn),
@@ -88,6 +118,14 @@ export function trainingPairs(
     });
   }
   return pairs;
+}
+
+function average(values: readonly number[]): number {
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function damped(historicalMean: number, lagReturn: number): number {
+  return (1 - PERSISTENCE_WEIGHT) * historicalMean + PERSISTENCE_WEIGHT * lagReturn;
 }
 
 function fromPoint(

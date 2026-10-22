@@ -56,6 +56,13 @@ describe("house price forecast engine", () => {
     expect(report.scoredOrigins).toBeGreaterThanOrEqual(20);
     expect(report.claim).toBe("NO_EDGE");
     expect(report.issuedModel).toBe("PERSIST");
+    expect(report.comparisons.map((row) => row.modelId).sort()).toEqual([
+      "AR1",
+      "DAMPED",
+      "LOCAL",
+      "MEAN",
+      "ZERO",
+    ]);
     expect(report.issued?.p50).toBeCloseTo(0);
     expect(report.promotable).toBe(false);
   });

@@ -14,6 +14,9 @@ const CLAIM: Record<string, string> = {
 const MODEL: Record<string, string> = {
   PERSIST: "persistence",
   ZERO: "nula",
+  MEAN: "historický průměr",
+  LOCAL: "posledních 8 oken",
+  DAMPED: "poloviční setrvačnost",
   AR1: "AR(1)",
   RATE_LAG: "sazba + minulý výnos",
 };
