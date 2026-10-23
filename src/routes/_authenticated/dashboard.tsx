@@ -53,22 +53,25 @@ function Dashboard() {
     (a, b) => (b.avg_asking_price_m2 ?? 0) - (a.avg_asking_price_m2 ?? 0),
   );
 
+  const hasPortfolio = totals.count > 0;
+  const money = (value: number) => (hasPortfolio ? formatCZK(value) : "—");
+
   return (
     <div className="space-y-5">
       <PageHeader title="Přehled" sub={t("app.tagline")} />
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
         <Kpi
           label="Hodnota mých nemovitostí"
-          value={formatCZK(totals.value)}
+          value={money(totals.value)}
           sub={`${totals.count} nemovitostí`}
         />
-        <Kpi label="Hodnota po odečtení dluhu" value={formatCZK(totals.equity)} />
-        <Kpi label="Dluh" value={formatCZK(totals.debt)} />
-        <Kpi label="Měsíční nájem" value={formatCZK(totals.rent)} />
+        <Kpi label="Hodnota po odečtení dluhu" value={money(totals.equity)} />
+        <Kpi label="Dluh" value={money(totals.debt)} />
+        <Kpi label="Měsíční nájem" value={money(totals.rent)} />
         <Kpi
           label="Zůstatek za měsíc"
-          value={formatCZK(totals.cashFlow)}
-          tone={totals.cashFlow >= 0 ? "pos" : "neg"}
+          value={money(totals.cashFlow)}
+          tone={hasPortfolio ? (totals.cashFlow >= 0 ? "pos" : "neg") : undefined}
         />
         <Kpi
           label="Průměrný výnos"
@@ -136,27 +139,35 @@ function Dashboard() {
             </Link>
           }
         >
-          <div className="mb-2 text-xs text-muted-foreground">Zdroj: veřejné realitní nabídky</div>
-          <ul className="divide-y">
-            {top.map((e) => (
-              <li key={e.listing.id}>
-                <Link
-                  to="/properties/$id"
-                  params={{ id: e.listing.id }}
-                  className="flex items-center gap-3 py-2 hover:text-primary"
-                >
-                  <PriorityBadge value={e.priority} />
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm">{e.listing.title}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {e.city} · výnos {formatBps(e.grossYieldBps)}
-                    </div>
-                  </div>
-                  <div className="num text-sm">{formatCZK(e.listing.price)}</div>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {top.length === 0 ? (
+            <Empty>{t("empty.deals")}</Empty>
+          ) : (
+            <>
+              <div className="mb-2 text-xs text-muted-foreground">
+                Zdroj: veřejné realitní nabídky
+              </div>
+              <ul className="divide-y">
+                {top.map((e) => (
+                  <li key={e.listing.id}>
+                    <Link
+                      to="/properties/$id"
+                      params={{ id: e.listing.id }}
+                      className="flex items-center gap-3 py-2 hover:text-primary"
+                    >
+                      <PriorityBadge value={e.priority} />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm">{e.listing.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {e.city} · výnos {formatBps(e.grossYieldBps)}
+                        </div>
+                      </div>
+                      <div className="num text-sm">{formatCZK(e.listing.price)}</div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </Section>
         <Section
           title="Oblíbené · poslední změny"
@@ -191,24 +202,28 @@ function Dashboard() {
           )}
         </Section>
         <Section title="Trh · cena za m²">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs text-muted-foreground">
-                <th className="pb-1 font-normal">Město</th>
-                <th className="pb-1 text-right font-normal">Kč/m²</th>
-                <th className="pb-1 text-right font-normal">Nájem Kč/m²</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stats.map((s) => (
-                <tr key={s.city} className="border-t border-border/50">
-                  <td className="py-1.5">{s.city}</td>
-                  <td className="num text-right">{formatCZK(s.avg_asking_price_m2)}</td>
-                  <td className="num text-right">{formatCZK(s.avg_rent_m2)}</td>
+          {stats.length === 0 ? (
+            <Empty>{t("empty.market")}</Empty>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-muted-foreground">
+                  <th className="pb-1 font-normal">Město</th>
+                  <th className="pb-1 text-right font-normal">Kč/m²</th>
+                  <th className="pb-1 text-right font-normal">Nájem Kč/m²</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {stats.map((s) => (
+                  <tr key={s.city} className="border-t border-border/50">
+                    <td className="py-1.5">{s.city}</td>
+                    <td className="num text-right">{formatCZK(s.avg_asking_price_m2)}</td>
+                    <td className="num text-right">{formatCZK(s.avg_rent_m2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </Section>
         <Section title="Shrnutí trhu">
           <p className="mb-3 text-sm text-muted-foreground">

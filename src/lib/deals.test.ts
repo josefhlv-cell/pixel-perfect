@@ -70,6 +70,32 @@ describe("enrichListing", () => {
     ] as never;
     expect(enrichListing(listing, null, stats, snaps).priceDropped).toBe(true);
   });
+  it("prefers an older live market stat over a newer sample stat", () => {
+    const live = latestStatsByCity([
+      {
+        id: "sample",
+        city: "Brno",
+        period: "2026-09-01",
+        avg_asking_price_m2: 999999,
+        avg_rent_m2: 1,
+        listings_count: 1,
+        is_sample: true,
+        created_at: "",
+      },
+      {
+        id: "live",
+        city: "Brno",
+        period: "2026-01-01",
+        avg_asking_price_m2: 80000,
+        avg_rent_m2: 250,
+        listings_count: 12,
+        is_sample: false,
+        created_at: "",
+      },
+    ]);
+    expect(live.get("Brno")?.avg_asking_price_m2).toBe(80000);
+    expect(live.get("Brno")?.is_sample).toBe(false);
+  });
   it("inactive listings score 0", () => {
     const e = enrichListing(
       { ...(listing as object), availability_status: "SOLD" } as never,

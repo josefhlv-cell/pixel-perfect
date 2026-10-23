@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { marketQuery } from "@/lib/queries";
 import { formatCZK } from "@/lib/format";
 import { pageHead } from "@/lib/head";
+import { t } from "@/lib/i18n";
 import { Empty, Kpi, PageHeader, Section } from "@/components/app/shared";
 import { observedMean } from "@/lib/live-data";
 import { Button } from "@/components/ui/button";
@@ -81,98 +82,104 @@ function Market() {
         }
       />
       <HousePriceForecast />
-      {data.length === 0 && <Empty>Zatím nejsou dostupná skutečná tržní data.</Empty>}
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-        <Kpi label="Prům. nabídková cena" value={`${formatCZK(avg)}/m²`} sub="napříč městy" />
-        <Kpi label="Prům. nájem" value={`${formatCZK(avgRent)}/m²`} />
-        <Kpi
-          label="Roční nájem vůči ceně"
-          value={
-            avg != null && avg > 0 && avgRent != null
-              ? `${(((avgRent * 12) / avg) * 100).toFixed(2).replace(".", ",")} %`
-              : "—"
-          }
-          sub="Roční nájem jako část kupní ceny, před náklady"
-        />
-        <Kpi label="Sledovaná města" value={cities.length} />
-      </div>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Section title="Trend cen (Kč/m²)">
-          <MultiLine data={pivot("avg_asking_price_m2")} keys={cities} />
-        </Section>
-        <Section title="Trend nájmů (Kč/m²/měs.)">
-          <MultiLine data={pivot("avg_rent_m2")} keys={cities} />
-        </Section>
-        <Section title="Regionální srovnání · cena/m²">
-          <Bars
-            data={[...latest]
-              .sort((a, b) => (b.avg_asking_price_m2 ?? 0) - (a.avg_asking_price_m2 ?? 0))
-              .map((r) => ({ label: r.city, v: r.avg_asking_price_m2 ?? 0 }))}
-            dataKey="v"
-            height={300}
-          />
-        </Section>
-        <Section title="Změny za vybrané období">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="text-left text-[11px] uppercase tracking-wider text-muted-foreground">
-                <tr>
-                  <th className="py-1 font-medium">Město</th>
-                  <th className="text-right font-medium">Kč/m²</th>
-                  <th className="text-right font-medium">Změna</th>
-                  <th className="text-right font-medium">Nájem</th>
-                  <th className="text-right font-medium">Změna</th>
-                </tr>
-              </thead>
-              <tbody>
-                {latest.map((r) => {
-                  const f = first(r.city);
-                  const dp =
-                    f?.avg_asking_price_m2 && r.avg_asking_price_m2
-                      ? ((r.avg_asking_price_m2 - f.avg_asking_price_m2) / f.avg_asking_price_m2) *
-                        100
-                      : null;
-                  const dr =
-                    f?.avg_rent_m2 && r.avg_rent_m2
-                      ? ((r.avg_rent_m2 - f.avg_rent_m2) / f.avg_rent_m2) * 100
-                      : null;
-                  const pct = (v: number | null) =>
-                    v == null ? "—" : `${v > 0 ? "+" : ""}${v.toFixed(1).replace(".", ",")} %`;
-                  return (
-                    <tr key={r.city} className="border-t border-border/50">
-                      <td className="py-1.5">{r.city}</td>
-                      <td className="num text-right">{formatCZK(r.avg_asking_price_m2)}</td>
-                      <td
-                        className={cn(
-                          "num text-right",
-                          (dp ?? 0) >= 0 ? "text-positive" : "text-negative",
-                        )}
-                      >
-                        {pct(dp)}
-                      </td>
-                      <td className="num text-right">{formatCZK(r.avg_rent_m2)}</td>
-                      <td
-                        className={cn(
-                          "num text-right",
-                          (dr ?? 0) >= 0 ? "text-positive" : "text-negative",
-                        )}
-                      >
-                        {pct(dr)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+      {data.length === 0 ? (
+        <Empty>{t("empty.market")}</Empty>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            <Kpi label="Prům. nabídková cena" value={`${formatCZK(avg)}/m²`} sub="napříč městy" />
+            <Kpi label="Prům. nájem" value={`${formatCZK(avgRent)}/m²`} />
+            <Kpi
+              label="Roční nájem vůči ceně"
+              value={
+                avg != null && avg > 0 && avgRent != null
+                  ? `${(((avgRent * 12) / avg) * 100).toFixed(2).replace(".", ",")} %`
+                  : "—"
+              }
+              sub="Roční nájem jako část kupní ceny, před náklady"
+            />
+            <Kpi label="Sledovaná města" value={cities.length} />
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Změna za zvolené období podle dostupných skutečných pozorování.
-          </p>
-        </Section>
-      </div>
-      <Section title="Vysvětlení situace na trhu">
-        <AiRunner kind="market" label="Shrnout trh" />
-      </Section>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Section title="Trend cen (Kč/m²)">
+              <MultiLine data={pivot("avg_asking_price_m2")} keys={cities} />
+            </Section>
+            <Section title="Trend nájmů (Kč/m²/měs.)">
+              <MultiLine data={pivot("avg_rent_m2")} keys={cities} />
+            </Section>
+            <Section title="Regionální srovnání · cena/m²">
+              <Bars
+                data={[...latest]
+                  .sort((a, b) => (b.avg_asking_price_m2 ?? 0) - (a.avg_asking_price_m2 ?? 0))
+                  .map((r) => ({ label: r.city, v: r.avg_asking_price_m2 ?? 0 }))}
+                dataKey="v"
+                height={300}
+              />
+            </Section>
+            <Section title="Změny za vybrané období">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="text-left text-[11px] uppercase tracking-wider text-muted-foreground">
+                    <tr>
+                      <th className="py-1 font-medium">Město</th>
+                      <th className="text-right font-medium">Kč/m²</th>
+                      <th className="text-right font-medium">Změna</th>
+                      <th className="text-right font-medium">Nájem</th>
+                      <th className="text-right font-medium">Změna</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {latest.map((r) => {
+                      const f = first(r.city);
+                      const dp =
+                        f?.avg_asking_price_m2 && r.avg_asking_price_m2
+                          ? ((r.avg_asking_price_m2 - f.avg_asking_price_m2) /
+                              f.avg_asking_price_m2) *
+                            100
+                          : null;
+                      const dr =
+                        f?.avg_rent_m2 && r.avg_rent_m2
+                          ? ((r.avg_rent_m2 - f.avg_rent_m2) / f.avg_rent_m2) * 100
+                          : null;
+                      const pct = (v: number | null) =>
+                        v == null ? "—" : `${v > 0 ? "+" : ""}${v.toFixed(1).replace(".", ",")} %`;
+                      return (
+                        <tr key={r.city} className="border-t border-border/50">
+                          <td className="py-1.5">{r.city}</td>
+                          <td className="num text-right">{formatCZK(r.avg_asking_price_m2)}</td>
+                          <td
+                            className={cn(
+                              "num text-right",
+                              (dp ?? 0) >= 0 ? "text-positive" : "text-negative",
+                            )}
+                          >
+                            {pct(dp)}
+                          </td>
+                          <td className="num text-right">{formatCZK(r.avg_rent_m2)}</td>
+                          <td
+                            className={cn(
+                              "num text-right",
+                              (dr ?? 0) >= 0 ? "text-positive" : "text-negative",
+                            )}
+                          >
+                            {pct(dr)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Změna za zvolené období podle dostupných skutečných pozorování.
+              </p>
+            </Section>
+          </div>
+          <Section title="Vysvětlení situace na trhu">
+            <AiRunner kind="market" label="Shrnout trh" />
+          </Section>
+        </>
+      )}
     </div>
   );
 }

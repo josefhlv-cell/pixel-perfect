@@ -27,6 +27,7 @@ import { calculateTotalReturn } from "@/lib/calculations";
 import { defaultInvestmentInput, type EnrichedListing } from "@/lib/deals";
 import { isActive } from "@/lib/freshness";
 import { pageHead } from "@/lib/head";
+import { t } from "@/lib/i18n";
 import { ListingCard } from "@/components/app/ListingCard";
 import { ComparePanel } from "@/components/app/ComparePanel";
 import { Empty, PageHeader } from "@/components/app/shared";
@@ -393,7 +394,7 @@ function DealHunter() {
         )}
       </div>
       {results.length === 0 ? (
-        <Empty>Kritériím neodpovídá žádná nabídka. Zkuste je uvolnit.</Empty>
+        <Empty>{data.length === 0 ? t("empty.deals") : t("empty.dealsFiltered")}</Empty>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {results.map(({ e, distanceKm }) => (

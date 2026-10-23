@@ -55,5 +55,9 @@ export const cs = {
     watchlist: "Zatím nemáte oblíbené nabídky. Uložte si nabídku z Hledání nabídek.",
     alerts:
       "Žádná upozornění. Jakmile se změní cena nebo stav sledované nemovitosti, uvidíte to tady.",
+    deals: "Žádné skutečné nabídky. Spusťte hledání. Ukázkové inzeráty se nezobrazují.",
+    dealsFiltered: "Kritériím neodpovídá žádná skutečná nabídka. Zkuste je uvolnit.",
+    market: "Zatím nejsou dostupná skutečná tržní data.",
+    map: "Na mapě zatím není žádný bod. Skutečné nabídky se objeví po hledání, vlastní nemovitost až s polohou.",
   },
 } as const;

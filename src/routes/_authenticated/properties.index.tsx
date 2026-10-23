@@ -233,7 +233,7 @@ function Properties() {
       </div>
 
       {rows.length === 0 ? (
-        <Empty>Žádná nabídka neodpovídá filtrům.</Empty>
+        <Empty>{data.length === 0 ? t("empty.deals") : t("empty.dealsFiltered")}</Empty>
       ) : view === "map" ? (
         <MapLazy
           onOpen={(href) => navigate({ to: "/properties/$id", params: { id: href } })}

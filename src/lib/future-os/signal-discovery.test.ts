@@ -4,6 +4,7 @@ import {
   evaluateLeadingSignal,
   parseEvidenceNumericValue,
 } from "./signal-discovery";
+import type { EvidenceObservation } from "./types";
 
 function series(offset = 0) {
   return Array.from({ length: 24 }, (_, i) => ({
@@ -133,6 +134,57 @@ describe("Future OS leading-signal discovery", () => {
     expect(results[0]?.signalKey).toBe("series:signal_a");
   });
 
+  it("uses wrapped ČNB values and the latest revision of a period, not the stale print", () => {
+    const base = series();
+    const wrapped = base.map((point, i) =>
+      observation(`rev-${i}`, "signal_a", point.date, {
+        value: point.value,
+        raw: String(point.value),
+        snapshot_id: null,
+      }),
+    );
+    const stale = base.map((point, i) =>
+      observation(`old-${i}`, "signal_a", point.date, 0, { revision: 1 }),
+    );
+    const revised = wrapped.map((row, i) => ({
+      ...row,
+      revision: 2,
+      isRevision: true,
+      id: `new-${i}`,
+    }));
+    const target = series(1).map((point, i) =>
+      observation(`t-${i}`, "target", point.date, point.value),
+    );
+    const results = discoverLeadingSignals(
+      [...stale, ...revised, ...target],
+      "series:target",
+      [30],
+    );
+    expect(results[0]?.signalKey).toBe("series:signal_a");
+    expect(results[0]?.correlation ?? 0).toBeGreaterThan(0.9);
+  });
+
+  it("does not see a revision that was unavailable at the cutoff", () => {
+    const signal = series().slice(0, 16);
+    const rows = [
+      ...signal.map((point, i) => observation(`s-${i}`, "signal_a", point.date, point.value)),
+      ...signal.map((point, i) => observation(`t-${i}`, "target", point.date, point.value)),
+      observation(
+        "late",
+        "signal_a",
+        signal[0]!.date,
+        { value: 50, raw: "50", snapshot_id: null },
+        { revision: 2, availableAt: "2024-01-01T00:00:00.000Z" },
+      ),
+    ];
+    const visible = discoverLeadingSignals(rows, "series:target", [0], {
+      asOf: "2021-06-01T00:00:00.000Z",
+    });
+    const leaked = discoverLeadingSignals(rows, "series:target", [0]);
+    expect(visible[0]?.correlation ?? 0).toBeGreaterThan(0.999);
+    expect(leaked[0]?.correlation ?? 1).toBeLessThan(0.99);
+  });
+
   it("discovers a lead from Czech grouped numbers stored only as raw text", () => {
     const observations = Array.from({ length: 16 }, (_, i) => {
       const date = new Date(Date.UTC(2021, i, 1)).toISOString();
@@ -191,3 +243,44 @@ describe("Future OS leading-signal discovery", () => {
     expect(results[0]?.status).not.toBe("REJECTED");
   });
 });
+
+function observation(
+  id: string,
+  entityKey: string,
+  date: string,
+  value: unknown,
+  extra: Partial<EvidenceObservation> = {},
+): EvidenceObservation {
+  const availableAt = extra.availableAt ?? date;
+  return {
+    id,
+    sourceId: "test",
+    sourceName: "test",
+    sourceType: "test",
+    sourceUrl: null,
+    publisher: "test",
+    geographyType: "country",
+    geographyKey: "CZ",
+    entityType: "series",
+    entityKey,
+    observedAt: date,
+    publishedAt: date,
+    retrievedAt: availableAt,
+    availableAt,
+    effectiveFrom: date,
+    effectiveTo: null,
+    revision: extra.revision ?? 1,
+    value,
+    unit: "x",
+    frequency: "monthly",
+    leadClass: entityKey === "target" ? "LAGGING" : "LEADING",
+    sourceReliability: 1,
+    independenceGroup: "test",
+    contentHash: id,
+    isRevision: (extra.revision ?? 1) > 1,
+    supersedesId: null,
+    metadata: {},
+    createdAt: availableAt,
+    ...extra,
+  };
+}

@@ -50,11 +50,11 @@ export const runAiAnalysis = createServerFn({ method: "POST" })
 
     try {
       if (data.kind === "market") {
-        const { data: stats } = await supabase
-          .from("market_statistics")
-          .select("city,period,avg_asking_price_m2,avg_rent_m2,listings_count,is_sample")
-          .eq("is_sample", false)
-          .order("period");
+        const { data: stats } = await onlyLive(
+          supabase
+            .from("market_statistics")
+            .select("city,period,avg_asking_price_m2,avg_rent_m2,listings_count,is_sample"),
+        ).order("period");
         if (!stats?.length)
           return {
             ok: false as const,
@@ -92,13 +92,11 @@ export const runAiAnalysis = createServerFn({ method: "POST" })
       }
 
       if (!data.listingId) throw new Error("Chybí nemovitost");
-      const { data: l } = await supabase
-        .from("listings")
-        .select("*")
+      const { data: l } = await onlyLive(supabase.from("listings").select("*"))
         .eq("id", data.listingId)
-        .eq("is_sample", false)
         .single();
       if (!l) throw new Error("Nemovitost nenalezena");
+      if (l.is_sample) throw new Error("Ukázková nabídka není součástí ostrého provozu.");
       propertyId = l.property_id;
       const [{ data: prop }, { data: stats }, { data: snaps }] = await Promise.all([
         onlyLive(supabase.from("properties").select("*")).eq("id", l.property_id).maybeSingle(),

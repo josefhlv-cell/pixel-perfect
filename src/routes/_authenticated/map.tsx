@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import { listingsQuery, portfolioQuery, watchlistQuery } from "@/lib/queries";
 import { formatCZK } from "@/lib/format";
 import { pageHead } from "@/lib/head";
-import { PageHeader } from "@/components/app/shared";
+import { t } from "@/lib/i18n";
+import { Empty, PageHeader } from "@/components/app/shared";
 import { MapLazy, type MapPoint } from "@/components/app/MapLazy";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -84,11 +85,7 @@ function MapPage() {
     <div className="space-y-4">
       <PageHeader
         title="Mapa"
-        sub={
-          <span className="inline-flex items-center gap-2">
-            Skutečné nabídky a vaše nemovitosti
-          </span>
-        }
+        sub="Skutečné nabídky a vaše nemovitosti. Klikněte na bod pro kartu."
       />
       <div className="flex flex-wrap gap-4 rounded-md border bg-card p-3">
         {LAYERS.map((l) => (
@@ -110,6 +107,7 @@ function MapPage() {
         onOpen={(id) => navigate({ to: "/properties/$id", params: { id } })}
         height={600}
       />
+      {points.length === 0 && <Empty>{t("empty.map")}</Empty>}
       <p className="text-xs text-muted-foreground">
         Vlastní nemovitost se zobrazí, pokud je nemovitost propojená se záznamem s polohou.
       </p>

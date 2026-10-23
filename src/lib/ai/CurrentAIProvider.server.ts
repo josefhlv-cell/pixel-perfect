@@ -117,7 +117,7 @@ export class CurrentAIProvider implements AIProvider {
 
   async summarizeMarket(input: MarketSummaryInput) {
     const text = await this.complete(
-      "Napiš jednu krátkou větu česky o trendu trhu výhradně z dodaných dat. Pokud jsou data ukázková, zmiň to.",
+      "Napiš jednu krátkou větu česky o trendu trhu výhradně z dodaných živých statistik. Když je seznam prázdný, řekni, že živá data ještě nejsou, a nic neodhaduj.",
       JSON.stringify(input.stats),
     );
     return { insight: text.trim() };

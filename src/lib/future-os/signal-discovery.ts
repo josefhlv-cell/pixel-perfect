@@ -1,3 +1,4 @@
+import { getEvidenceAvailableAt } from "./point-in-time";
 import type { EvidenceObservation } from "./types";
 
 export type SignalPoint = {
@@ -233,13 +234,28 @@ export function discoverLeadingSignals(
   observations: EvidenceObservation[],
   targetEntityKey: string,
   lagDaysList = [30, 90, 180, 365],
+  options?: { asOf?: string },
 ) {
-  const byEntity = new Map<string, SignalPoint[]>();
-  for (const row of observations) {
-    const value = parseEvidenceNumericValue(row.value);
-    if (value === null) continue;
+  const source = options?.asOf ? getEvidenceAvailableAt(observations, options.asOf) : observations;
+  const chosen = new Map<string, EvidenceObservation>();
+  for (const row of source) {
     const date = row.effectiveFrom ?? row.observedAt;
-    if (!date) continue;
+    if (!date || parseEvidenceNumericValue(row.value) == null) continue;
+    const key = `${row.entityType}:${row.entityKey}|${date}`;
+    const prev = chosen.get(key);
+    if (
+      !prev ||
+      row.revision > prev.revision ||
+      (row.revision === prev.revision && row.availableAt > prev.availableAt)
+    ) {
+      chosen.set(key, row);
+    }
+  }
+  const byEntity = new Map<string, SignalPoint[]>();
+  for (const row of chosen.values()) {
+    const date = row.effectiveFrom ?? row.observedAt;
+    const value = parseEvidenceNumericValue(row.value);
+    if (!date || value == null) continue;
     const key = `${row.entityType}:${row.entityKey}`;
     const list = byEntity.get(key) ?? [];
     list.push({ date, value, evidenceId: row.id });

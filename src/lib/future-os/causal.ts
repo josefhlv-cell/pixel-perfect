@@ -1,6 +1,6 @@
-import type { EvidenceObservation } from "./types";
 import { parseEvidenceNumericValue } from "./signal-discovery";
 import { getEvidenceAvailableAt } from "./point-in-time";
+import type { EvidenceObservation } from "./types";
 
 export type CausalEdge = {
   edgeKey: string;
@@ -24,7 +24,6 @@ export function propagateCausalSignal(
   evidence: EvidenceObservation[],
   asOf: Date | string,
 ) {
-  // Fail closed for invalid cutoffs and exclude evidence with invalid/future availability.
   const usable = getEvidenceAvailableAt(evidence, asOf);
   const grouped = new Map<string, EvidenceObservation[]>();
   for (const row of usable) {
