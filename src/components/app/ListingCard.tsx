@@ -65,7 +65,7 @@ export function ListingCard({
         <div className="grid grid-cols-2 gap-2 text-xs">
           <Stat k="Cena" v={formatCZK(l.price)} />
           <Stat k="Kč/m²" v={formatCZK(e.pricePerM2)} />
-          <Stat k="Odhad" v={formatCZK(e.estimate?.estimatedValue)} />
+          <Stat k="Cenový benchmark" v={formatCZK(e.estimate?.estimatedValue)} />
           <Stat
             k="Rozdíl"
             v={e.diffBps == null ? "—" : `${e.diffBps > 0 ? "+" : ""}${formatBps(e.diffBps, 1)}`}
