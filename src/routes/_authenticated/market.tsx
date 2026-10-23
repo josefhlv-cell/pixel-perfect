@@ -87,7 +87,11 @@ function Market() {
         <Kpi label="Prům. nájem" value={`${formatCZK(avgRent)}/m²`} />
         <Kpi
           label="Hrubý výnos trhu"
-          value={avg != null && avg > 0 && avgRent != null ? `${(((avgRent * 12) / avg) * 100).toFixed(2).replace(".", ",")} %` : "—"}
+          value={
+            avg != null && avg > 0 && avgRent != null
+              ? `${(((avgRent * 12) / avg) * 100).toFixed(2).replace(".", ",")} %`
+              : "—"
+          }
           sub="nájem×12 / cena"
         />
         <Kpi label="Sledovaná města" value={cities.length} />

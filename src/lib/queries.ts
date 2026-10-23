@@ -35,7 +35,9 @@ export const listingsQuery = queryOptions({
 export const marketQuery = queryOptions({
   queryKey: ["market"],
   queryFn: async () => {
-    const { data, error } = await onlyLive(supabase.from("market_statistics").select("*")).order("period");
+    const { data, error } = await onlyLive(supabase.from("market_statistics").select("*")).order(
+      "period",
+    );
     if (error) throw error;
     return data;
   },
@@ -44,13 +46,18 @@ export const marketQuery = queryOptions({
 export const watchlistQuery = queryOptions({
   queryKey: ["watchlist"],
   queryFn: async () => {
-    const { data: listings, error: listingsError } = await onlyLive(supabase.from("listings").select("id"));
+    const { data: listings, error: listingsError } = await onlyLive(
+      supabase.from("listings").select("id"),
+    );
     if (listingsError) throw listingsError;
     if (!listings?.length) return [];
     const { data, error } = await supabase
       .from("watchlist")
       .select("*")
-      .in("listing_id", listings.map((row) => row.id))
+      .in(
+        "listing_id",
+        listings.map((row) => row.id),
+      )
       .order("created_at", { ascending: false });
     if (error) throw error;
     return data;
@@ -60,13 +67,18 @@ export const watchlistQuery = queryOptions({
 export const freshnessEventsQuery = queryOptions({
   queryKey: ["freshness-events"],
   queryFn: async () => {
-    const { data: listings, error: listingsError } = await onlyLive(supabase.from("listings").select("id"));
+    const { data: listings, error: listingsError } = await onlyLive(
+      supabase.from("listings").select("id"),
+    );
     if (listingsError) throw listingsError;
     if (!listings?.length) return [];
     const { data, error } = await supabase
       .from("listing_freshness_events")
       .select("*")
-      .in("listing_id", listings.map((row) => row.id))
+      .in(
+        "listing_id",
+        listings.map((row) => row.id),
+      )
       .order("created_at", { ascending: false })
       .limit(500);
     if (error) throw error;

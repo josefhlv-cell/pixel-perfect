@@ -55,7 +55,13 @@ export const runAiAnalysis = createServerFn({ method: "POST" })
           .select("city,period,avg_asking_price_m2,avg_rent_m2,listings_count,is_sample")
           .eq("is_sample", false)
           .order("period");
-        if (!stats?.length) return { ok: false as const, provider: ai.name, kind: data.kind, error: "Pro analýzu trhu zatím nejsou skutečná data." };
+        if (!stats?.length)
+          return {
+            ok: false as const,
+            provider: ai.name,
+            kind: data.kind,
+            error: "Pro analýzu trhu zatím nejsou skutečná data.",
+          };
         const r = await ai.summarizeMarket({ stats: (stats ?? []) as Record<string, unknown>[] });
         await logUsage(r);
         return { ok: true as const, provider: ai.name, kind: data.kind, text: r.insight };
