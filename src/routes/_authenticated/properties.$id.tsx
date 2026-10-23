@@ -296,6 +296,15 @@ function Detail() {
                 Benchmark vychází z aktuálních nabídkových cen podobných inzerátů, nikoli z
                 realizovaných prodejů. Rozsah je orientační a závisí na dostupnosti a kvalitě srovnání.
               </p>
+              <ul className="mt-2 space-y-1 text-xs">
+                {e.estimate.sources.slice(0, 5).map((source, index) => (
+                  <li key={source}>
+                    <a href={source} target="_blank" rel="noopener noreferrer" className="underline">
+                      Srovnávací nabídka {index + 1}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </>
           ) : (
             <p className="text-sm text-muted-foreground">Nedostatek dat pro odhad.</p>
