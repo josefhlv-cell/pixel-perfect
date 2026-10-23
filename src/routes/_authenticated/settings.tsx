@@ -150,7 +150,14 @@ function Settings() {
         </Section>
         <Section title="Účet">
           <Row k="E-mail" v={data.email ?? "—"} />
-          <Row k="Tarif" v={<Badge variant="outline">{data.profile?.plan === "PRO" ? "Rozšířený" : "Základní"}</Badge>} />
+          <Row
+            k="Tarif"
+            v={
+              <Badge variant="outline">
+                {data.profile?.plan === "PRO" ? "Rozšířený" : "Základní"}
+              </Badge>
+            }
+          />
           <p className="mb-3 mt-1 text-xs text-muted-foreground">
             Změna tarifu není na této stránce dostupná.
           </p>

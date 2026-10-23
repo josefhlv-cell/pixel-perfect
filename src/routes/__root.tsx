@@ -84,7 +84,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Hledání nabídek v Česku, vlastní nemovitosti, kalkulačka a srozumitelné vysvětlení.",
       },
       { property: "og:title", content: "Reality Investor" },
-      { property: "og:description", content: "Přehled nemovitostí, nájmů a nákladů na jednom místě." },
+      {
+        property: "og:description",
+        content: "Přehled nemovitostí, nájmů a nákladů na jednom místě.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

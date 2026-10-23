@@ -113,7 +113,11 @@ function Stat({ k, v, tone }: { k: string; v: string; tone?: "pos" | "neg" | und
     <div>
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</div>
       <div
-        className={cn("num break-words", tone === "pos" && "text-positive", tone === "neg" && "text-negative")}
+        className={cn(
+          "num break-words",
+          tone === "pos" && "text-positive",
+          tone === "neg" && "text-negative",
+        )}
       >
         {v}
       </div>

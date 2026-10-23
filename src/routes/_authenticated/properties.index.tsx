@@ -194,7 +194,7 @@ function Properties() {
           "Typ",
           types.map((x) => [x, x]),
         )}
-        {inp("yieldMin", "Min. výnos %")}
+        {inp("yieldMin", "Roční nájem vůči ceně od %")}
         {inp("cfMin", "Min. měsíční zůstatek")}
         {inp("prioMin", "Min. hodnocení ze 100")}
         {sel(
@@ -225,7 +225,7 @@ function Properties() {
             <SelectItem value="priority">Řadit: hodnocení nabídky</SelectItem>
             <SelectItem value="price">Řadit: cena ↑</SelectItem>
             <SelectItem value="ppm2">Řadit: Kč/m² ↑</SelectItem>
-            <SelectItem value="yield">Řadit: výnos ↓</SelectItem>
+            <SelectItem value="yield">Řadit: nájem vůči ceně ↓</SelectItem>
             <SelectItem value="cashflow">Řadit: měsíční zůstatek ↓</SelectItem>
             <SelectItem value="area">Řadit: plocha ↓</SelectItem>
           </SelectContent>
@@ -266,7 +266,7 @@ function Properties() {
                   "Cena",
                   "Kč/m²",
                   "m²",
-                  "Výnos",
+                  "Roční nájem vůči ceně",
                   "Zůstatek za měsíc",
                   "Aktuálnost",
                   "Stav",

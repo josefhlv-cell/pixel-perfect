@@ -32,7 +32,9 @@ function Claims({ title, items }: { title: string; items: Claim[] }) {
                 kindTone[c.kind],
               )}
             >
-              {{ FACT: "Z údajů", ESTIMATE: "Odhad", ASSUMPTION: "Předpoklad", UNKNOWN: "Nevíme" }[c.kind] ?? "Nevíme"}
+              {{ FACT: "Z údajů", ESTIMATE: "Odhad", ASSUMPTION: "Předpoklad", UNKNOWN: "Nevíme" }[
+                c.kind
+              ] ?? "Nevíme"}
             </span>
             <span>{c.text}</span>
           </li>
@@ -111,7 +113,8 @@ export function AiRunner({
         ok: false,
         provider: "lovable",
         kind,
-        error: "Automatické vysvětlení je momentálně nedostupná. Výpočty a uložená data zůstávají dostupná.",
+        error:
+          "Automatické vysvětlení je momentálně nedostupná. Výpočty a uložená data zůstávají dostupná.",
       });
     } finally {
       setBusy(false);
@@ -136,8 +139,8 @@ export function AiRunner({
       )}
       {res?.ok && (
         <p className="text-[11px] text-muted-foreground">
-          Vysvětlení připravuje umělá inteligence. Čísla přebírá z kalkulačky; údaje si ověřte. Nejde o
-          investiční poradenství.
+          Vysvětlení připravuje umělá inteligence. Čísla přebírá z kalkulačky; údaje si ověřte.
+          Nejde o investiční poradenství.
         </p>
       )}
     </div>

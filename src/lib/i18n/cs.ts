@@ -1,5 +1,8 @@
 export const cs = {
-  app: { name: "Reality Investor", tagline: "Přehled nemovitostí, nájmů a nákladů na jednom místě" },
+  app: {
+    name: "Reality Investor",
+    tagline: "Přehled nemovitostí, nájmů a nákladů na jednom místě",
+  },
   nav: {
     dashboard: "Přehled",
     dealHunter: "Hledání nabídek",
@@ -29,7 +32,7 @@ export const cs = {
     generic: "Něco se nepovedlo. Zkuste to prosím znovu.",
   },
   disclaimer:
-    "Reality Investor je analytický nástroj pro práci s informacemi o nemovitostech. Výsledky, odhady a scénáře nejsou investičním, finančním, právním ani daňovým poradenstvím ani zárukou budoucího výnosu. Před rozhodnutím ověřte aktuálnost údajů a zvažte odbornou konzultaci.",
+    "Aplikace pomáhá porovnat nemovitosti. Odhady nejsou zárukou zisku ani doporučením ke koupi. Před rozhodnutím ověřte údaje u prodávajícího; otázky financování, smluv a daní proberte s odborníkem.",
   freshness: {
     FRESH: "Čerstvé",
     RECENT: "Nedávné",
@@ -51,6 +54,7 @@ export const cs = {
     portfolio:
       "Zatím nemáte žádné nemovitosti mezi vlastními nemovitostmi. Přidejte první nemovitost nebo vyhledejte nabídky.",
     watchlist: "Zatím nemáte oblíbené nabídky. Uložte si nabídku z Hledání nabídek.",
-    alerts: "Žádná upozornění. Jakmile se změní cena nebo stav sledované nemovitosti, uvidíte to tady.",
+    alerts:
+      "Žádná upozornění. Jakmile se změní cena nebo stav sledované nemovitosti, uvidíte to tady.",
   },
 } as const;

@@ -85,7 +85,9 @@ export function Kpi({
 }) {
   return (
     <div className="rounded-md border bg-card p-3">
-      <div className="text-[11px] uppercase tracking-wider text-muted-foreground break-words">{label}</div>
+      <div className="text-[11px] uppercase tracking-wider text-muted-foreground break-words">
+        {label}
+      </div>
       <div
         className={cn(
           "num mt-1 break-words text-lg font-semibold sm:text-xl",

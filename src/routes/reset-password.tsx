@@ -27,7 +27,10 @@ function Reset() {
     e.preventDefault();
     if (pw.length < 8) return void toast.error("Heslo musí mít alespoň 8 znaků");
     const { error } = await supabase.auth.updateUser({ password: pw });
-    if (error) return void toast.error("Heslo se nepodařilo změnit. Otevřete znovu odkaz z e-mailu a zkuste to ještě jednou.");
+    if (error)
+      return void toast.error(
+        "Heslo se nepodařilo změnit. Otevřete znovu odkaz z e-mailu a zkuste to ještě jednou.",
+      );
     toast.success("Heslo změněno");
     navigate({ to: "/dashboard" });
   };

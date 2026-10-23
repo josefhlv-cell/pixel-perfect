@@ -51,7 +51,10 @@ import {
 
 export const Route = createFileRoute("/_authenticated/deals")({
   head: () =>
-    pageHead("Hledání nabídek", "Vyhledejte nemovitosti a porovnejte jejich cenu, nájem a náklady."),
+    pageHead(
+      "Hledání nabídek",
+      "Vyhledejte nemovitosti a porovnejte jejich cenu, nájem a náklady.",
+    ),
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.ensureQueryData(listingsQuery),
@@ -293,7 +296,7 @@ function DealHunter() {
         <F label="Max. cena (Kč)">
           <Input value={f.maxPrice} onChange={set("maxPrice")} inputMode="numeric" />
         </F>
-        <F label="Min. výnos (%)">
+        <F label="Roční nájem vůči ceně alespoň (%)">
           <Input value={f.minYield} onChange={set("minYield")} inputMode="decimal" />
         </F>
         <F label="Nejméně pod odhadem ceny (%)">
@@ -313,7 +316,7 @@ function DealHunter() {
             <SelectContent>
               <SelectItem value="priority">Hodnocení nabídky</SelectItem>
               <SelectItem value="cashflow">Měsíční zůstatek</SelectItem>
-              <SelectItem value="yield">Výnos</SelectItem>
+              <SelectItem value="yield">Roční nájem vůči ceně</SelectItem>
               <SelectItem value="discount">Sleva vůči odhadu</SelectItem>
               <SelectItem value="distance">Vzdálenost</SelectItem>
             </SelectContent>
@@ -407,9 +410,9 @@ function DealHunter() {
         </div>
       )}
       <p className="text-xs text-muted-foreground">
-        Hodnocení nabídky = sleva (35) + výnos (30) + čerstvost (20) + dostupnost (10) + snížení ceny
-        (5). Zaškrtněte až 3 nabídky pro porovnání. Stáhnout tabulku exportuje aktuálně vyfiltrované
-        výsledky.
+        Hodnocení nabídky = sleva (35) + výnos (30) + čerstvost (20) + dostupnost (10) + snížení
+        ceny (5). Zaškrtněte až 3 nabídky pro porovnání. Stáhnout tabulku exportuje aktuálně
+        vyfiltrované výsledky.
       </p>
 
       {compareItems.length >= 2 && (
@@ -503,7 +506,7 @@ function WebAgentBox() {
     <div className="space-y-3 rounded-md border bg-card p-4">
       <Label className="text-xs text-muted-foreground">Vyhledávání na webu – co hledáš?</Label>
       <form
-        className="flex gap-2"
+        className="flex flex-wrap gap-2"
         onSubmit={(e) => {
           e.preventDefault();
           void go();
@@ -512,6 +515,8 @@ function WebAgentBox() {
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          aria-label="Co hledáte"
+          className="min-w-0 basis-full sm:flex-1 sm:basis-auto"
           placeholder="2+kk Pardubice do 5 000 000 Kč"
         />
         <Button type="submit" disabled={phase === "searching" || q.trim().length < 3}>
@@ -533,7 +538,7 @@ function WebAgentBox() {
           <span className="ml-1.5 hidden sm:inline">Hlídat denně</span>
         </Button>
       </form>
-      <div className="flex gap-1 text-xs" role="group" aria-label="Rozsah hledání">
+      <div className="flex flex-wrap gap-1 text-xs" role="group" aria-label="Rozsah hledání">
         {(
           [
             ["city", "V městě"],
@@ -551,9 +556,7 @@ function WebAgentBox() {
             {l}
           </Button>
         ))}
-        <span className="ml-2 self-center text-muted-foreground">
-          Výsledky se promítnou i do přehledu Trh.
-        </span>
+        <span className="ml-2 self-center text-muted-foreground"></span>
       </div>
       {(watches.data?.length ?? 0) > 0 && (
         <div className="flex flex-wrap gap-2 text-xs">
@@ -586,7 +589,7 @@ function WebAgentBox() {
           {found.map((e) => (
             <div key={e.listing.id} className="space-y-2">
               <span className="inline-block rounded-sm border border-positive/50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-positive">
-                Live data
+                Skutečná nabídka
               </span>
               <ListingCard e={e} showReasons />
               <div className="flex items-center justify-between text-xs text-muted-foreground">

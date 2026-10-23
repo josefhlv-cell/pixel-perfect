@@ -189,22 +189,42 @@ export function InvestmentCalculator({
             value={formatCZK(r.monthlyCashFlow)}
             tone={r.monthlyCashFlow >= 0 ? "pos" : "neg"}
           />
-          <Kpi label="Pokrytí splátky nájmem" value={dscr ?? "Bez hypotéky"} sub="1× = nájem po nákladech právě pokryje splátku" />
+          <Kpi
+            label="Pokrytí splátky nájmem"
+            value={dscr ?? "Bez hypotéky"}
+            sub="1× = nájem po nákladech právě pokryje splátku"
+          />
           <Kpi
             label="Nájem potřebný na pokrytí nákladů"
             value={r.breakEvenRent > 0 ? formatCZK(r.breakEvenRent) : "—"}
             sub="měsíčně, před daní"
           />
-          <Kpi label="Roční nájem vůči ceně" value={formatBps(r.grossYieldBps)} sub="Před odečtením nákladů" />
-          <Kpi label="Roční nájem po nákladech vůči ceně" value={formatBps(r.netYieldBps)} sub="Bez splátek a daně" />
+          <Kpi
+            label="Roční nájem vůči ceně"
+            value={formatBps(r.grossYieldBps)}
+            sub="Před odečtením nákladů"
+          />
+          <Kpi
+            label="Roční nájem po nákladech vůči ceně"
+            value={formatBps(r.netYieldBps)}
+            sub="Bez splátek a daně"
+          />
           <Kpi
             label="Roční příjem z vlastních peněz"
             sub="Roční zůstatek vůči vloženým penězům, před daní"
             value={formatBps(r.cashOnCashBps)}
             tone={r.cashOnCashBps >= 0 ? "pos" : "neg"}
           />
-          <Kpi label="Celkové zhodnocení vlastních peněz" value={formatBps(r.roiBps)} sub={`za ${inp.holdingYears} let včetně prodeje`} />
-          <Kpi label="Roční zhodnocení včetně prodeje" value={r.irrBps == null ? "—" : formatBps(r.irrBps)} sub="Zohledňuje, kdy peníze vložíte a kdy je dostanete zpět" />
+          <Kpi
+            label="Celkové zhodnocení vlastních peněz"
+            value={formatBps(r.roiBps)}
+            sub={`za ${inp.holdingYears} let včetně prodeje`}
+          />
+          <Kpi
+            label="Roční zhodnocení včetně prodeje"
+            value={r.irrBps == null ? "—" : formatBps(r.irrBps)}
+            sub="Zohledňuje, kdy peníze vložíte a kdy je dostanete zpět"
+          />
           <Kpi label="Část ceny hrazená hypotékou" value={formatBps(r.ltvBps, 0)} />
         </div>
         <div className="grid gap-4 md:grid-cols-2">
@@ -240,14 +260,18 @@ export function InvestmentCalculator({
               </div>
               <Row k="Základ daně / rok" v={formatCZK(taxEstimate.taxBase)} />
               <Row k="Daň / rok" v={formatCZK(taxEstimate.tax)} />
-              <Row k="Zůstatek po dani za měsíc (odhad)" v={formatCZK(taxEstimate.monthlyAfterTaxCf)} />
+              <Row
+                k="Zůstatek po dani za měsíc (odhad)"
+                v={formatCZK(taxEstimate.monthlyAfterTaxCf)}
+              />
               <p className="mt-1 text-[11px] text-muted-foreground">
                 Nejde o daňové poradenství. Skutečná daň závisí na režimu a odpočtech.
               </p>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              Scénář: {SCENARIOS[scenario].label}. Nové sjednání úroku po {fixYears} letech – výpočet
-              předpokládá stejnou sazbu. Výchozí část ceny hrazená hypotékou {DEFAULT_ASSUMPTIONS.ltvBps / 100} %.
+              Scénář: {SCENARIOS[scenario].label}. Nové sjednání úroku po {fixYears} letech –
+              výpočet předpokládá stejnou sazbu. Výchozí část ceny hrazená hypotékou{" "}
+              {DEFAULT_ASSUMPTIONS.ltvBps / 100} %.
             </p>
           </div>
           {!compact && (

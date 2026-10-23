@@ -47,7 +47,8 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/portfolio")({
-  head: () => pageHead("Moje nemovitosti", "Vaše nemovitosti: hodnota, dluh, nájem a zůstatek po nákladech."),
+  head: () =>
+    pageHead("Moje nemovitosti", "Vaše nemovitosti: hodnota, dluh, nájem a zůstatek po nákladech."),
   loader: ({ context }) => context.queryClient.ensureQueryData(portfolioQuery),
   component: Portfolio,
 });
@@ -246,7 +247,15 @@ function Portfolio() {
                   className="flex justify-between border-b border-border/50 py-1.5 text-sm last:border-0"
                 >
                   <span>
-                    {new Date(x.occurred_on).toLocaleDateString("cs-CZ")} · {{ rent: "Nájem", income: "Jiný příjem", expense: "Výdaj", repair: "Oprava", tax: "Daň", sale: "Prodej" }[x.kind] ?? "Platba"}
+                    {new Date(x.occurred_on).toLocaleDateString("cs-CZ")} ·{" "}
+                    {{
+                      rent: "Nájem",
+                      income: "Jiný příjem",
+                      expense: "Výdaj",
+                      repair: "Oprava",
+                      tax: "Daň",
+                      sale: "Prodej",
+                    }[x.kind] ?? "Platba"}
                     {x.note ? ` · ${x.note}` : ""}
                   </span>
                   <span className={cn("num", x.amount < 0 ? "text-negative" : "text-positive")}>

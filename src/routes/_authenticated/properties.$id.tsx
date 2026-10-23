@@ -148,12 +148,12 @@ function Detail() {
           </div>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Kpi label="Hrubý výnos" value={formatBps(e.grossYieldBps)} sub="odhad" />
+          <Kpi label="Roční nájem vůči ceně" value={formatBps(e.grossYieldBps)} sub="Odhad před náklady a daní" />
           <Kpi
             label="Zůstatek za měsíc"
             value={formatCZK(e.monthlyCashFlow)}
             tone={(e.monthlyCashFlow ?? 0) >= 0 ? "pos" : "neg"}
-            sub="Hypotéka na 80 % ceny"
+            sub="Po nákladech a splátce; před daní. Hypotéka na 80 % ceny."
           />
           <div className="rounded-md border bg-card p-3">
             <div className="text-[11px] uppercase tracking-wider text-muted-foreground">

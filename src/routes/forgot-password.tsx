@@ -28,7 +28,8 @@ function Forgot() {
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo: `${window.location.origin}/reset-password`,
     });
-    if (error) return void toast.error("Odkaz se nepodařilo odeslat. Chvíli počkejte a zkuste to znovu.");
+    if (error)
+      return void toast.error("Odkaz se nepodařilo odeslat. Chvíli počkejte a zkuste to znovu.");
     setSent(true);
   };
   return (

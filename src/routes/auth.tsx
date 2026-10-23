@@ -55,8 +55,7 @@ function authErrorMessage(error: unknown): string {
     return "Příliš mnoho pokusů. Chvíli počkejte a zkuste to znovu.";
   if (lower.includes("user already registered") || lower.includes("already registered"))
     return "Účet s tímto e-mailem už existuje. Zkuste se přihlásit.";
-  if (lower.includes("signup is disabled"))
-    return "Vytváření nových účtů je momentálně vypnuté.";
+  if (lower.includes("signup is disabled")) return "Vytváření nových účtů je momentálně vypnuté.";
   if (lower.includes("failed to fetch") || lower.includes("network"))
     return "Nepodařilo se spojit se serverem. Zkontrolujte připojení a zkuste to znovu.";
   return "Nepodařilo se dokončit přihlášení nebo vytvoření účtu. Zkuste to prosím znovu.";
@@ -83,9 +82,7 @@ function AuthPage() {
         const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
         if (error) throw error;
         if (!data.session || !data.user)
-          throw new Error(
-            "Přihlášení se nepodařilo dokončit. Zkuste to prosím znovu.",
-          );
+          throw new Error("Přihlášení se nepodařilo dokončit. Zkuste to prosím znovu.");
         navigate({ to: "/dashboard" });
       } else {
         const { data, error } = await supabase.auth.signUp({
@@ -104,9 +101,7 @@ function AuthPage() {
             "Účet byl vytvořen. Otevřete potvrzovací odkaz v e-mailu, který jsme vám poslali.",
           );
         } else {
-          throw new Error(
-            "Účet se nepodařilo vytvořit. Zkuste to prosím znovu.",
-          );
+          throw new Error("Účet se nepodařilo vytvořit. Zkuste to prosím znovu.");
         }
       }
     } catch (err) {

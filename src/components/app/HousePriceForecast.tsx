@@ -56,17 +56,23 @@ export function HousePriceForecast({ compact = false }: { compact?: boolean }) {
             Podrobnosti odhadu →
           </Link>
         ) : (
-          <span className="text-[10px] text-muted-foreground">Zdroj: evropský statistický úřad Eurostat</span>
+          <span className="text-[10px] text-muted-foreground">
+            Zdroj: evropský statistický úřad Eurostat
+          </span>
         )
       }
     >
       {query.isPending && (
-        <p className="text-sm text-muted-foreground">Ověřuji odhad na dostupných historických údajích…</p>
+        <p className="text-sm text-muted-foreground">
+          Ověřuji odhad na dostupných historických údajích…
+        </p>
       )}
-      {query.isError && (
-        <p className="text-sm text-negative">Odhad se teď nepodařilo vypočítat.</p>
+      {query.isError && <p className="text-sm text-negative">Odhad se teď nepodařilo vypočítat.</p>}
+      {data && !data.ok && (
+        <p className="text-sm text-negative">
+          Údaje pro odhad nejsou nyní dostupné. Zkuste to později.
+        </p>
       )}
-      {data && !data.ok && <p className="text-sm text-negative">Údaje pro odhad nejsou nyní dostupné. Zkuste to později.</p>}
       {data?.ok && (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -88,18 +94,26 @@ export function HousePriceForecast({ compact = false }: { compact?: boolean }) {
             </span>
           </div>
           <div className="grid gap-2 sm:grid-cols-3">
-            <Kpi label="Nižší odhad" value={pricePct(data.percent?.p10)} sub="Pod touto změnou leží 10 % odhadovaných výsledků" />
+            <Kpi
+              label="Nižší odhad"
+              value={pricePct(data.percent?.p10)}
+              sub="Pod touto změnou leží 10 % odhadovaných výsledků"
+            />
             <Kpi
               label="Střední odhad"
               value={pricePct(data.percent?.p50)}
               sub={`${quarterLabel(data.originPeriod)} → ${quarterLabel(data.horizonPeriod)}`}
             />
-            <Kpi label="Vyšší odhad" value={pricePct(data.percent?.p90)} sub="Pod touto změnou leží 90 % odhadovaných výsledků" />
+            <Kpi
+              label="Vyšší odhad"
+              value={pricePct(data.percent?.p90)}
+              sub="Pod touto změnou leží 90 % odhadovaných výsledků"
+            />
           </div>
           <p className="text-xs text-muted-foreground">
-            Procenta vyjadřují možnou změnu cen za rok. Záporná hodnota znamená pokles.
-            Rozmezí není záruka; skutečný výsledek může ležet i mimo něj.
-            Celostátní odhad neurčuje cenu konkrétního bytu.
+            Procenta vyjadřují možnou změnu cen za rok. Záporná hodnota znamená pokles. Rozmezí není
+            záruka; skutečný výsledek může ležet i mimo něj. Celostátní odhad neurčuje cenu
+            konkrétního bytu.
           </p>
           <p className="text-xs text-muted-foreground">
             {data.evidenceClass === "OBSERVED_VINTAGE"
@@ -109,7 +123,8 @@ export function HousePriceForecast({ compact = false }: { compact?: boolean }) {
           {!compact && (
             <>
               <p className="text-xs text-muted-foreground">
-                Ověřeno na {data.scoredOrigins} historických obdobích. Odhadovaná pravděpodobnost růstu cen:{" "}
+                Ověřeno na {data.scoredOrigins} historických obdobích. Odhadovaná pravděpodobnost
+                růstu cen:{" "}
                 {data.probabilityPositive == null
                   ? "—"
                   : `${Math.round(data.probabilityPositive * 100)} %`}
@@ -154,9 +169,10 @@ export function HousePriceForecast({ compact = false }: { compact?: boolean }) {
                 </div>
               )}
               <p className="text-xs text-muted-foreground">
-                Menší chyba znamená přesnější odhad v minulosti. Srovnávací odhad předpokládá pokračování poslední změny.
-                Chyby jsou ve společné výpočetní stupnici, nikoli v korunách nebo procentech ceny.
-                Rozmezí nejistoty zlepšení má úroveň 95 %; pokud zahrnuje nulu, lepší přesnost není prokázaná.
+                Menší chyba znamená přesnější odhad v minulosti. Srovnávací odhad předpokládá
+                pokračování poslední změny. Chyby jsou ve společné výpočetní stupnici, nikoli v
+                korunách nebo procentech ceny. Rozmezí nejistoty zlepšení má úroveň 95 %; pokud
+                zahrnuje nulu, lepší přesnost není prokázaná.
               </p>
               {data.journal.length > 0 && (
                 <div>

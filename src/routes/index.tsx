@@ -53,8 +53,8 @@ function Landing() {
           {t("app.tagline")}.
         </h1>
         <p className="mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">
-          Porovnejte cenu nemovitosti s odhadem, zjistěte možný nájem a kolik vám zbude
-          po nákladech a splátce hypotéky. Odhady nejsou zárukou budoucího zisku.
+          Porovnejte cenu nemovitosti s odhadem, zjistěte možný nájem a kolik vám zbude po nákladech
+          a splátce hypotéky. Odhady nejsou zárukou budoucího zisku.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Button asChild size="lg">
