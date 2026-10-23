@@ -12,3 +12,7 @@
 - [x] #2 part 1: walk-forward runner, prediction journal, runner state, experiment config/integrity, trajectory graph, vintage as-of/audit/snapshot, backtest metrics (pure, tested)
 - [ ] #2 rest: baseline-forecast(s) (strict-type fixes), house-price server fn + UI, dashboard/market edits, migrations
 - [ ] Real-data walk-forward backtest vs naive baseline (needs evidence history with vintages)
+
+## Current request: production-only data
+- [ ] Hide demo data across lists, market, AI and related reads without deleting history.
+- [ ] Verify authenticated preview and publish; confirm live availability.

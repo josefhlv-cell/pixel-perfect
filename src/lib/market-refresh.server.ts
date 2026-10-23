@@ -33,6 +33,7 @@ export async function refreshLiveMarketStats(): Promise<number> {
       .from("market_statistics")
       .select("avg_rent_m2")
       .eq("city", city)
+      .eq("is_sample", false)
       .not("avg_rent_m2", "is", null)
       .order("period", { ascending: false })
       .limit(1)
