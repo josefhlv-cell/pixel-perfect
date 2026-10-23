@@ -7,7 +7,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { calculateTotalReturn } from "./calculations";
-import { defaultInvestmentInput, enrichListing, latestStatsByCity } from "./deals";
+import { defaultInvestmentInput, enrichListing, latestStatsByCity, saleComparablesFromListings } from "./deals";
 import { portfolioTotals } from "./portfolio";
 import { onlyLive } from "./live-data";
 
@@ -100,12 +100,28 @@ export const runAiAnalysis = createServerFn({ method: "POST" })
         .single();
       if (!l) throw new Error("Nemovitost nenalezena");
       propertyId = l.property_id;
-      const [{ data: prop }, { data: stats }, { data: snaps }] = await Promise.all([
+      const [
+        { data: prop },
+        { data: stats },
+        { data: snaps },
+        { data: allListings },
+        { data: allProperties },
+      ] = await Promise.all([
         onlyLive(supabase.from("properties").select("*")).eq("id", l.property_id).maybeSingle(),
         onlyLive(supabase.from("market_statistics").select("*")),
         supabase.from("listing_snapshots").select("*").eq("listing_id", l.id),
+        onlyLive(supabase.from("listings").select("*")),
+        onlyLive(supabase.from("properties").select("*")),
       ]);
-      const e = enrichListing(l, prop ?? null, latestStatsByCity(stats ?? []), snaps ?? []);
+      const propertyMap = new Map((allProperties ?? []).map((row) => [row.id, row]));
+      const saleComparables = saleComparablesFromListings(allListings ?? [], propertyMap);
+      const e = enrichListing(
+        l,
+        prop ?? null,
+        latestStatsByCity(stats ?? []),
+        snaps ?? [],
+        saleComparables,
+      );
       const calc =
         l.price && e.rent ? calculateTotalReturn(defaultInvestmentInput(l.price, e.rent)) : null;
       const property = {
