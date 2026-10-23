@@ -19,6 +19,6 @@
 - [ ] Confirm new deployment and safe production access — publication completion not yet confirmed; latest security scan reports 7 critical permissive read-policy findings.
 
 ## Current request: srozumitelná čeština
-- [ ] Nahradit anglické názvy a odborné zkratky na všech obrazovkách.
-- [ ] Vysvětlit finanční údaje a nejistotu odhadů jednoduchou češtinou bez změny výpočtů.
-- [ ] Ověřit přihlášený náhled a regresní testy.
+- [x] Nahradit anglické názvy a odborné zkratky v navigaci, stránkách, porovnání a popisech nabídek.
+- [x] Vysvětlit finanční údaje a nejistotu odhadů jednoduchou češtinou bez změny výpočtů; zachovat upozornění na chybějící historické verze dat.
+- [x] Ověřit 11 přihlášených stránek, detail skutečné nabídky a zadání nájmu 20 000 Kč; bez starých zkratek, vodorovného přetečení a chyb prohlížeče. 216/216 testů, lint 0 chyb/9 varování, automatická kontrola build OK. Nezveřejněno.
