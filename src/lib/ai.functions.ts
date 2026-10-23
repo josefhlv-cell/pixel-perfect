@@ -11,6 +11,7 @@ import {
   defaultInvestmentInput,
   enrichListing,
   latestStatsByCity,
+  rentalComparablesFromListings,
   saleComparablesFromListings,
 } from "./deals";
 import { portfolioTotals } from "./portfolio";
@@ -120,12 +121,14 @@ export const runAiAnalysis = createServerFn({ method: "POST" })
       ]);
       const propertyMap = new Map((allProperties ?? []).map((row) => [row.id, row]));
       const saleComparables = saleComparablesFromListings(allListings ?? [], propertyMap);
+      const rentalComparables = rentalComparablesFromListings(allListings ?? [], propertyMap);
       const e = enrichListing(
         l,
         prop ?? null,
         latestStatsByCity(stats ?? []),
         snaps ?? [],
         saleComparables,
+        rentalComparables,
       );
       const calc =
         l.price && e.rent ? calculateTotalReturn(defaultInvestmentInput(l.price, e.rent)) : null;
