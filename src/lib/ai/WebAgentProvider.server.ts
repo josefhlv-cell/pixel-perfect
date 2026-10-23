@@ -54,7 +54,7 @@ export class WebAgentProvider {
         model: MODEL,
         tools: [{ type: "web_search" }],
         reasoning: { effort: "low" },
-        input: `Vyhledej na veřejném webu AKTUÁLNÍ jednotlivé inzeráty nemovitostí k prodeji (detail jedné nabídky, ne výpis/kategorie) odpovídající zadání: "${query.slice(0, 300)}". Hledej na českých realitních portálech, webech realitních kanceláří i inzertních serverech (Bazoš, Sbazar, Annonce) a ve veřejných příspěvcích Facebook Marketplace / skupin, pokud jsou veřejně dostupné. Vrať pouze seznam až 12 URL detailů inzerátů, jedna na řádek. Nic nevymýšlej.`,
+        input: `Vyhledej na veřejném webu AKTUÁLNÍ jednotlivé inzeráty nemovitostí (detail jedné nabídky, ne výpis/kategorie) odpovídající zadání: "${query.slice(0, 300)}". Podle zadání jde o prodej nebo pronájem – respektuj to. Hledej na českých realitních portálech, webech realitních kanceláří i inzertních serverech (Bazoš, Sbazar, Annonce) a ve veřejných příspěvcích Facebook Marketplace / skupin, pokud jsou veřejně dostupné. Vrať pouze seznam až 12 URL detailů inzerátů, jedna na řádek. Nic nevymýšlej.`,
       }),
     });
     if (!res.ok) throw new WebAgentUnavailableError(`search ${res.status}`);
@@ -161,11 +161,13 @@ export class WebAgentProvider {
       }
     };
     // 4 requests: open web + two OR-ed portal groups + one classified-ads group.
+    // Rental queries search rental ads; everything else defaults to sale ads.
+    const offerTerm = /pron[aá]jem|n[aá]jem|pronajmout/i.test(q) ? "pronájem" : "prodej";
     const half = Math.ceil(MAJOR_PORTALS.length / 2);
     const groups = [MAJOR_PORTALS.slice(0, half), MAJOR_PORTALS.slice(half), CLASSIFIED_SITES];
     const lists = await Promise.all([
-      one(`${q} prodej inzerát`, 10),
-      ...groups.map((g) => one(`${q} prodej (${g.map((d) => `site:${d}`).join(" OR ")})`, 12)),
+      one(`${q} ${offerTerm} inzerát`, 10),
+      ...groups.map((g) => one(`${q} ${offerTerm} (${g.map((d) => `site:${d}`).join(" OR ")})`, 12)),
     ]);
     // Interleave so every portal gets a slot before any portal gets a second one.
     const out: string[] = [];

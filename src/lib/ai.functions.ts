@@ -159,6 +159,9 @@ export const runAiAnalysis = createServerFn({ method: "POST" })
         estimate_range_high: e.estimate?.high ?? null,
         diff_vs_estimate_bps: e.diffBps,
         estimated_rent: e.rent,
+        rent_comparable_count: e.rentEstimate?.comparableCount ?? null,
+        rent_confidence: e.rentEstimate?.confidence ?? null,
+        rent_evidence_as_of: e.rentEstimate?.evidenceAsOf ?? null,
         gross_yield_bps: e.grossYieldBps,
         deal_priority: e.priority,
         ...(calc && {
