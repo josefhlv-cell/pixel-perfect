@@ -93,9 +93,9 @@ export function saleComparablesFromListings(
         district: locationParts.length > 1 ? locationParts.slice(1).join(", ") : null,
         rooms: property?.disposition ?? row.rooms,
         propertyType: property?.property_type ?? row.property_type,
-        condition: property?.condition,
-        buildingType: property?.building_type,
-        floor: property?.floor,
+        condition: property?.condition ?? null,
+        buildingType: property?.building_type ?? null,
+        floor: property?.floor ?? null,
         areaM2,
         priceCzk,
         observedAt,
@@ -141,8 +141,8 @@ export function rentalComparablesFromListings(
         disposition: property?.disposition ?? row.rooms ?? "",
         areaM2,
         monthlyRentCzk: rentCzk,
-        condition: property?.condition,
-        floor: property?.floor,
+        condition: property?.condition ?? null,
+        floor: property?.floor ?? null,
         observedAt,
         isActive: ["ACTIVE_CONFIRMED", "ACTIVE_UNCONFIRMED"].includes(row.availability_status),
         isVerified: row.last_verified_at != null,
@@ -203,9 +203,9 @@ export function enrichListing(
           district: locationParts.length > 1 ? locationParts.slice(1).join(", ") : null,
           rooms: property?.disposition ?? listing.rooms,
           propertyType: property?.property_type ?? listing.property_type,
-          condition: property?.condition,
-          buildingType: property?.building_type,
-          floor: property?.floor,
+          condition: property?.condition ?? null,
+          buildingType: property?.building_type ?? null,
+          floor: property?.floor ?? null,
           areaM2: area,
         }
       : null;
@@ -219,8 +219,8 @@ export function enrichListing(
           district: locationParts.length > 1 ? locationParts.slice(1).join(", ") : null,
           disposition: property?.disposition ?? listing.rooms ?? "",
           areaM2: area,
-          condition: property?.condition,
-          floor: property?.floor,
+          condition: property?.condition ?? null,
+          floor: property?.floor ?? null,
         }
       : null;
   const rentEstimate = rentTarget
