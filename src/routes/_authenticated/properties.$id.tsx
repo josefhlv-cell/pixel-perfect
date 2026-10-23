@@ -12,7 +12,7 @@ import { pageHead } from "@/lib/head";
 import {
   AvailabilityBadge,
   Delta,
-  Aktuálnost nabídkyBadge,
+  FreshnessBadge,
   Kpi,
   PriorityBadge,
   Row,
@@ -160,7 +160,7 @@ function Detail() {
               Aktuálnost nabídky
             </div>
             <div className="mt-1.5">
-              <Aktuálnost nabídkyBadge status={l.freshness_status} />
+              <FreshnessBadge status={l.freshness_status} />
             </div>
           </div>
           <div className="rounded-md border bg-card p-3">
@@ -186,7 +186,7 @@ function Detail() {
             disabled={inWl}
           >
             <Star className="mr-1.5 h-4 w-4" />
-            {inWl ? "Ve oblíbených" : "Uložit do oblíbených"}
+            {inWl ? "V oblíbených" : "Uložit do oblíbených"}
           </Button>
           <Button size="sm" variant="outline" onClick={() => setPfOpen(true)}>
             <Plus className="mr-1.5 h-4 w-4" />
