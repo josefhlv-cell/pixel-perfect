@@ -19,10 +19,12 @@
 - [x] Plain-Czech UI pass; 11 authenticated pages verified; 216/216 tests, lint 0 errors
 
 ## Current request: FINAL AUDIT & COMPLETION (uploaded spec)
-- [ ] Audit: map where valuation/rent/calculation engines are used (UI, API, AI); find divergent or stale logic
-- [ ] Wire rent comparables model (rent-model.ts) into the real data flow or document the blocker (no rental listings source)
-- [ ] Verify UI null/empty handling for estimates (no zero-as-estimate, no false deal score)
-- [ ] Verify consistency: same engine in UI, API, AI
-- [ ] Add/repair tests for: insufficient comparables, outliers, duplicates, stale data, rent vs services separation, null handling
-- [ ] Run tests, lint, typecheck, production build; record real results
-- [ ] Final summary: changes, files, checks, remaining blockers, live-data status, deploy readiness
+- [x] Audit: single engine confirmed (deals.ts/valuation.ts/calculations) shared by UI, AI and API; no divergent math
+- [x] Rent model wired: listings.offer_type (migration 0017), extraction distinguishes prodej/pronajem, monthly_rent without services, rental comparables feed estimateRentFromComparables in enrichListing (UI + AI)
+- [x] Sale pool excludes rentals; rental listings are not sale targets (no benchmark/yield/cash-flow on them)
+- [x] Deal score capped at 20 without any financial evidence; priorityBreakdown mirrors the cap
+- [x] UI null fixes: portfolio-import rent no longer defaults to 0 (save blocked without real rent), cash-flow tone no longer treats null as positive, market bar chart skips missing cities, rental cards show "Nájem za měsíc" instead of "Cena"
+- [x] Tests added (webagent offer_type/rent, rental pool, rent estimate wiring, score cap): 240/240 pass, tsgo clean, lint 0 errors/9 pre-existing warnings, production build OK
+- [x] Authenticated browser check: /deals (33 live listings) + detail — no console errors, missing rent shows "Neuvedeno" with explanation
+- [ ] Live rental search to populate rental comparables (user runs e.g. "pronájem 2+kk Pardubice" in Deal Hunter; costs Firecrawl/AI credits)
+- [ ] Publication of these changes — awaiting user approval
