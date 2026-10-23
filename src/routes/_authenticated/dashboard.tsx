@@ -8,14 +8,7 @@ import { formatBps, formatCZK, formatRelative } from "@/lib/format";
 import { isActive } from "@/lib/freshness";
 import { pageHead } from "@/lib/head";
 import { t } from "@/lib/i18n";
-import {
-  Empty,
-  Kpi,
-  PageHeader,
-  PriorityBadge,
-  SampleBadge,
-  Section,
-} from "@/components/app/shared";
+import { Empty, Kpi, PageHeader, PriorityBadge, Section } from "@/components/app/shared";
 import { ValueChart, SERIES } from "@/components/app/Charts";
 import { AiRunner } from "@/components/app/AiPanel";
 import { HousePriceForecast } from "@/components/app/HousePriceForecast";
@@ -82,15 +75,7 @@ function Dashboard() {
           value={totals.yieldBps == null ? "—" : formatBps(totals.yieldBps)}
           sub="hrubý, z kupní ceny"
         />
-        <Kpi
-          label="Aktivní dealy"
-          value={active.length}
-          sub={
-            <span className="inline-flex items-center gap-1">
-              vč. <SampleBadge />
-            </span>
-          }
-        />
+        <Kpi label="Aktivní dealy" value={active.length} sub="skutečné nabídky" />
         <Kpi label="Watchlist" value={wl.length} />
       </div>
 
@@ -151,9 +136,7 @@ function Dashboard() {
             </Link>
           }
         >
-          <div className="mb-2 text-xs text-muted-foreground">
-            Zdroj: <SampleBadge /> – datový zdroj není připojen.
-          </div>
+          <div className="mb-2 text-xs text-muted-foreground">Zdroj: veřejné realitní nabídky</div>
           <ul className="divide-y">
             {top.map((e) => (
               <li key={e.listing.id}>
@@ -207,7 +190,7 @@ function Dashboard() {
             </ul>
           )}
         </Section>
-        <Section title="Trh · cena za m²" right={<SampleBadge />}>
+        <Section title="Trh · cena za m²">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs text-muted-foreground">
@@ -229,7 +212,7 @@ function Dashboard() {
         </Section>
         <Section title="AI Insight">
           <p className="mb-3 text-sm text-muted-foreground">
-            Krátké shrnutí trhu z dostupných (ukázkových) dat.
+            Krátké shrnutí trhu z dostupných skutečných dat.
           </p>
           <AiRunner kind="market" label="Vygenerovat insight" />
         </Section>

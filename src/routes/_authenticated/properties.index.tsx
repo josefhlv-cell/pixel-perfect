@@ -140,7 +140,7 @@ function Properties() {
         title="Nemovitosti"
         sub={
           <span className="inline-flex items-center gap-2">
-            <span className="num">{rows.length}</span> nabídek · <SampleBadge />
+            <span className="num">{rows.length}</span> skutečných nabídek
           </span>
         }
         actions={

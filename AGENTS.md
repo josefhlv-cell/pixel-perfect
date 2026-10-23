@@ -16,3 +16,4 @@
 - Daily watchdog runs server-side via pg_cron hourly → /api/public/cron/watchdog (each watch is due after 20 h); the in-app runDueWatches stays as a fallback.
 - Firecrawl search uses 4 requests (open web, two OR-ed portal groups, one classified-ads group: bazos/sbazar/annonce) and retries once on 429; Facebook is reached only via open web search because it requires login.
 - ČNB ARAD import (src/lib/future-os/adapters/cnb-arad*.ts) appends to reality_evidence via supabaseAdmin after requireSupabaseAuth — authenticated has no INSERT grant, so evidence history stays server-controlled; published_at stays NULL because ARAD exposes none.
+- Production reads filter is_sample=false at query boundaries, including AI and market rent carry-over; Web Agent dedup uses only owned live properties so demo references cannot contaminate new listings.
