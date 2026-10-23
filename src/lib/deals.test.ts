@@ -35,7 +35,7 @@ const listing = {
 } as never;
 
 describe("enrichListing", () => {
-  it("prefers older live statistics over newer sample statistics for rent", () => {
+  it("does not invent property-level rent from city averages", () => {
     const base = {
       id: "stat",
       city: "Brno",
@@ -47,7 +47,7 @@ describe("enrichListing", () => {
       { ...base, period: "2026-01-01", avg_rent_m2: 300, is_sample: false },
       { ...base, period: "2026-10-01", avg_rent_m2: 900, is_sample: true },
     ]);
-    expect(enrichListing(listing, null, mixed, []).rent).toBe(15000);
+    expect(enrichListing(listing, null, mixed, []).rent).toBeNull();
     expect(
       latestStatsByCity([{ ...base, period: "2026-10-01", avg_rent_m2: 900, is_sample: true }])
         .size,
@@ -64,14 +64,14 @@ describe("enrichListing", () => {
     expect(e.rent).toBeNull();
     expect(e.estimate).toBeNull();
   });
-  it("uses the latest market period and existing engines", () => {
+  it("does not label city-level averages as a property valuation or rent", () => {
     const e = enrichListing(listing, null, stats, []);
-    expect(e.estimate?.estimatedValue).toBe(5_500_000);
-    expect(e.rent).toBe(16_500);
-    expect(e.diffBps).toBe(-909);
+    expect(e.estimate).toBeNull();
+    expect(e.rent).toBeNull();
+    expect(e.diffBps).toBeNull();
     expect(e.isSample).toBe(true);
-    expect(e.reasons.some((r) => r.text.includes("pod odhadem"))).toBe(true);
-    expect(e.reasons.some((r) => !r.positive && r.text.includes("nízká jistota"))).toBe(true);
+    expect(e.reasons.some((r) => r.text.includes("pod odhadem"))).toBe(false);
+    expect(e.reasons.some((r) => r.text.includes("srovnatelné nabídky"))).toBe(true);
   });
   it("breakdown sums to the priority score", () => {
     const e = enrichListing(listing, null, stats, []);
