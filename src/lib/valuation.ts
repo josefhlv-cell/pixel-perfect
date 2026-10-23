@@ -95,7 +95,12 @@ export function estimateValueFromComparables(
   ) return null;
 
   const seen = new Set<string>();
-  const scored: { item: SaleComparable; pricePerM2: number; weight: number; observedMs: number }[] = [];
+  const scored: {
+    item: SaleComparable;
+    pricePerM2: number;
+    weight: number;
+    observedMs: number;
+  }[] = [];
   for (const item of comparables) {
     if (
       item.listingId === target.listingId ||
@@ -114,8 +119,16 @@ export function estimateValueFromComparables(
     seen.add(urlKey);
 
     if (baseCity(item.city) !== baseCity(target.city)) continue;
-    if (target.rooms && item.rooms && normalize(target.rooms) !== normalize(item.rooms)) continue;
-    if (target.propertyType && item.propertyType && normalize(target.propertyType) !== normalize(item.propertyType)) continue;
+    if (
+      target.rooms &&
+      item.rooms &&
+      normalize(target.rooms) !== normalize(item.rooms)
+    ) continue;
+    if (
+      target.propertyType &&
+      item.propertyType &&
+      normalize(target.propertyType) !== normalize(item.propertyType)
+    ) continue;
 
     const areaRatio = Math.abs(item.areaM2 - target.areaM2) / target.areaM2;
     if (areaRatio > 0.35) continue;
@@ -157,7 +170,9 @@ export function estimateValueFromComparables(
     comparables: scored.length,
     confidence: effectiveN >= 12 ? "high" : effectiveN >= 7 ? "medium" : "low",
     isSample: false,
-    evidenceAsOf: new Date(Math.max(...scored.map((item) => item.observedMs))).toISOString(),
+    evidenceAsOf: new Date(
+      Math.max(...scored.map((item) => item.observedMs)),
+    ).toISOString(),
     sources: scored.map((item) => item.item.sourceUrl),
   };
 }
