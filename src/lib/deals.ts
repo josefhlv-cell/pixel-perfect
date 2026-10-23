@@ -150,6 +150,11 @@ export function enrichListing(
     });
   if (rent != null)
     reasons.push({ positive: false, text: "Nájem je odhad z průměru lokality – nízká jistota" });
+  else
+    reasons.push({
+      positive: false,
+      text: "Odhad nájmu není k dispozici: chybí ověřené srovnatelné nabídky; výnos a cash flow proto nejsou dopočítány.",
+    });
   if (estimate == null) reasons.push({ positive: false, text: "Chybí data pro odhad hodnoty" });
 
   return {
