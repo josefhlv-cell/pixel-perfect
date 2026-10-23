@@ -156,7 +156,9 @@ function Detail() {
           <Kpi
             label="Zůstatek za měsíc"
             value={formatCZK(e.monthlyCashFlow)}
-            tone={(e.monthlyCashFlow ?? 0) >= 0 ? "pos" : "neg"}
+            tone={
+              e.monthlyCashFlow == null ? undefined : e.monthlyCashFlow >= 0 ? "pos" : "neg"
+            }
             sub="Po nákladech a splátce; před daní. Hypotéka na 80 % ceny."
           />
           <div className="rounded-md border bg-card p-3">
@@ -453,11 +455,16 @@ function AddToPortfolio({
     mortgage: String(Math.round(price * 0.8)),
     rate: "4.89",
     years: "30",
-    rent: String(e.rent ?? 0),
-    expenses: String(Math.round((e.rent ?? 0) * 0.15)),
+    rent: e.rent != null ? String(e.rent) : "",
+    expenses: e.rent != null ? String(Math.round(e.rent * 0.15)) : "",
     date: new Date().toISOString().slice(0, 10),
   });
   const save = async () => {
+    const rentNum = Math.round(Number(v.rent));
+    if (!Number.isFinite(rentNum) || rentNum <= 0) {
+      toast.error("Doplňte skutečný měsíční nájem – bez něj nelze nemovitost uložit do portfolia.");
+      return;
+    }
     try {
       const user_id = await uid();
       const { error } = await supabase.from("portfolio_properties").insert({

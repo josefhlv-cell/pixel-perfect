@@ -106,8 +106,9 @@ function Market() {
         <Section title="Regionální srovnání · cena/m²">
           <Bars
             data={[...latest]
-              .sort((a, b) => (b.avg_asking_price_m2 ?? 0) - (a.avg_asking_price_m2 ?? 0))
-              .map((r) => ({ label: r.city, v: r.avg_asking_price_m2 ?? 0 }))}
+              .filter((r) => r.avg_asking_price_m2 != null)
+              .sort((a, b) => b.avg_asking_price_m2! - a.avg_asking_price_m2!)
+              .map((r) => ({ label: r.city, v: r.avg_asking_price_m2! }))}
             dataKey="v"
             height={300}
           />
