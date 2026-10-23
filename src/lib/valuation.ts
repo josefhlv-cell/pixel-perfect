@@ -23,6 +23,9 @@ export type SaleComparable = {
   district?: string | null;
   rooms?: string | null;
   propertyType?: string | null;
+  condition?: string | null;
+  buildingType?: string | null;
+  floor?: number | null;
   areaM2: number;
   priceCzk: number;
   observedAt: string;
@@ -38,6 +41,9 @@ export type SaleTarget = {
   district?: string | null;
   rooms?: string | null;
   propertyType?: string | null;
+  condition?: string | null;
+  buildingType?: string | null;
+  floor?: number | null;
   areaM2: number;
 };
 
@@ -121,6 +127,15 @@ export function estimateValueFromComparables(
     let weight = Math.exp(-areaRatio * 3) * Math.exp(-ageDays / 90);
     if (target.district && item.district) {
       weight *= normalize(target.district) === normalize(item.district) ? 1.35 : 0.75;
+    }
+    if (target.condition && item.condition) {
+      weight *= normalize(target.condition) === normalize(item.condition) ? 1.15 : 0.82;
+    }
+    if (target.buildingType && item.buildingType) {
+      weight *= normalize(target.buildingType) === normalize(item.buildingType) ? 1.08 : 0.88;
+    }
+    if (target.floor != null && item.floor != null) {
+      weight *= Math.abs(target.floor - item.floor) <= 1 ? 1.04 : 0.96;
     }
     if (item.availability === "ACTIVE_CONFIRMED") weight *= 1.1;
     if (item.freshness === "FRESH") weight *= 1.1;
