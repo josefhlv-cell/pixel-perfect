@@ -24,9 +24,38 @@ export const listingsQuery = queryOptions({
     for (const r of [l, p, m, s]) if (r.error) throw r.error;
     const props = new Map((p.data ?? []).map((x) => [x.id, x]));
     const stats = latestStatsByCity(m.data ?? []);
+    // Comparable evidence is drawn only from the same production-only listing set
+    // already loaded above. The target listing and duplicate property are excluded
+    // inside the model; city-level averages are never used as a substitute.
+    const saleComparables = (l.data ?? []).flatMap((row) => {
+      const prop = props.get(row.property_id);
+      const areaM2 = row.area_m2 == null ? null : Number(row.area_m2);
+      const priceCzk = row.price == null ? null : Number(row.price);
+      const city = prop?.city ?? row.location;
+      const observedAt = row.last_verified_at ?? row.last_seen_at ?? row.updated_at ?? row.created_at;
+      if (!city || !areaM2 || areaM2 <= 0 || !priceCzk || priceCzk <= 0 || !row.source_url || !observedAt) {
+        return [];
+      }
+      const locationParts = (row.location ?? city).split(/[,–-]/).map((part) => part.trim());
+      return [{
+        listingId: row.id,
+        propertyId: row.property_id,
+        sourceUrl: row.source_url,
+        city,
+        district: locationParts.length > 1 ? locationParts.slice(1).join(", ") : null,
+        rooms: row.rooms,
+        propertyType: row.property_type,
+        areaM2,
+        priceCzk,
+        observedAt,
+        availability: row.availability_status,
+        freshness: row.freshness_status,
+        isSample: row.is_sample || (prop?.is_sample ?? false),
+      }];
+    });
     return (l.data ?? [])
       .map((x) =>
-        enrichListing(x, props.get(x.property_id) ?? null, stats, (s.data ?? []) as never),
+        enrichListing(x, props.get(x.property_id) ?? null, stats, (s.data ?? []) as never, saleComparables),
       )
       .sort((a, b) => b.priority - a.priority);
   },
