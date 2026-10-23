@@ -194,12 +194,12 @@ function Properties() {
           "Typ",
           types.map((x) => [x, x]),
         )}
-        {inp("yieldMin", "Min. výnos %")}
-        {inp("cfMin", "Min. cash-flow")}
-        {inp("prioMin", "Min. Deal Priority")}
+        {inp("yieldMin", "Roční nájem vůči ceně od %")}
+        {inp("cfMin", "Min. měsíční zůstatek")}
+        {inp("prioMin", "Min. hodnocení ze 100")}
         {sel(
           "fresh",
-          "Freshness",
+          "Aktuálnost",
           ["FRESH", "RECENT", "AGING", "STALE", "EXPIRED", "UNKNOWN"].map((s) => [
             s,
             t(`freshness.${s}`),
@@ -222,11 +222,11 @@ function Properties() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="priority">Řadit: Deal Priority</SelectItem>
+            <SelectItem value="priority">Řadit: hodnocení nabídky</SelectItem>
             <SelectItem value="price">Řadit: cena ↑</SelectItem>
             <SelectItem value="ppm2">Řadit: Kč/m² ↑</SelectItem>
-            <SelectItem value="yield">Řadit: výnos ↓</SelectItem>
-            <SelectItem value="cashflow">Řadit: cash-flow ↓</SelectItem>
+            <SelectItem value="yield">Řadit: nájem vůči ceně ↓</SelectItem>
+            <SelectItem value="cashflow">Řadit: měsíční zůstatek ↓</SelectItem>
             <SelectItem value="area">Řadit: plocha ↓</SelectItem>
           </SelectContent>
         </Select>
@@ -244,7 +244,7 @@ function Properties() {
               lat: e.listing.latitude!,
               lng: e.listing.longitude!,
               title: e.listing.title ?? "",
-              subtitle: `${formatCZK(e.listing.price)} · DP ${e.priority}`,
+              subtitle: `${formatCZK(e.listing.price)} · hodnocení ${e.priority}`,
               layer: e.priority >= 50 ? "deal" : "listing",
               href: e.listing.id,
             }))}
@@ -261,14 +261,14 @@ function Properties() {
             <thead className="border-b text-left text-[11px] uppercase tracking-wider text-muted-foreground">
               <tr>
                 {[
-                  "DP",
+                  "Hodnocení",
                   "Nabídka",
                   "Cena",
                   "Kč/m²",
                   "m²",
-                  "Výnos",
-                  "Cash-flow",
-                  "Freshness",
+                  "Roční nájem vůči ceně",
+                  "Zůstatek za měsíc",
+                  "Aktuálnost",
                   "Stav",
                   "Zdroj",
                 ].map((h) => (

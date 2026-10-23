@@ -6,10 +6,10 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
 export const ALERT_TYPES = [
-  ["new_deal", "Nový potenciální deal"],
+  ["new_deal", "Nová zajímavá nabídka"],
   ["price_drop", "Pokles ceny"],
   ["availability_change", "Změna dostupnosti"],
-  ["priority_change", "Změna Deal Priority"],
+  ["priority_change", "Změna hodnocení nabídky"],
   ["stale_listing", "Zastaralá nabídka"],
   ["removed_listing", "Odstraněná nabídka"],
   ["reappeared_listing", "Znovuobjevená nabídka"],

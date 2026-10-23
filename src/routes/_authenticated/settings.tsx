@@ -22,7 +22,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_authenticated/settings")({
-  head: () => pageHead("Nastavení", "Investiční profil, notifikace, AI a účet."),
+  head: () => pageHead("Nastavení", "Vaše požadavky na nemovitosti, upozornění, pomocník a účet."),
   loader: ({ context }) => context.queryClient.ensureQueryData(profileQuery),
   component: Settings,
 });
@@ -63,7 +63,7 @@ function Settings() {
       ? await supabase.from("investor_profiles").update(payload).eq("id", inv.id)
       : await supabase.from("investor_profiles").insert({ ...payload, user_id: data.userId });
     if (error) return void toast.error("Uložení se nepovedlo.");
-    toast.success("Investiční profil uložen");
+    toast.success("Moje požadavky uložen");
     qc.invalidateQueries({ queryKey: ["profile"] });
   };
   const saveName = async () => {
@@ -94,21 +94,21 @@ function Settings() {
     <div className="space-y-4">
       <PageHeader title="Nastavení" />
       <div className="grid gap-4 lg:grid-cols-2">
-        <Section title="Investiční profil">
+        <Section title="Moje požadavky">
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              {field("locations", "Cílové lokality", "Brno, Pardubice")}
+              {field("locations", "Města, kde chci hledat", "Brno, Pardubice")}
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Strategie</Label>
+              <Label className="text-xs text-muted-foreground">Co je pro mě důležité</Label>
               <Select value={v.strategy} onValueChange={(s) => setV({ ...v, strategy: s })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cashflow">Cash-flow</SelectItem>
+                  <SelectItem value="cashflow">Pravidelný příjem z nájmu</SelectItem>
                   <SelectItem value="appreciation">Růst hodnoty</SelectItem>
-                  <SelectItem value="value_add">Value-add (rekonstrukce)</SelectItem>
+                  <SelectItem value="value_add">Zvýšení hodnoty rekonstrukcí</SelectItem>
                   <SelectItem value="balanced">Vyvážená</SelectItem>
                 </SelectContent>
               </Select>
@@ -127,32 +127,39 @@ function Settings() {
               </Select>
             </div>
             {field("maxPrice", "Rozpočet – max. cena (Kč)")}
-            {field("minYield", "Požadovaný výnos (%)")}
-            {field("ltv", "Financování – LTV (%)")}
+            {field("minYield", "Roční nájem vůči ceně alespoň (%)")}
+            {field("ltv", "Část ceny hrazená hypotékou (%)")}
             {field("rate", "Financování – úrok (%)")}
           </div>
           <Button className="mt-4" size="sm" onClick={saveProfile}>
             Uložit profil
           </Button>
         </Section>
-        <Section title="Notifikace">
+        <Section title="Upozornění">
           <NotificationSettings />
         </Section>
-        <Section title="Makrodata ČNB">
+        <Section title="Údaje České národní banky">
           <CnbAradImport />
         </Section>
-        <Section title="AI">
-          <Row k="AI Provider" v="Lovable" />
-          <Row k="Model" v="spravuje server" />
+        <Section title="Automatický pomocník">
+          <Row k="Vysvětlení připravuje" v="Umělá inteligence" />
+          <Row k="Provozovatel služby" v="Lovable" />
           <p className="mt-2 text-xs text-muted-foreground">
-            API klíče jsou uložené pouze na serveru a nikdy se nezobrazují.
+            Pomocník může udělat chybu. Před rozhodnutím si ověřte údaje v původních zdrojích.
           </p>
         </Section>
         <Section title="Účet">
           <Row k="E-mail" v={data.email ?? "—"} />
-          <Row k="Plán" v={<Badge variant="outline">{data.profile?.plan ?? "FREE"}</Badge>} />
+          <Row
+            k="Tarif"
+            v={
+              <Badge variant="outline">
+                {data.profile?.plan === "PRO" ? "Rozšířený" : "Základní"}
+              </Badge>
+            }
+          />
           <p className="mb-3 mt-1 text-xs text-muted-foreground">
-            Plán FREE / PRO lze změnit pouze přes platbu – nikoli z aplikace.
+            Změna tarifu není na této stránce dostupná.
           </p>
           <div className="flex gap-2">
             <Input

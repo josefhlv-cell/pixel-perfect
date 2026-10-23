@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/alerts")({
-  head: () => pageHead("Alerty", "Alert Center: změny cen, dostupnosti, čerstvosti a nové dealy."),
+  head: () => pageHead("Upozornění", "Nové nabídky a změny cen, aktuálnosti a dostupnosti."),
   loader: ({ context }) => context.queryClient.ensureQueryData(alertsQuery),
   component: Alerts,
 });
@@ -29,11 +29,11 @@ function Alerts() {
     await supabase.from("alerts").update({ read_at: new Date().toISOString() }).is("read_at", null);
     qc.invalidateQueries({ queryKey: ["alerts"] });
   };
-  const label = (k: string) => ALERT_TYPES.find(([x]) => x === k)?.[1] ?? k;
+  const label = (k: string) => ALERT_TYPES.find(([x]) => x === k)?.[1] ?? "Změna nabídky";
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Alert Center"
+        title="Upozornění"
         actions={
           data.some((a) => !a.read_at) && (
             <Button size="sm" variant="outline" onClick={markAll}>
@@ -66,7 +66,7 @@ function Alerts() {
             ))
           )}
         </div>
-        <Section title="Nastavení notifikací">
+        <Section title="Nastavení upozornění">
           <NotificationSettings />
         </Section>
       </div>

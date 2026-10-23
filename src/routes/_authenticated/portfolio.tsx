@@ -47,7 +47,8 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/portfolio")({
-  head: () => pageHead("Portfolio", "Vaše nemovitosti: hodnota, equity, dluh, nájem a cash-flow."),
+  head: () =>
+    pageHead("Moje nemovitosti", "Vaše nemovitosti: hodnota, dluh, nájem a zůstatek po nákladech."),
   loader: ({ context }) => context.queryClient.ensureQueryData(portfolioQuery),
   component: Portfolio,
 });
@@ -84,7 +85,7 @@ function Portfolio() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Portfolio"
+        title="Moje nemovitosti"
         actions={
           <Button size="sm" onClick={() => setEdit("new")}>
             <Plus className="mr-1.5 h-4 w-4" />
@@ -94,11 +95,11 @@ function Portfolio() {
       />
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-7">
         <Kpi label="Hodnota" value={formatCZK(totals.value)} />
-        <Kpi label="Equity" value={formatCZK(totals.equity)} />
+        <Kpi label="Hodnota po odečtení dluhu" value={formatCZK(totals.equity)} />
         <Kpi label="Dluh" value={formatCZK(totals.debt)} />
         <Kpi label="Nájem / měs." value={formatCZK(totals.rent)} />
         <Kpi
-          label="Cash-flow / měs."
+          label="Zůstatek za měsíc"
           value={formatCZK(totals.cashFlow)}
           tone={totals.cashFlow >= 0 ? "pos" : "neg"}
         />
@@ -113,7 +114,7 @@ function Portfolio() {
         <Empty>
           {t("empty.portfolio")}{" "}
           <Link to="/deals" className="text-primary hover:underline">
-            Deal Hunter
+            Hledání nabídek
           </Link>
         </Empty>
       ) : (
@@ -124,14 +125,14 @@ function Portfolio() {
               <div className="flex gap-0.5">
                 {(Object.keys(RANGES) as RangeKey[]).map((r) => (
                   <button
-                    key={r}
+                    key={r === "ALL" ? "Celá historie" : r}
                     onClick={() => setRange(r)}
                     className={cn(
                       "num rounded px-2 py-0.5 text-[11px]",
                       r === range ? "bg-primary text-primary-foreground" : "text-muted-foreground",
                     )}
                   >
-                    {r}
+                    {r === "ALL" ? "Celá historie" : r}
                   </button>
                 ))}
               </div>
@@ -160,9 +161,9 @@ function Portfolio() {
                     "Nemovitost",
                     "Hodnota",
                     "Dluh",
-                    "Equity",
+                    "Hodnota po odečtení dluhu",
                     "Nájem",
-                    "Cash-flow",
+                    "Zůstatek po nákladech",
                     "Výnos",
                     "",
                   ].map((h) => (
@@ -246,7 +247,15 @@ function Portfolio() {
                   className="flex justify-between border-b border-border/50 py-1.5 text-sm last:border-0"
                 >
                   <span>
-                    {new Date(x.occurred_on).toLocaleDateString("cs-CZ")} · {x.kind}
+                    {new Date(x.occurred_on).toLocaleDateString("cs-CZ")} ·{" "}
+                    {{
+                      rent: "Nájem",
+                      income: "Jiný příjem",
+                      expense: "Výdaj",
+                      repair: "Oprava",
+                      tax: "Daň",
+                      sale: "Prodej",
+                    }[x.kind] ?? "Platba"}
                     {x.note ? ` · ${x.note}` : ""}
                   </span>
                   <span className={cn("num", x.amount < 0 ? "text-negative" : "text-positive")}>
@@ -386,7 +395,7 @@ function EditDialog({ row, onClose }: { row: PortfolioRow | null; onClose: () =>
             ["price", "Kupní cena"],
             ["date", "Datum koupě", "date"],
             ["value", "Aktuální hodnota"],
-            ["mortgage", "Hypotéka (jistina)"],
+            ["mortgage", "Nesplacená část hypotéky"],
             ["rate", "Úrok %"],
             ["years", "Doba (let)"],
             ["rent", "Nájem / měs."],
@@ -484,7 +493,7 @@ function ValDialog({ row, onClose }: { row: PortfolioRow; onClose: () => void })
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Valuation snapshot · {row.name}</DialogTitle>
+          <DialogTitle>Záznam hodnoty · {row.name}</DialogTitle>
         </DialogHeader>
         <Fields
           v={v}
@@ -495,7 +504,7 @@ function ValDialog({ row, onClose }: { row: PortfolioRow; onClose: () => void })
           ]}
         />
         <p className="text-xs text-muted-foreground">
-          Snapshoty ocenění jsou neměnné (append-only historie).
+          Dřívější záznamy hodnoty zůstávají zachované. Nová hodnota se přidá do historie.
         </p>
         <DialogFooter>
           <Button onClick={save}>Uložit</Button>

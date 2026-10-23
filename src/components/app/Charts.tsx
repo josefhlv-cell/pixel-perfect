@@ -16,10 +16,10 @@ import { formatCZK } from "@/lib/format";
 
 export const SERIES: Record<string, { label: string; color: string }> = {
   value: { label: "Hodnota", color: "var(--color-chart-1)" },
-  equity: { label: "Equity", color: "var(--color-chart-2)" },
+  equity: { label: "Hodnota po odečtení dluhu", color: "var(--color-chart-2)" },
   debt: { label: "Dluh", color: "var(--color-chart-4)" },
   rent: { label: "Nájem", color: "var(--color-chart-3)" },
-  cashFlow: { label: "Cash-flow", color: "var(--color-chart-5)" },
+  cashFlow: { label: "Zůstatek po nákladech", color: "var(--color-chart-5)" },
   growth: { label: "Růst hodnoty", color: "var(--color-chart-2)" },
 };
 

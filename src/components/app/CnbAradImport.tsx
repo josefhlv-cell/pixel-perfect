@@ -25,7 +25,7 @@ export function CnbAradImport() {
       toast.success(`ČNB: uloženo ${ins} nových hodnot`);
       qc.invalidateQueries({ queryKey: ["cnb-arad-status"] });
     } catch {
-      toast.error("Import ČNB selhal.");
+      toast.error("Stažení údajů České národní banky se nepodařilo.");
     } finally {
       setBusy(false);
     }
@@ -43,7 +43,7 @@ export function CnbAradImport() {
         }
       />
       <Button size="sm" onClick={run} disabled={busy}>
-        {busy ? "Stahuji z ČNB…" : "Stáhnout data ČNB (ARAD)"}
+        {busy ? "Stahuji z ČNB…" : "Stáhnout údaje České národní banky"}
       </Button>
       {res && (
         <ul className="space-y-1 text-xs text-muted-foreground">
@@ -51,7 +51,7 @@ export function CnbAradImport() {
             <li key={x.setId}>
               Sada {x.setId}:{" "}
               {x.ok
-                ? `staženo ${x.fetched}, nových ${x.inserted} (z toho revizí ${x.revised}), přeskočeno ${x.skipped}`
+                ? `staženo ${x.fetched}, nových ${x.inserted} (z toho opravených hodnot ${x.revised}), přeskočeno ${x.skipped}`
                 : x.error}
             </li>
           ))}

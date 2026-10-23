@@ -6,19 +6,19 @@ import { Kpi, Section } from "@/components/app/shared";
 import { cn } from "@/lib/utils";
 
 const CLAIM: Record<string, string> = {
-  NO_EDGE: "Bez prokázané výhody",
-  EDGE: "Výhoda proti persistenci",
-  INSUFFICIENT_SAMPLE: "Málo historických oken",
+  NO_EDGE: "Lepší přesnost zatím nebyla prokázána",
+  EDGE: "Přesnější než jednoduchý srovnávací odhad",
+  INSUFFICIENT_SAMPLE: "Příliš málo období pro ověření přesnosti",
 };
 
 const MODEL: Record<string, string> = {
-  PERSIST: "persistence",
-  ZERO: "nula",
+  PERSIST: "pokračování poslední změny",
+  ZERO: "beze změny cen",
   MEAN: "historický průměr",
-  LOCAL: "posledních 8 oken",
-  DAMPED: "poloviční setrvačnost",
-  AR1: "AR(1)",
-  RATE_LAG: "sazba + minulý výnos",
+  LOCAL: "průměr posledních 8 období",
+  DAMPED: "pokračování s poloviční změnou",
+  AR1: "návaznost na předchozí období",
+  RATE_LAG: "vliv úroku a předchozí změny cen",
 };
 
 function logPoints(value: number): string {
@@ -35,7 +35,7 @@ function quarterLabel(iso: string | null): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "—";
   const quarter = Math.floor(date.getUTCMonth() / 3) + 1;
-  return `${date.getUTCFullYear()} Q${quarter}`;
+  return `${quarter}. čtvrtletí ${date.getUTCFullYear()}`;
 }
 
 export function HousePriceForecast({ compact = false }: { compact?: boolean }) {
@@ -49,24 +49,30 @@ export function HousePriceForecast({ compact = false }: { compact?: boolean }) {
 
   return (
     <Section
-      title="Česko · index cen bytů, další rok"
+      title="Česko · odhad změny cen bytů za rok"
       right={
         compact ? (
           <Link to="/market" className="text-xs text-primary hover:underline">
-            Celý kontrakt →
+            Podrobnosti odhadu →
           </Link>
         ) : (
-          <span className="font-mono text-[10px] text-muted-foreground">Eurostat prc_hpi_q</span>
+          <span className="text-[10px] text-muted-foreground">
+            Zdroj: evropský statistický úřad Eurostat
+          </span>
         )
       }
     >
       {query.isPending && (
-        <p className="text-sm text-muted-foreground">Počítám walk-forward na zveřejněné řadě…</p>
+        <p className="text-sm text-muted-foreground">
+          Ověřuji odhad na dostupných historických údajích…
+        </p>
       )}
-      {query.isError && (
-        <p className="text-sm text-negative">Forecast se teď nepodařilo spočítat.</p>
+      {query.isError && <p className="text-sm text-negative">Odhad se teď nepodařilo vypočítat.</p>}
+      {data && !data.ok && (
+        <p className="text-sm text-negative">
+          Údaje pro odhad nejsou nyní dostupné. Zkuste to později.
+        </p>
       )}
-      {data && !data.ok && <p className="text-sm text-negative">{data.error}</p>}
       {data?.ok && (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -78,53 +84,68 @@ export function HousePriceForecast({ compact = false }: { compact?: boolean }) {
                   : "border-warning/40 text-warning",
               )}
             >
-              {CLAIM[data.claim] ?? data.claim}
+              {CLAIM[data.claim] ?? "Přesnost zatím není ověřena"}
             </span>
             <span className="text-xs text-muted-foreground">
-              vydaný model: {MODEL[data.issuedModel] ?? data.issuedModel}
+              Použitý výpočet: {MODEL[data.issuedModel] ?? "jiný výpočet"}
               {data.champion
-                ? ` · šampion: ${MODEL[data.champion] ?? data.champion}`
-                : " · šampion walk-forwardu není"}
+                ? ` · nejlépe ověřený: ${MODEL[data.champion] ?? "jiný výpočet"}`
+                : " · žádný výpočet zatím nemá prokázanou převahu"}
             </span>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            <Kpi label="P10" value={pricePct(data.percent?.p10)} sub="spodní okraj" />
+          <div className="grid gap-2 sm:grid-cols-3">
             <Kpi
-              label="P50"
+              label="Nižší odhad"
+              value={pricePct(data.percent?.p10)}
+              sub="Pod touto změnou leží 10 % odhadovaných výsledků"
+            />
+            <Kpi
+              label="Střední odhad"
               value={pricePct(data.percent?.p50)}
               sub={`${quarterLabel(data.originPeriod)} → ${quarterLabel(data.horizonPeriod)}`}
             />
-            <Kpi label="P90" value={pricePct(data.percent?.p90)} sub="horní okraj" />
+            <Kpi
+              label="Vyšší odhad"
+              value={pricePct(data.percent?.p90)}
+              sub="Pod touto změnou leží 90 % odhadovaných výsledků"
+            />
           </div>
+          <p className="text-xs text-muted-foreground">
+            Procenta vyjadřují možnou změnu cen za rok. Záporná hodnota znamená pokles. Rozmezí není
+            záruka; skutečný výsledek může ležet i mimo něj. Celostátní odhad neurčuje cenu
+            konkrétního bytu.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {data.evidenceClass === "OBSERVED_VINTAGE"
+              ? "Ověření používá historické údaje v podobě, v jaké byly tehdy známé. Ani lepší výsledek v minulosti sám o sobě nestačí pro rozhodnutí o koupi."
+              : "Ověření používá dnes dostupné, případně opravené údaje. Datum, kdy byly známy, je pouze odhadnuté. Nejde proto o důkaz, že by výpočet stejně uspěl v minulosti."}
+          </p>
           {!compact && (
             <>
-              <p className="text-sm text-muted-foreground">{data.caveat}</p>
               <p className="text-xs text-muted-foreground">
-                Okna out-of-sample: {data.scoredOrigins}. Pravděpodobnost kladného výnosu u vydaného
-                modelu:{" "}
+                Ověřeno na {data.scoredOrigins} historických obdobích. Odhadovaná pravděpodobnost
+                růstu cen:{" "}
                 {data.probabilityPositive == null
                   ? "—"
                   : `${Math.round(data.probabilityPositive * 100)} %`}
-                . Kontrakt <span className="font-mono">{data.contractHash.slice(0, 12)}</span>.{" "}
-                Kontrakt se neukládá. Journal se zapíše až po kontrole přístupových pravidel.
-                {data.promotable ? "" : " Není povýžitelný a není to pokyn k nákupu."}
+                . Aktuální odhad se zatím neukládá do historie. Nejde o doporučení ke koupi.
               </p>
               {data.comparisons.length > 0 && (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="text-left text-[11px] uppercase tracking-wider text-muted-foreground">
                       <tr>
-                        <th className="py-1 font-medium">Model</th>
-                        <th className="text-right font-medium">MAE</th>
-                        <th className="text-right font-medium">Persistence</th>
-                        <th className="text-right font-medium">Δ MAE</th>
-                        <th className="text-right font-medium">95 %</th>
+                        <th className="py-1 font-medium">Způsob výpočtu</th>
+                        <th className="text-right font-medium">Průměrná chyba</th>
+                        <th className="text-right font-medium">Chyba srovnávacího odhadu</th>
+                        <th className="text-right font-medium">Zlepšení chyby</th>
+                        <th className="text-right font-medium">Nejistota zlepšení</th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.comparisons.map((row) => (
                         <tr key={row.modelId} className="border-t border-border/50">
-                          <td className="py-1.5">{MODEL[row.modelId] ?? row.modelId}</td>
+                          <td className="py-1.5">{MODEL[row.modelId] ?? "Jiný výpočet"}</td>
                           <td className="num text-right">{logPoints(row.mae)}</td>
                           <td className="num text-right">{logPoints(row.benchmarkMae)}</td>
                           <td
@@ -136,7 +157,7 @@ export function HousePriceForecast({ compact = false }: { compact?: boolean }) {
                             )}
                           >
                             {logPoints(row.improvement)}
-                            {row.significant ? "" : " n.s."}
+                            {row.significant ? "" : " (neprůkazné)"}
                           </td>
                           <td className="num text-right text-muted-foreground">
                             {logPoints(row.confidenceLow)} … {logPoints(row.confidenceHigh)}
@@ -147,10 +168,16 @@ export function HousePriceForecast({ compact = false }: { compact?: boolean }) {
                   </table>
                 </div>
               )}
+              <p className="text-xs text-muted-foreground">
+                Menší chyba znamená přesnější odhad v minulosti. Srovnávací odhad předpokládá
+                pokračování poslední změny. Chyby jsou ve společné výpočetní stupnici, nikoli v
+                korunách nebo procentech ceny. Rozmezí nejistoty zlepšení má úroveň 95 %; pokud
+                zahrnuje nulu, lepší přesnost není prokázaná.
+              </p>
               {data.journal.length > 0 && (
                 <div>
                   <div className="mb-1 text-[11px] uppercase tracking-wider text-muted-foreground">
-                    Zapečetěné kontrakty
+                    Dřívější zaznamenané odhady
                   </div>
                   <ul className="divide-y text-sm">
                     {data.journal.map((row) => (
@@ -160,15 +187,15 @@ export function HousePriceForecast({ compact = false }: { compact?: boolean }) {
                       >
                         <span className="font-mono text-xs">{row.contractHash.slice(0, 12)}</span>
                         <span className="text-muted-foreground">
-                          {MODEL[row.model] ?? row.model} ·{" "}
-                          {CLAIM[row.claim ?? ""] ?? row.claim ?? "—"}
+                          {MODEL[row.model] ?? "Jiný výpočet"} ·{" "}
+                          {CLAIM[row.claim ?? ""] ?? "Přesnost zatím není ověřena"}
                         </span>
                         <span className="num">
                           {row.realized == null
-                            ? "čeká na realizaci"
+                            ? "čeká na skutečný výsledek"
                             : row.insideInterval
-                              ? "realizace v intervalu"
-                              : "realizace mimo interval"}
+                              ? "skutečnost v odhadovaném rozmezí"
+                              : "skutečnost mimo odhadované rozmezí"}
                         </span>
                       </li>
                     ))}
@@ -179,7 +206,7 @@ export function HousePriceForecast({ compact = false }: { compact?: boolean }) {
           )}
           {compact && (
             <p className="text-xs text-muted-foreground">
-              {data.caveat} {data.promotable ? "" : "Není to pokyn k nákupu."}
+              Přesnost na minulých údajích nezaručuje budoucí výsledek. Nejde o doporučení ke koupi.
             </p>
           )}
         </div>
