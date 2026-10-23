@@ -148,7 +148,11 @@ function Detail() {
           </div>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Kpi label="Roční nájem vůči ceně" value={formatBps(e.grossYieldBps)} sub="Odhad před náklady a daní" />
+          <Kpi
+            label="Roční nájem vůči ceně"
+            value={formatBps(e.grossYieldBps)}
+            sub="Odhad před náklady a daní"
+          />
           <Kpi
             label="Zůstatek za měsíc"
             value={formatCZK(e.monthlyCashFlow)}
@@ -272,7 +276,8 @@ function Detail() {
               <Row k="Metoda" v="Nabídkové ceny v lokalitě" />
               <Row k="Jistota" v={e.estimate.confidence === "medium" ? "střední" : "nízká"} />
               <p className="mt-2 text-xs text-muted-foreground">
-                Odhad vychází z nabídkových (ne realizovaných) cen – jde o odhad, ne potvrzenou prodejní cenu.
+                Odhad vychází z nabídkových (ne realizovaných) cen – jde o odhad, ne potvrzenou
+                prodejní cenu.
               </p>
             </>
           ) : (
@@ -341,8 +346,9 @@ function Detail() {
             </table>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            Opatrný: nájem −10 %, neobsazenost 10 %, úrok vyšší o 1 procentní bod, růst ceny 1 %. Příznivý:
-            nájem +5 %, neobsazenost 3 %, růst ceny 4,5 %. Jde o předpoklady, nikoli o zaručený vývoj.
+            Opatrný: nájem −10 %, neobsazenost 10 %, úrok vyšší o 1 procentní bod, růst ceny 1 %.
+            Příznivý: nájem +5 %, neobsazenost 3 %, růst ceny 4,5 %. Jde o předpoklady, nikoli o
+            zaručený vývoj.
           </p>
         </Section>
       )}
