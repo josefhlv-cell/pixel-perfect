@@ -8,13 +8,13 @@ export const Route = createFileRoute("/_authenticated/calculator")({
   head: () =>
     pageHead(
       "Kalkulačka",
-      "Investiční kalkulačka: splátka, výnos, cash-flow, ROI, IRR a total return.",
+      "Spočítejte splátku hypotéky, nájem po nákladech a možné zhodnocení peněz.",
     ),
   component: () => (
     <div>
       <PageHeader
         title="Investiční kalkulačka"
-        sub="Výsledky se přepočítají okamžitě při změně vstupu. Výpočty používají centrální výpočetní jádro."
+        sub="Částky jsou příkladem pro vlastní výpočet, ne skutečnou nabídkou. Zadejte své údaje. Odhad růstu ceny a nájmu není zaručený."
       />
       <InvestmentCalculator initial={defaultInvestmentInput(4_500_000, 16_000)} />
     </div>

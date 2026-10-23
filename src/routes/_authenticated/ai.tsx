@@ -16,22 +16,22 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/_authenticated/ai")({
-  head: () => pageHead("AI Analytik", "AI analýza nemovitostí, dealů, portfolia a trhu."),
+  head: () => pageHead("Pomocník", "Srozumitelné vysvětlení nemovitostí, nabídek, nájmů a trhu."),
   loader: ({ context }) => context.queryClient.ensureQueryData(listingsQuery),
   component: AiPage,
 });
 
 const ACTIONS: Record<string, { kind: AiKind; label: string }[]> = {
   property: [
-    { kind: "property", label: "Analyzovat nemovitost" },
+    { kind: "property", label: "Vysvětlit nemovitost" },
     { kind: "risks", label: "Najít rizika" },
-    { kind: "due_diligence", label: "Připravit due diligence" },
+    { kind: "due_diligence", label: "Co ověřit před koupí" },
   ],
   deal: [
-    { kind: "deal", label: "Vysvětlit deal" },
+    { kind: "deal", label: "Vysvětlit nabídku" },
     { kind: "risks", label: "Najít rizika" },
   ],
-  portfolio: [{ kind: "portfolio", label: "Shrnutí portfolia" }],
+  portfolio: [{ kind: "portfolio", label: "Shrnutí mých nemovitostí" }],
   market: [{ kind: "market", label: "Shrnutí trhu" }],
 };
 
@@ -43,14 +43,14 @@ function AiPage() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="AI Analytik"
-        sub="Provider: Lovable AI. Finanční čísla počítá výpočetní jádro, AI je pouze interpretuje a označuje FACT / ESTIMATE / ASSUMPTION / UNKNOWN."
+        title="Pomocník"
+        sub="U vysvětlení rozlišujeme údaje ze zdrojů, odhady, předpoklady a to, co nevíme. Žádný odhad není zárukou."
       />
       <Tabs value={scope} onValueChange={(v) => setScope(v as keyof typeof ACTIONS)}>
-        <TabsList>
+        <TabsList className="flex h-auto flex-wrap">
           <TabsTrigger value="property">Nemovitost</TabsTrigger>
-          <TabsTrigger value="deal">Deal</TabsTrigger>
-          <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+          <TabsTrigger value="deal">Nabídka</TabsTrigger>
+          <TabsTrigger value="portfolio">Moje nemovitosti</TabsTrigger>
           <TabsTrigger value="market">Trh</TabsTrigger>
         </TabsList>
       </Tabs>
@@ -62,7 +62,7 @@ function AiPage() {
           <SelectContent>
             {data.map((e) => (
               <SelectItem key={e.listing.id} value={e.listing.id}>
-                {e.listing.title} · {formatCZK(e.listing.price)} · DP {e.priority}
+                {e.listing.title} · {formatCZK(e.listing.price)} · hodnocení {e.priority}
               </SelectItem>
             ))}
           </SelectContent>

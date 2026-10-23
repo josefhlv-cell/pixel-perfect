@@ -62,7 +62,7 @@ export function ListingCard({
         <PriorityBadge value={e.priority} />
       </div>
       <Link to="/properties/$id" params={{ id: l.id }} className="mt-3 block">
-        <div className="grid grid-cols-3 gap-2 text-xs">
+        <div className="grid grid-cols-2 gap-2 text-xs">
           <Stat k="Cena" v={formatCZK(l.price)} />
           <Stat k="Kč/m²" v={formatCZK(e.pricePerM2)} />
           <Stat k="Odhad" v={formatCZK(e.estimate?.estimatedValue)} />
@@ -72,9 +72,9 @@ export function ListingCard({
             tone={e.diffBps != null ? (e.diffBps < 0 ? "pos" : "neg") : undefined}
           />
           <Stat k="Nájem (odhad)" v={formatCZK(e.rent)} />
-          <Stat k="Hrubý výnos" v={formatBps(e.grossYieldBps)} />
+          <Stat k="Roční nájem vůči ceně" v={formatBps(e.grossYieldBps)} />
           <Stat
-            k="Cash-flow"
+            k="Zůstatek za měsíc"
             v={formatCZK(e.monthlyCashFlow)}
             tone={e.monthlyCashFlow != null ? (e.monthlyCashFlow >= 0 ? "pos" : "neg") : undefined}
           />
@@ -113,7 +113,7 @@ function Stat({ k, v, tone }: { k: string; v: string; tone?: "pos" | "neg" | und
     <div>
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</div>
       <div
-        className={cn("num", tone === "pos" && "text-positive", tone === "neg" && "text-negative")}
+        className={cn("num break-words", tone === "pos" && "text-positive", tone === "neg" && "text-negative")}
       >
         {v}
       </div>

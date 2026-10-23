@@ -3,6 +3,7 @@ import type { EnrichedListing } from "@/lib/deals";
 import { formatBps, formatCZK, formatNumber } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { PriorityBadge } from "./shared";
+import { t } from "@/lib/i18n";
 import { Link } from "@tanstack/react-router";
 
 export function ComparePanel({
@@ -27,16 +28,16 @@ export function ComparePanel({
     { label: "Dispozice", get: (e) => e.listing.rooms ?? "—" },
     { label: "Město", get: (e) => e.city ?? "—" },
     { label: "Odhad hodnoty", get: (e) => formatCZK(e.estimate?.estimatedValue) },
-    { label: "Rozdíl vs. odhad", get: (e) => (e.diffBps == null ? "—" : formatBps(e.diffBps, 1)) },
-    { label: "Hrubý výnos", get: (e) => formatBps(e.grossYieldBps) },
-    { label: "Cash-flow / měs.", get: (e) => formatCZK(e.monthlyCashFlow) },
-    { label: "Deal Priority", get: (e) => String(e.priority) },
-    { label: "Čerstvost", get: (e) => e.listing.freshness_status },
-    { label: "Dostupnost", get: (e) => e.listing.availability_status },
+    { label: "Cena vůči odhadu", get: (e) => (e.diffBps == null ? "—" : formatBps(e.diffBps, 1)) },
+    { label: "Roční nájem vůči ceně", get: (e) => formatBps(e.grossYieldBps) },
+    { label: "Zůstatek za měsíc", get: (e) => formatCZK(e.monthlyCashFlow) },
+    { label: "Hodnocení ze 100", get: (e) => String(e.priority) },
+    { label: "Aktuálnost", get: (e) => t(`freshness.${e.listing.freshness_status}`) },
+    { label: "Dostupnost", get: (e) => t(`availability.${e.listing.availability_status}`) },
   ];
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 p-4 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-card/80">
+    <div className="fixed inset-x-0 bottom-0 z-40 max-h-[60vh] overflow-y-auto border-t bg-card/95 p-4 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-card/80">
       <div className="mx-auto max-w-6xl">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold">Porovnání ({items.length})</h3>
@@ -48,7 +49,7 @@ export function ComparePanel({
           <table className="w-full min-w-[480px] text-sm">
             <thead>
               <tr className="text-left text-xs text-muted-foreground">
-                <th className="pb-2 pr-3 font-normal">Metrika</th>
+                <th className="pb-2 pr-3 font-normal">Údaj</th>
                 {items.map((e) => (
                   <th key={e.listing.id} className="pb-2 pr-3 font-normal">
                     <div className="flex items-start justify-between gap-1">

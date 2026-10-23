@@ -7,16 +7,16 @@ import { t } from "@/lib/i18n";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Reality Investor — investiční inteligence pro české nemovitosti" },
+      { title: "Reality Investor — nemovitosti, nájmy a náklady přehledně" },
       {
         name: "description",
         content:
-          "Najděte investiční byty s transparentním Deal Priority, spočítejte výnos a cash-flow a sledujte portfolio.",
+          "Najděte byty, porovnejte cenu a nájem a spočítejte, kolik vám zbude po nákladech.",
       },
       { property: "og:title", content: "Reality Investor" },
       {
         property: "og:description",
-        content: "Deal Hunter, kalkulačka výnosů, portfolio a AI analytik pro české nemovitosti.",
+        content: "Hledání nabídek, kalkulačka, vlastní nemovitosti a srozumitelné vysvětlení.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -47,14 +47,14 @@ function Landing() {
       </header>
       <main className="mx-auto flex max-w-4xl flex-1 flex-col justify-center px-4 py-16 sm:px-8">
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">
-          Investor terminal · CZ
+          Nemovitosti v Česku
         </p>
         <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">
           {t("app.tagline")}.
         </h1>
         <p className="mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">
-          Deal Priority s otevřeným výpočtem, odhad hodnoty a nájmu, cash-flow při reálném
-          financování, hlídání čerstvosti nabídek a AI analytik, který nepřepočítává vaše čísla.
+          Porovnejte cenu nemovitosti s odhadem, zjistěte možný nájem a kolik vám zbude
+          po nákladech a splátce hypotéky. Odhady nejsou zárukou budoucího zisku.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Button asChild size="lg">
@@ -68,9 +68,9 @@ function Landing() {
         </div>
         <div className="mt-14 grid gap-px overflow-hidden rounded-md border bg-border sm:grid-cols-3">
           {[
-            ["Deal Hunter", "Proč deal sedí – a proč ne. Každý bod skóre je vidět."],
-            ["Kalkulačka", "Splátka, cash-on-cash, IRR, equity a total return okamžitě."],
-            ["Freshness", "Ověřená dostupnost a stáří nabídky u každého inzerátu."],
+            ["Hledání nabídek", "Cena, možný nájem i rizika u každé nabídky."],
+            ["Kalkulačka", "Splátka hypotéky, měsíční zůstatek a možné zhodnocení peněz."],
+            ["Aktuálnost nabídek", "Ověřená dostupnost a stáří nabídky u každého inzerátu."],
           ].map(([h, d]) => (
             <div key={h} className="bg-card p-5">
               <div className="text-sm font-semibold">{h}</div>

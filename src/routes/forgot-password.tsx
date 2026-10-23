@@ -13,6 +13,8 @@ export const Route = createFileRoute("/forgot-password")({
       { name: "description", content: "Obnovení hesla k účtu Reality Investor." },
       { property: "og:title", content: "Zapomenuté heslo — Reality Investor" },
       { property: "og:description", content: "Pošleme vám odkaz pro nastavení nového hesla." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Forgot,
@@ -26,7 +28,7 @@ function Forgot() {
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo: `${window.location.origin}/reset-password`,
     });
-    if (error) return void toast.error(error.message);
+    if (error) return void toast.error("Odkaz se nepodařilo odeslat. Chvíli počkejte a zkuste to znovu.");
     setSent(true);
   };
   return (

@@ -86,13 +86,13 @@ function Market() {
         <Kpi label="Prům. nabídková cena" value={`${formatCZK(avg)}/m²`} sub="napříč městy" />
         <Kpi label="Prům. nájem" value={`${formatCZK(avgRent)}/m²`} />
         <Kpi
-          label="Hrubý výnos trhu"
+          label="Roční nájem vůči ceně"
           value={
             avg != null && avg > 0 && avgRent != null
               ? `${(((avgRent * 12) / avg) * 100).toFixed(2).replace(".", ",")} %`
               : "—"
           }
-          sub="nájem×12 / cena"
+          sub="Roční nájem jako část kupní ceny, před náklady"
         />
         <Kpi label="Sledovaná města" value={cities.length} />
       </div>
@@ -112,7 +112,7 @@ function Market() {
             height={300}
           />
         </Section>
-        <Section title="Kvartální vývoj">
+        <Section title="Změny za vybrané období">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-left text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -170,7 +170,7 @@ function Market() {
           </p>
         </Section>
       </div>
-      <Section title="AI shrnutí trhu">
+      <Section title="Vysvětlení situace na trhu">
         <AiRunner kind="market" label="Shrnout trh" />
       </Section>
     </div>

@@ -18,8 +18,10 @@ export const Route = createFileRoute("/auth")({
       { property: "og:title", content: "Přihlášení — Deal-Hunt" },
       {
         property: "og:description",
-        content: "Přístup k Deal Hunteru, portfoliu a AI analytikovi.",
+        content: "Přístup k nabídkám, vlastním nemovitostem a jejich vysvětlení.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: AuthPage,
@@ -39,7 +41,7 @@ function authErrorMessage(error: unknown): string {
     lower.includes("supabase_url") ||
     lower.includes("publishable_key")
   ) {
-    return "Připojení k databázi není nakonfigurované. Zkontrolujte Supabase nastavení aplikace.";
+    return "Přihlášení není správně nastavené. Správce aplikace musí obnovit připojení.";
   }
   if (lower.includes("invalid login") || lower.includes("invalid credentials"))
     return "Nesprávný e-mail nebo heslo.";
@@ -54,10 +56,10 @@ function authErrorMessage(error: unknown): string {
   if (lower.includes("user already registered") || lower.includes("already registered"))
     return "Účet s tímto e-mailem už existuje. Zkuste se přihlásit.";
   if (lower.includes("signup is disabled"))
-    return "Registrace je momentálně vypnutá v nastavení Supabase.";
+    return "Vytváření nových účtů je momentálně vypnuté.";
   if (lower.includes("failed to fetch") || lower.includes("network"))
     return "Nepodařilo se spojit se serverem. Zkontrolujte připojení a zkuste to znovu.";
-  return message || "Nepodařilo se dokončit požadavek.";
+  return "Nepodařilo se dokončit přihlášení nebo vytvoření účtu. Zkuste to prosím znovu.";
 }
 
 function AuthPage() {
@@ -82,7 +84,7 @@ function AuthPage() {
         if (error) throw error;
         if (!data.session || !data.user)
           throw new Error(
-            "Přihlášení nevrátilo platnou relaci. Zkontrolujte Supabase Auth konfiguraci.",
+            "Přihlášení se nepodařilo dokončit. Zkuste to prosím znovu.",
           );
         navigate({ to: "/dashboard" });
       } else {
@@ -99,11 +101,11 @@ function AuthPage() {
           navigate({ to: "/dashboard" });
         } else if (data.user) {
           toast.success(
-            "Účet byl vytvořen. Potvrďte prosím e-mail – odkaz vám musí dorazit z Supabase Auth.",
+            "Účet byl vytvořen. Otevřete potvrzovací odkaz v e-mailu, který jsme vám poslali.",
           );
         } else {
           throw new Error(
-            "Registrace nevrátila uživatele. Zkontrolujte Supabase Auth a e-mailové nastavení.",
+            "Účet se nepodařilo vytvořit. Zkuste to prosím znovu.",
           );
         }
       }

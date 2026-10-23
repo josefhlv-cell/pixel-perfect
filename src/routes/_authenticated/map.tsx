@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/_authenticated/map")({
-  head: () => pageHead("Mapa", "Nabídky, potenciální dealy, portfolio a watchlist na mapě."),
+  head: () => pageHead("Mapa", "Nabídky, vlastní nemovitosti a oblíbené na mapě."),
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.ensureQueryData(listingsQuery),
@@ -22,9 +22,9 @@ export const Route = createFileRoute("/_authenticated/map")({
 
 const LAYERS = [
   { k: "listing", label: "Nabídky", color: "#8b93a7" },
-  { k: "deal", label: "Potenciální dealy (DP ≥ 50)", color: "#e8b34a" },
-  { k: "portfolio", label: "Portfolio", color: "#3fbf7f" },
-  { k: "watchlist", label: "Watchlist", color: "#b07cf0" },
+  { k: "deal", label: "Nabídky s hodnocením alespoň 50 ze 100", color: "#e8b34a" },
+  { k: "portfolio", label: "Moje nemovitosti", color: "#3fbf7f" },
+  { k: "watchlist", label: "Oblíbené", color: "#b07cf0" },
 ] as const;
 
 function MapPage() {
@@ -55,7 +55,7 @@ function MapPage() {
         lat: e.listing.latitude,
         lng: e.listing.longitude,
         title: e.listing.title ?? "",
-        subtitle: `${formatCZK(e.listing.price)} · DP ${e.priority}${e.isSample ? " · SAMPLE DATA" : ""}`,
+        subtitle: `${formatCZK(e.listing.price)} · hodnocení ${e.priority}${e.isSample ? " · UKÁZKOVÁ DATA" : ""}`,
         layer,
         href: e.listing.id,
       });
@@ -71,7 +71,7 @@ function MapPage() {
           lat: e.listing.latitude! + 0.0004,
           lng: e.listing.longitude! + 0.0004,
           title: p.name,
-          subtitle: `Portfolio · ${formatCZK(p.current_value ?? p.purchase_price)}`,
+          subtitle: `Moje nemovitosti · ${formatCZK(p.current_value ?? p.purchase_price)}`,
           layer: "portfolio",
           href: e.listing.id,
         });
@@ -85,7 +85,7 @@ function MapPage() {
       <PageHeader
         title="Mapa"
         sub={
-          <span className="inline-flex items-center gap-2">Skutečné nabídky a vaše portfolio</span>
+          <span className="inline-flex items-center gap-2">Skutečné nabídky a vaše nemovitosti</span>
         }
       />
       <div className="flex flex-wrap gap-4 rounded-md border bg-card p-3">
@@ -109,7 +109,7 @@ function MapPage() {
         height={600}
       />
       <p className="text-xs text-muted-foreground">
-        Portfolio se zobrazí, pokud je nemovitost propojená se záznamem s polohou.
+        Vlastní nemovitost se zobrazí, pokud je nemovitost propojená se záznamem s polohou.
       </p>
     </div>
   );
