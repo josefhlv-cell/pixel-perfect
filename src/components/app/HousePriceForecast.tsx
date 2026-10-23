@@ -66,7 +66,7 @@ export function HousePriceForecast({ compact = false }: { compact?: boolean }) {
       {query.isError && (
         <p className="text-sm text-negative">Odhad se teď nepodařilo vypočítat.</p>
       )}
-      {data && !data.ok && <p className="text-sm text-negative">{data.error}</p>}
+      {data && !data.ok && <p className="text-sm text-negative">Údaje pro odhad nejsou nyní dostupné. Zkuste to později.</p>}
       {data?.ok && (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -100,6 +100,11 @@ export function HousePriceForecast({ compact = false }: { compact?: boolean }) {
             Procenta vyjadřují možnou změnu cen za rok. Záporná hodnota znamená pokles.
             Rozmezí není záruka; skutečný výsledek může ležet i mimo něj.
             Celostátní odhad neurčuje cenu konkrétního bytu.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {data.evidenceClass === "OBSERVED_VINTAGE"
+              ? "Ověření používá historické údaje v podobě, v jaké byly tehdy známé. Ani lepší výsledek v minulosti sám o sobě nestačí pro rozhodnutí o koupi."
+              : "Ověření používá dnes dostupné, případně opravené údaje. Datum, kdy byly známy, je pouze odhadnuté. Nejde proto o důkaz, že by výpočet stejně uspěl v minulosti."}
           </p>
           {!compact && (
             <>
