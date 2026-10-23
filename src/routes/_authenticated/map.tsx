@@ -85,9 +85,7 @@ function MapPage() {
       <PageHeader
         title="Mapa"
         sub={
-          <span className="inline-flex items-center gap-2">
-            Skutečné nabídky a vaše portfolio
-          </span>
+          <span className="inline-flex items-center gap-2">Skutečné nabídky a vaše portfolio</span>
         }
       />
       <div className="flex flex-wrap gap-4 rounded-md border bg-card p-3">

@@ -8,13 +8,7 @@ import { formatBps, formatCZK, formatRelative } from "@/lib/format";
 import { isActive } from "@/lib/freshness";
 import { pageHead } from "@/lib/head";
 import { t } from "@/lib/i18n";
-import {
-  Empty,
-  Kpi,
-  PageHeader,
-  PriorityBadge,
-  Section,
-} from "@/components/app/shared";
+import { Empty, Kpi, PageHeader, PriorityBadge, Section } from "@/components/app/shared";
 import { ValueChart, SERIES } from "@/components/app/Charts";
 import { AiRunner } from "@/components/app/AiPanel";
 import { HousePriceForecast } from "@/components/app/HousePriceForecast";
@@ -81,11 +75,7 @@ function Dashboard() {
           value={totals.yieldBps == null ? "—" : formatBps(totals.yieldBps)}
           sub="hrubý, z kupní ceny"
         />
-        <Kpi
-          label="Aktivní dealy"
-          value={active.length}
-          sub="skutečné nabídky"
-        />
+        <Kpi label="Aktivní dealy" value={active.length} sub="skutečné nabídky" />
         <Kpi label="Watchlist" value={wl.length} />
       </div>
 
@@ -146,9 +136,7 @@ function Dashboard() {
             </Link>
           }
         >
-          <div className="mb-2 text-xs text-muted-foreground">
-            Zdroj: veřejné realitní nabídky
-          </div>
+          <div className="mb-2 text-xs text-muted-foreground">Zdroj: veřejné realitní nabídky</div>
           <ul className="divide-y">
             {top.map((e) => (
               <li key={e.listing.id}>
