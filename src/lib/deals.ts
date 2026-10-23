@@ -10,6 +10,7 @@ import {
   grossYieldFor,
   priceDifferenceBps,
   type MarketStat,
+  type SaleComparable,
 } from "./valuation";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -80,6 +81,7 @@ export function enrichListing(
   property: PropertyRow | null,
   stats: Map<string, MarketStat>,
   snapshots: SnapshotRow[],
+  saleComparables: SaleComparable[] = [],
 ): EnrichedListing {
   if (!listing.is_sample && property?.is_sample) property = null;
   const city = property?.city ?? listing.location ?? null;
@@ -91,7 +93,17 @@ export function enrichListing(
         : null;
   // Live listings often carry "City, District" (e.g. "Pardubice, Zelené Předměstí"); fall back to the base city.
   const stat = city ? (stats.get(city) ?? stats.get(city.split(/[,–-]/)[0]!.trim())) : undefined;
-  const estimate = estimateValue(area, stat);
+  const locationParts = (listing.location ?? city ?? "").split(/[,–-]/).map((part) => part.trim());
+  const saleTarget = city && area != null && area > 0 ? {
+    listingId: listing.id,
+    propertyId: listing.property_id,
+    city,
+    district: locationParts.length > 1 ? locationParts.slice(1).join(", ") : null,
+    rooms: listing.rooms,
+    propertyType: listing.property_type,
+    areaM2: area,
+  } : null;
+  const estimate = estimateValue(saleTarget, saleComparables);
   const rent = estimateRent(area, stat);
   const diffBps = priceDifferenceBps(listing.price, estimate?.estimatedValue ?? null);
   const grossYieldBps = grossYieldFor(listing.price, rent);
@@ -149,13 +161,13 @@ export function enrichListing(
       text: "Nájem nepokryje náklady a splátku hypotéky na 80 % ceny; každý měsíc je třeba doplácet",
     });
   if (rent != null)
-    reasons.push({ positive: false, text: "Nájem je odhad z průměru lokality – nízká jistota" });
+    reasons.push({ positive: false, text: "Nájemní odhad vyžaduje kontrolu srovnatelných pronájmů a oddělení služeb a energií." });
   else
     reasons.push({
       positive: false,
       text: "Odhad nájmu není k dispozici: chybí ověřené srovnatelné nabídky; výnos a cash flow proto nejsou dopočítány.",
     });
-  if (estimate == null) reasons.push({ positive: false, text: "Chybí data pro odhad hodnoty" });
+  if (estimate == null) reasons.push({ positive: false, text: "Chybí alespoň pět aktuálních srovnatelných nabídek pro orientační cenový benchmark." });
 
   return {
     listing,
