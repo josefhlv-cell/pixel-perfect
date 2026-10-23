@@ -100,3 +100,37 @@ describe("estimateValueFromComparables", () => {
       .toEqual(estimateValueFromComparables(target, rows, "2026-10-23T00:00:00.000Z"));
   });
 });
+
+describe("computeDealPriority", () => {
+  it("caps the score at 20 when no financial evidence exists", () => {
+    const score = computeDealPriority({
+      diffBps: null,
+      grossYieldBps: null,
+      freshness: "FRESH",
+      availability: "ACTIVE_CONFIRMED",
+      priceDropped: true,
+    });
+    expect(score).toBe(20);
+  });
+  it("lets verified financial evidence raise the score above the cap", () => {
+    const score = computeDealPriority({
+      diffBps: -800,
+      grossYieldBps: 600,
+      freshness: "FRESH",
+      availability: "ACTIVE_CONFIRMED",
+      priceDropped: false,
+    });
+    expect(score).toBeGreaterThan(20);
+  });
+  it("never scores inactive listings", () => {
+    expect(
+      computeDealPriority({
+        diffBps: -800,
+        grossYieldBps: 600,
+        freshness: "FRESH",
+        availability: "SOLD",
+        priceDropped: true,
+      }),
+    ).toBe(0);
+  });
+});
