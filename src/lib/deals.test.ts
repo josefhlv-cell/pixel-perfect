@@ -36,13 +36,22 @@ const listing = {
 
 describe("enrichListing", () => {
   it("prefers older live statistics over newer sample statistics for rent", () => {
-    const base = { id: "stat", city: "Brno", listings_count: 3, created_at: "", avg_asking_price_m2: 100000 };
+    const base = {
+      id: "stat",
+      city: "Brno",
+      listings_count: 3,
+      created_at: "",
+      avg_asking_price_m2: 100000,
+    };
     const mixed = latestStatsByCity([
       { ...base, period: "2026-01-01", avg_rent_m2: 300, is_sample: false },
       { ...base, period: "2026-10-01", avg_rent_m2: 900, is_sample: true },
     ]);
     expect(enrichListing(listing, null, mixed, []).rent).toBe(15000);
-    expect(latestStatsByCity([{ ...base, period: "2026-10-01", avg_rent_m2: 900, is_sample: true }]).size).toBe(0);
+    expect(
+      latestStatsByCity([{ ...base, period: "2026-10-01", avg_rent_m2: 900, is_sample: true }])
+        .size,
+    ).toBe(0);
   });
   it("does not enrich a live listing with a sample property", () => {
     const e = enrichListing(
