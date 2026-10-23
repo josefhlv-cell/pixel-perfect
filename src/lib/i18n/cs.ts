@@ -51,8 +51,7 @@ export const cs = {
     UNKNOWN: "Neznámý stav",
   },
   empty: {
-    portfolio:
-      "Zatím nemáte uložené vlastní nemovitosti. Přidejte první nebo vyhledejte nabídky.",
+    portfolio: "Zatím nemáte uložené vlastní nemovitosti. Přidejte první nebo vyhledejte nabídky.",
     watchlist: "Zatím nemáte oblíbené nabídky. Uložte si nabídku z Hledání nabídek.",
     alerts:
       "Žádná upozornění. Jakmile se změní cena nebo stav sledované nemovitosti, uvidíte to tady.",

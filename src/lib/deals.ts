@@ -142,7 +142,10 @@ export function enrichListing(
     reasons.push({ positive: false, text: "Dostupnost neověřena" });
   if (priceDropped) reasons.push({ positive: true, text: "Cena byla snížena" });
   if (monthlyCashFlow != null && monthlyCashFlow < 0)
-    reasons.push({ positive: false, text: "Nájem nepokryje náklady a splátku hypotéky na 80 % ceny; každý měsíc je třeba doplácet" });
+    reasons.push({
+      positive: false,
+      text: "Nájem nepokryje náklady a splátku hypotéky na 80 % ceny; každý měsíc je třeba doplácet",
+    });
   if (rent != null)
     reasons.push({ positive: false, text: "Nájem je odhad z průměru lokality – nízká jistota" });
   if (estimate == null) reasons.push({ positive: false, text: "Chybí data pro odhad hodnoty" });

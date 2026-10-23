@@ -7,7 +7,9 @@ import type { Claim, PropertyAnalysis } from "@/lib/ai/AIProvider";
 import { cn } from "@/lib/utils";
 
 export type AiKind = "property" | "deal" | "risks" | "due_diligence" | "portfolio" | "market";
-type Result = Awaited<ReturnType<typeof runAiAnalysis>> | { ok: false; provider: string; kind: AiKind; error: string };
+type Result =
+  | Awaited<ReturnType<typeof runAiAnalysis>>
+  | { ok: false; provider: string; kind: AiKind; error: string };
 
 const kindTone: Record<string, string> = {
   FACT: "border-positive/40 text-positive",
@@ -128,7 +130,8 @@ export function AiRunner({
       </Button>
       {res && !res.ok && (
         <div className="rounded-md border border-warning/40 bg-warning/10 p-3 text-sm">
-          Automatické vysvětlení se nepodařilo připravit. Zkuste to později; výpočty a uložené údaje zůstávají dostupné.
+          Automatické vysvětlení se nepodařilo připravit. Zkuste to později; výpočty a uložené údaje
+          zůstávají dostupné.
         </div>
       )}
       {res?.ok && "analysis" in res && res.analysis && (
