@@ -26,7 +26,7 @@ import { PriceSparkline } from "@/components/app/PriceSparkline";
 
 export const Route = createFileRoute("/_authenticated/watchlist")({
   head: () =>
-    pageHead("Watchlist", "Uložené nabídky a historie změn ceny, čerstvosti a dostupnosti."),
+    pageHead("Oblíbené", "Uložené nabídky a historie změn ceny, čerstvosti a dostupnosti."),
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.ensureQueryData(watchlistQuery),
@@ -45,7 +45,7 @@ function Watchlist() {
   const remove = async (id: string) => {
     await removeFromWatchlist(id);
     await qc.invalidateQueries({ queryKey: ["watchlist"] });
-    toast.success("Odebráno z Watchlistu");
+    toast.success("Odebráno z oblíbených");
   };
 
   const exportCsv = () => {
@@ -67,19 +67,19 @@ function Watchlist() {
       })
       .filter(Boolean) as Record<string, string | number | null | undefined>[];
     downloadCsv(`watchlist-${new Date().toISOString().slice(0, 10)}.csv`, rows);
-    toast.success("CSV staženo");
+    toast.success("Tabulka stažena");
   };
 
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Watchlist"
-        sub="Historie změn je čtena z databáze (append-only snapshoty a události ověření)."
+        title="Oblíbené"
+        sub="Uložené nabídky a zaznamenané změny ceny a dostupnosti."
         actions={
           wl.length > 0 && (
             <Button size="sm" variant="outline" onClick={exportCsv}>
               <Download className="mr-1.5 h-4 w-4" />
-              Export CSV
+              Stáhnout tabulku
             </Button>
           )
         }
@@ -88,7 +88,7 @@ function Watchlist() {
         <Empty>
           {t("empty.watchlist")}{" "}
           <Link to="/deals" className="text-primary hover:underline">
-            Deal Hunter
+            Hledání nabídek
           </Link>
         </Empty>
       ) : (
@@ -180,7 +180,7 @@ function Watchlist() {
                             ? `${t(`availability.${x.previous_status}`)} → ${t(`availability.${x.new_status}`)}`
                             : x.freshness_status
                               ? `Čerstvost: ${t(`freshness.${x.freshness_status}`)}`
-                              : x.event_type}
+                              : "Ověření nabídky"}
                         </li>
                       ))}
                     </ul>

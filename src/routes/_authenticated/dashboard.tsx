@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => pageHead("Dashboard", "Přehled portfolia, dealů, watchlistu a trhu."),
+  head: () => pageHead("Přehled", "Přehled vlastních nemovitostí, nabídek, oblíbených a trhu."),
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.ensureQueryData(listingsQuery),
@@ -58,18 +58,18 @@ function Dashboard() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Dashboard" sub={t("app.tagline")} />
+      <PageHeader title="Přehled" sub={t("app.tagline")} />
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
         <Kpi
-          label="Hodnota portfolia"
+          label="Hodnota mých nemovitostí"
           value={money(totals.value)}
           sub={`${totals.count} nemovitostí`}
         />
-        <Kpi label="Vlastní kapitál" value={money(totals.equity)} />
+        <Kpi label="Hodnota po odečtení dluhu" value={money(totals.equity)} />
         <Kpi label="Dluh" value={money(totals.debt)} />
         <Kpi label="Měsíční nájem" value={money(totals.rent)} />
         <Kpi
-          label="Měsíční cash-flow"
+          label="Zůstatek za měsíc"
           value={money(totals.cashFlow)}
           tone={hasPortfolio ? (totals.cashFlow >= 0 ? "pos" : "neg") : undefined}
         />
@@ -78,14 +78,14 @@ function Dashboard() {
           value={totals.yieldBps == null ? "—" : formatBps(totals.yieldBps)}
           sub="hrubý, z kupní ceny"
         />
-        <Kpi label="Aktivní dealy" value={active.length} sub="jen živé nabídky" />
-        <Kpi label="Watchlist" value={wl.length} />
+        <Kpi label="Dostupné nabídky" value={active.length} sub="skutečné nabídky" />
+        <Kpi label="Oblíbené nabídky" value={wl.length} />
       </div>
 
       <HousePriceForecast compact />
 
       <Section
-        title="Vývoj portfolia"
+        title="Vývoj mých nemovitostí"
         right={
           <div className="flex gap-0.5">
             {(Object.keys(RANGES) as RangeKey[]).map((r) => (
@@ -132,7 +132,7 @@ function Dashboard() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Section
-          title="Deal Hunter · top příležitosti"
+          title="Nejlépe hodnocené nabídky"
           right={
             <Link to="/deals" className="text-xs text-primary hover:underline">
               Vše →
@@ -142,30 +142,35 @@ function Dashboard() {
           {top.length === 0 ? (
             <Empty>{t("empty.deals")}</Empty>
           ) : (
-            <ul className="divide-y">
-              {top.map((e) => (
-                <li key={e.listing.id}>
-                  <Link
-                    to="/properties/$id"
-                    params={{ id: e.listing.id }}
-                    className="flex items-center gap-3 py-2 hover:text-primary"
-                  >
-                    <PriorityBadge value={e.priority} />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm">{e.listing.title}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {e.city} · výnos {formatBps(e.grossYieldBps)}
+            <>
+              <div className="mb-2 text-xs text-muted-foreground">
+                Zdroj: veřejné realitní nabídky
+              </div>
+              <ul className="divide-y">
+                {top.map((e) => (
+                  <li key={e.listing.id}>
+                    <Link
+                      to="/properties/$id"
+                      params={{ id: e.listing.id }}
+                      className="flex items-center gap-3 py-2 hover:text-primary"
+                    >
+                      <PriorityBadge value={e.priority} />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm">{e.listing.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {e.city} · výnos {formatBps(e.grossYieldBps)}
+                        </div>
                       </div>
-                    </div>
-                    <div className="num text-sm">{formatCZK(e.listing.price)}</div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                      <div className="num text-sm">{formatCZK(e.listing.price)}</div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </Section>
         <Section
-          title="Watchlist · poslední změny"
+          title="Oblíbené · poslední změny"
           right={
             <Link to="/watchlist" className="text-xs text-primary hover:underline">
               Vše →
@@ -196,14 +201,7 @@ function Dashboard() {
             </ul>
           )}
         </Section>
-        <Section
-          title="Trh · cena za m²"
-          right={
-            stats.length === 0 ? null : (
-              <span className="text-xs text-muted-foreground">živé statistiky</span>
-            )
-          }
-        >
+        <Section title="Trh · cena za m²">
           {stats.length === 0 ? (
             <Empty>{t("empty.market")}</Empty>
           ) : (
@@ -227,11 +225,11 @@ function Dashboard() {
             </table>
           )}
         </Section>
-        <Section title="AI Insight">
+        <Section title="Shrnutí trhu">
           <p className="mb-3 text-sm text-muted-foreground">
-            Shrnutí jen z živých statistik. Když žádné nejsou, insight to řekne a nic neodhadne.
+            Krátké shrnutí trhu z dostupných skutečných dat.
           </p>
-          <AiRunner kind="market" label="Vygenerovat insight" />
+          <AiRunner kind="market" label="Připravit shrnutí" />
         </Section>
       </div>
       <p className="text-xs text-muted-foreground">{t("disclaimer")}</p>

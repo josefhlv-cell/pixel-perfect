@@ -6,6 +6,8 @@ import { formatCZK } from "@/lib/format";
 import { pageHead } from "@/lib/head";
 import { t } from "@/lib/i18n";
 import { Empty, Kpi, PageHeader, Section } from "@/components/app/shared";
+import { observedMean } from "@/lib/live-data";
+import { Button } from "@/components/ui/button";
 import { HousePriceForecast } from "@/components/app/HousePriceForecast";
 import { Bars, MultiLine } from "@/components/app/Charts";
 import { AiRunner } from "@/components/app/AiPanel";
@@ -25,6 +27,7 @@ function Market() {
   const [range, setRange] = useState<R>("1R");
   const latestPeriod = data.reduce((m, r) => (r.period > m ? r.period : m), "");
   const filtered = useMemo(() => {
+    if (!latestPeriod) return [];
     const end = new Date(latestPeriod);
     const start = new Date(end.getFullYear(), end.getMonth() - RANGE[range], 1)
       .toISOString()
@@ -47,24 +50,24 @@ function Market() {
   const latest = data.filter((r) => r.period === latestPeriod);
   const first = (c: string) =>
     filtered.filter((r) => r.city === c).sort((a, b) => a.period.localeCompare(b.period))[0];
-  const avg = latest.length
-    ? Math.round(latest.reduce((a, r) => a + (r.avg_asking_price_m2 ?? 0), 0) / latest.length)
-    : null;
-  const avgRent = latest.length
-    ? Math.round(latest.reduce((a, r) => a + (r.avg_rent_m2 ?? 0), 0) / latest.length)
-    : null;
-  const gross =
-    avg && avgRent ? `${(((avgRent * 12) / avg) * 100).toFixed(2).replace(".", ",")} %` : "—";
+  const avg = observedMean(latest.map((row) => row.avg_asking_price_m2));
+  const avgRent = observedMean(latest.map((row) => row.avg_rent_m2));
 
   return (
     <div className="space-y-5">
       <PageHeader
         title="Trh"
-        sub="Cena a nájem jen z živých, neukázkových statistik. Prázdný trh znamená, že je ještě nikdo nesesbíral."
+        sub={
+          <span className="inline-flex items-center gap-2">
+            Zdroj: skutečné nabídkové ceny a dostupné nájemní údaje
+          </span>
+        }
         actions={
           <div className="flex gap-0.5 rounded-md border p-0.5">
             {(Object.keys(RANGE) as R[]).map((r) => (
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 key={r}
                 onClick={() => setRange(r)}
                 className={cn(
@@ -73,7 +76,7 @@ function Market() {
                 )}
               >
                 {r}
-              </button>
+              </Button>
             ))}
           </div>
         }
@@ -84,13 +87,17 @@ function Market() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            <Kpi label="Prům. nabídková cena" value={`${formatCZK(avg)}/m²`} sub="napříč městy" />
+            <Kpi label="Prům. nájem" value={`${formatCZK(avgRent)}/m²`} />
             <Kpi
-              label="Prům. nabídková cena"
-              value={avg == null ? "—" : `${formatCZK(avg)}/m²`}
-              sub="napříč městy"
+              label="Roční nájem vůči ceně"
+              value={
+                avg != null && avg > 0 && avgRent != null
+                  ? `${(((avgRent * 12) / avg) * 100).toFixed(2).replace(".", ",")} %`
+                  : "—"
+              }
+              sub="Roční nájem jako část kupní ceny, před náklady"
             />
-            <Kpi label="Prům. nájem" value={avgRent == null ? "—" : `${formatCZK(avgRent)}/m²`} />
-            <Kpi label="Hrubý výnos trhu" value={gross} sub="nájem×12 / cena" />
             <Kpi label="Sledovaná města" value={cities.length} />
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
@@ -109,7 +116,7 @@ function Market() {
                 height={300}
               />
             </Section>
-            <Section title="Kvartální vývoj">
+            <Section title="Změny za vybrané období">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="text-left text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -164,12 +171,11 @@ function Market() {
                 </table>
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
-                Změna za zvolené období. Delší rozsah ukáže jen období, pro která existuje živá
-                statistika.
+                Změna za zvolené období podle dostupných skutečných pozorování.
               </p>
             </Section>
           </div>
-          <Section title="AI shrnutí trhu">
+          <Section title="Vysvětlení situace na trhu">
             <AiRunner kind="market" label="Shrnout trh" />
           </Section>
         </>

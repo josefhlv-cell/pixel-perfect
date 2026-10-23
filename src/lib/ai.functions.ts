@@ -9,6 +9,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { calculateTotalReturn } from "./calculations";
 import { defaultInvestmentInput, enrichListing, latestStatsByCity } from "./deals";
 import { portfolioTotals } from "./portfolio";
+import { onlyLive } from "./live-data";
 
 const input = z.object({
   kind: z.enum(["property", "deal", "risks", "due_diligence", "portfolio", "market"]),
@@ -49,11 +50,18 @@ export const runAiAnalysis = createServerFn({ method: "POST" })
 
     try {
       if (data.kind === "market") {
-        const { data: stats } = await supabase
-          .from("market_statistics")
-          .select("city,period,avg_asking_price_m2,avg_rent_m2,listings_count,is_sample")
-          .eq("is_sample", false)
-          .order("period");
+        const { data: stats } = await onlyLive(
+          supabase
+            .from("market_statistics")
+            .select("city,period,avg_asking_price_m2,avg_rent_m2,listings_count,is_sample"),
+        ).order("period");
+        if (!stats?.length)
+          return {
+            ok: false as const,
+            provider: ai.name,
+            kind: data.kind,
+            error: "Pro analýzu trhu zatím nejsou skutečná data.",
+          };
         const r = await ai.summarizeMarket({ stats: (stats ?? []) as Record<string, unknown>[] });
         await logUsage(r);
         return { ok: true as const, provider: ai.name, kind: data.kind, text: r.insight };
@@ -84,17 +92,15 @@ export const runAiAnalysis = createServerFn({ method: "POST" })
       }
 
       if (!data.listingId) throw new Error("Chybí nemovitost");
-      const { data: l } = await supabase
-        .from("listings")
-        .select("*")
+      const { data: l } = await onlyLive(supabase.from("listings").select("*"))
         .eq("id", data.listingId)
         .single();
       if (!l) throw new Error("Nemovitost nenalezena");
       if (l.is_sample) throw new Error("Ukázková nabídka není součástí ostrého provozu.");
       propertyId = l.property_id;
       const [{ data: prop }, { data: stats }, { data: snaps }] = await Promise.all([
-        supabase.from("properties").select("*").eq("id", l.property_id).maybeSingle(),
-        supabase.from("market_statistics").select("*").eq("is_sample", false),
+        onlyLive(supabase.from("properties").select("*")).eq("id", l.property_id).maybeSingle(),
+        onlyLive(supabase.from("market_statistics").select("*")),
         supabase.from("listing_snapshots").select("*").eq("listing_id", l.id),
       ]);
       const e = enrichListing(l, prop ?? null, latestStatsByCity(stats ?? []), snaps ?? []);

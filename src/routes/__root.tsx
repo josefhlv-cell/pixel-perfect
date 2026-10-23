@@ -77,14 +77,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Reality Investor — investiční inteligence pro české nemovitosti" },
+      { title: "Reality Investor — nemovitosti, nájmy a náklady přehledně" },
       {
         name: "description",
         content:
-          "Analýza investičních nemovitostí v ČR: Deal Hunter, portfolio, kalkulačka výnosů a AI analytik.",
+          "Hledání nabídek v Česku, vlastní nemovitosti, kalkulačka a srozumitelné vysvětlení.",
       },
       { property: "og:title", content: "Reality Investor" },
-      { property: "og:description", content: "Investiční inteligence pro české nemovitosti." },
+      {
+        property: "og:description",
+        content: "Přehled nemovitostí, nájmů a nákladů na jednom místě.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

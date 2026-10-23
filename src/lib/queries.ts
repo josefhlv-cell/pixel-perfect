@@ -2,6 +2,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { enrichListing, latestStatsByCity } from "./deals";
+import { onlyLive } from "./live-data";
 
 async function uid() {
   const { data } = await supabase.auth.getUser();
@@ -13,22 +14,18 @@ export const listingsQuery = queryOptions({
   queryKey: ["listings"],
   queryFn: async () => {
     const [l, p, m, s] = await Promise.all([
-      supabase
-        .from("listings")
-        .select("*")
-        .eq("is_sample", false)
-        .order("created_at", { ascending: false }),
-      supabase.from("properties").select("*").eq("is_sample", false),
-      supabase.from("market_statistics").select("*").eq("is_sample", false),
+      onlyLive(supabase.from("listings").select("*")).order("created_at", { ascending: false }),
+      onlyLive(supabase.from("properties").select("*")),
+      onlyLive(supabase.from("market_statistics").select("*")),
       supabase
         .from("listing_snapshots")
         .select("id,listing_id,price,availability_status,observed_at"),
     ]);
     for (const r of [l, p, m, s]) if (r.error) throw r.error;
-    const props = new Map(p.data!.map((x) => [x.id, x]));
-    const stats = latestStatsByCity(m.data!);
-    return l
-      .data!.map((x) =>
+    const props = new Map((p.data ?? []).map((x) => [x.id, x]));
+    const stats = latestStatsByCity(m.data ?? []);
+    return (l.data ?? [])
+      .map((x) =>
         enrichListing(x, props.get(x.property_id) ?? null, stats, (s.data ?? []) as never),
       )
       .sort((a, b) => b.priority - a.priority);
@@ -38,11 +35,9 @@ export const listingsQuery = queryOptions({
 export const marketQuery = queryOptions({
   queryKey: ["market"],
   queryFn: async () => {
-    const { data, error } = await supabase
-      .from("market_statistics")
-      .select("*")
-      .eq("is_sample", false)
-      .order("period");
+    const { data, error } = await onlyLive(supabase.from("market_statistics").select("*")).order(
+      "period",
+    );
     if (error) throw error;
     return data;
   },
@@ -51,9 +46,18 @@ export const marketQuery = queryOptions({
 export const watchlistQuery = queryOptions({
   queryKey: ["watchlist"],
   queryFn: async () => {
+    const { data: listings, error: listingsError } = await onlyLive(
+      supabase.from("listings").select("id"),
+    );
+    if (listingsError) throw listingsError;
+    if (!listings?.length) return [];
     const { data, error } = await supabase
       .from("watchlist")
       .select("*")
+      .in(
+        "listing_id",
+        listings.map((row) => row.id),
+      )
       .order("created_at", { ascending: false });
     if (error) throw error;
     return data;
@@ -63,9 +67,18 @@ export const watchlistQuery = queryOptions({
 export const freshnessEventsQuery = queryOptions({
   queryKey: ["freshness-events"],
   queryFn: async () => {
+    const { data: listings, error: listingsError } = await onlyLive(
+      supabase.from("listings").select("id"),
+    );
+    if (listingsError) throw listingsError;
+    if (!listings?.length) return [];
     const { data, error } = await supabase
       .from("listing_freshness_events")
       .select("*")
+      .in(
+        "listing_id",
+        listings.map((row) => row.id),
+      )
       .order("created_at", { ascending: false })
       .limit(500);
     if (error) throw error;
