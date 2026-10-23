@@ -1,6 +1,9 @@
 /**
- * Asking-price valuation + rent-estimate guardrails + Deal Priority.
- * Pure. Never invents: missing or non-comparable inputs produce null.
+ * Valuation guardrails.
+ *
+ * City-level asking-price aggregates are not property-level comparables. Until
+ * the app has verified sale comparables with location, layout, condition and
+ * time/provenance, do not present a city-average multiplication as a valuation.
  */
 import { calculateGrossYield } from "./calculations";
 
@@ -16,40 +19,26 @@ export interface ValuationEstimate {
   estimatedValue: number;
   low: number;
   high: number;
-  method: "asking_comparables";
+  method: "verified_sale_comparables";
   comparables: number;
   confidence: "low" | "medium" | "high";
   isSample: boolean;
 }
 
+/**
+ * Fail closed: market_statistics contains city-level asking-price averages,
+ * not comparable transactions/listings for this individual property.
+ */
 export function estimateValue(
   areaM2: number | null,
   stat: MarketStat | undefined,
 ): ValuationEstimate | null {
-  if (!areaM2 || !stat?.avg_asking_price_m2) return null;
-  const v = Math.round(areaM2 * stat.avg_asking_price_m2);
-  const n = stat.listings_count ?? 0;
-  const confidence = n >= 300 ? "medium" : "low"; // asking prices → never "high"
-  return {
-    estimatedValue: v,
-    low: Math.round(v * 0.9),
-    high: Math.round(v * 1.1),
-    method: "asking_comparables",
-    comparables: n,
-    confidence,
-    isSample: stat.is_sample,
-  };
+  void areaM2;
+  void stat;
+  return null;
 }
 
-/**
- * A city-level rent-per-m² statistic is not a comparable-rent dataset.
- * The current schema's listings_count counts property/sale listings, not
- * rental comparables, and contains no apartment features. Returning a number
- * here would create false precision and can inflate yields/cash-flow estimates.
- *
- * Fail closed until the caller can provide verified, deduplicated rental
- * comparables matched on location, layout, area, condition and amenities.
- */
+/** City-level rent is also not enough to value a specific rental unit. */
 export function estimateRent(areaM2: number | null, stat: MarketStat | undefined): number | null {
   void areaM2;
   void stat;
@@ -75,8 +64,8 @@ export function computeDealPriority(i: DealPriorityInput): number {
   if (i.availability === "SOLD" || i.availability === "REMOVED" || i.availability === "EXPIRED")
     return 0;
   let s = 0;
-  if (i.diffBps != null) s += Math.max(0, Math.min(35, -i.diffBps / 40)); // -14 % → 35
-  if (i.grossYieldBps != null) s += Math.max(0, Math.min(30, (i.grossYieldBps - 300) / 13)); // 7 % → ~30
+  if (i.diffBps != null) s += Math.max(0, Math.min(35, -i.diffBps / 40));
+  if (i.grossYieldBps != null) s += Math.max(0, Math.min(30, (i.grossYieldBps - 300) / 13));
   s += { FRESH: 20, RECENT: 14, AGING: 7, STALE: 2, EXPIRED: 0, UNKNOWN: 0 }[i.freshness] ?? 0;
   if (i.availability === "ACTIVE_CONFIRMED") s += 10;
   else if (i.availability === "ACTIVE_UNCONFIRMED") s += 4;
