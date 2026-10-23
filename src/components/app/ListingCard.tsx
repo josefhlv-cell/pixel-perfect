@@ -63,21 +63,30 @@ export function ListingCard({
       </div>
       <Link to="/properties/$id" params={{ id: l.id }} className="mt-3 block">
         <div className="grid grid-cols-2 gap-2 text-xs">
-          <Stat k="Cena" v={formatCZK(l.price)} />
-          <Stat k="Kč/m²" v={formatCZK(e.pricePerM2)} />
-          <Stat k="Cenový benchmark" v={formatCZK(e.estimate?.estimatedValue)} />
-          <Stat
-            k="Rozdíl"
-            v={e.diffBps == null ? "—" : `${e.diffBps > 0 ? "+" : ""}${formatBps(e.diffBps, 1)}`}
-            tone={e.diffBps != null ? (e.diffBps < 0 ? "pos" : "neg") : undefined}
-          />
-          <Stat k="Nájem (odhad)" v={formatCZK(e.rent)} />
-          <Stat k="Roční nájem vůči ceně" v={formatBps(e.grossYieldBps)} />
-          <Stat
-            k="Zůstatek za měsíc"
-            v={formatCZK(e.monthlyCashFlow)}
-            tone={e.monthlyCashFlow != null ? (e.monthlyCashFlow >= 0 ? "pos" : "neg") : undefined}
-          />
+          {l.offer_type === "pronajem" ? (
+            <>
+              <Stat k="Nájem za měsíc" v={formatCZK(l.price)} />
+              <Stat k="Kč/m² za měsíc" v={formatCZK(e.pricePerM2)} />
+            </>
+          ) : (
+            <>
+              <Stat k="Cena" v={formatCZK(l.price)} />
+              <Stat k="Kč/m²" v={formatCZK(e.pricePerM2)} />
+              <Stat k="Cenový benchmark" v={formatCZK(e.estimate?.estimatedValue)} />
+              <Stat
+                k="Rozdíl"
+                v={e.diffBps == null ? "—" : `${e.diffBps > 0 ? "+" : ""}${formatBps(e.diffBps, 1)}`}
+                tone={e.diffBps != null ? (e.diffBps < 0 ? "pos" : "neg") : undefined}
+              />
+              <Stat k="Nájem (odhad)" v={formatCZK(e.rent)} />
+              <Stat k="Roční nájem vůči ceně" v={formatBps(e.grossYieldBps)} />
+              <Stat
+                k="Zůstatek za měsíc"
+                v={formatCZK(e.monthlyCashFlow)}
+                tone={e.monthlyCashFlow != null ? (e.monthlyCashFlow >= 0 ? "pos" : "neg") : undefined}
+              />
+            </>
+          )}
         </div>
         <div className="mt-3 flex flex-wrap gap-1.5">
           <FreshnessBadge status={l.freshness_status} />
