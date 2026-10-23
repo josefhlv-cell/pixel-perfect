@@ -125,12 +125,12 @@ export function enrichListing(
   if (grossYieldBps != null && grossYieldBps >= 500)
     reasons.push({
       positive: true,
-      text: `Vysoký odhadovaný hrubý výnos ${(grossYieldBps / 100).toFixed(2)} %`,
+      text: `Odhad ročního nájmu před náklady tvoří ${(grossYieldBps / 100).toFixed(2).replace(".", ",")} % kupní ceny`,
     });
   if (grossYieldBps != null && grossYieldBps < 400)
     reasons.push({
       positive: false,
-      text: `Nízký odhadovaný hrubý výnos ${(grossYieldBps / 100).toFixed(2)} %`,
+      text: `Odhad ročního nájmu před náklady tvoří jen ${(grossYieldBps / 100).toFixed(2).replace(".", ",")} % kupní ceny`,
     });
   if (listing.freshness_status === "FRESH")
     reasons.push({ positive: true, text: "Čerstvá nabídka" });
@@ -142,7 +142,7 @@ export function enrichListing(
     reasons.push({ positive: false, text: "Dostupnost neověřena" });
   if (priceDropped) reasons.push({ positive: true, text: "Cena byla snížena" });
   if (monthlyCashFlow != null && monthlyCashFlow < 0)
-    reasons.push({ positive: false, text: "Záporné cash-flow při 80% LTV" });
+    reasons.push({ positive: false, text: "Nájem nepokryje náklady a splátku hypotéky na 80 % ceny; každý měsíc je třeba doplácet" });
   if (rent != null)
     reasons.push({ positive: false, text: "Nájem je odhad z průměru lokality – nízká jistota" });
   if (estimate == null) reasons.push({ positive: false, text: "Chybí data pro odhad hodnoty" });
@@ -178,7 +178,7 @@ export function priorityBreakdown(
       max: 35,
     },
     {
-      label: "Hrubý výnos",
+      label: "Roční nájem vůči kupní ceně",
       points:
         e.grossYieldBps != null
           ? Math.round(Math.max(0, Math.min(30, (e.grossYieldBps - 300) / 13)))
@@ -186,7 +186,7 @@ export function priorityBreakdown(
       max: 30,
     },
     {
-      label: "Čerstvost",
+      label: "Aktuálnost nabídky",
       points:
         ({ FRESH: 20, RECENT: 14, AGING: 7, STALE: 2 } as Record<string, number>)[
           e.listing.freshness_status

@@ -27,19 +27,19 @@ export const cs = {
   },
   errors: {
     aiUnavailable:
-      "Automatické vysvětlení je momentálně nedostupná. Výpočty a uložená data zůstávají dostupná.",
+      "Automatické vysvětlení je momentálně nedostupné. Výpočty a uložená data zůstávají dostupná.",
     discoveryUnavailable: "Vyhledávání se nepodařilo dokončit.",
     generic: "Něco se nepovedlo. Zkuste to prosím znovu.",
   },
   disclaimer:
     "Aplikace pomáhá porovnat nemovitosti. Odhady nejsou zárukou zisku ani doporučením ke koupi. Před rozhodnutím ověřte údaje u prodávajícího; otázky financování, smluv a daní proberte s odborníkem.",
   freshness: {
-    FRESH: "Čerstvé",
-    RECENT: "Nedávné",
-    AGING: "Stárnoucí",
-    STALE: "Zastaralé",
-    EXPIRED: "Expirované",
-    UNKNOWN: "Neznámé",
+    FRESH: "Čerstvě ověřená",
+    RECENT: "Nedávno ověřená",
+    AGING: "Delší dobu neověřená",
+    STALE: "Dlouho neověřená",
+    EXPIRED: "Platnost vypršela",
+    UNKNOWN: "Datum ověření neznámé",
   },
   availability: {
     ACTIVE_CONFIRMED: "Aktivní · ověřeno",
@@ -47,12 +47,12 @@ export const cs = {
     RESERVED: "Rezervováno",
     SOLD: "Prodáno",
     REMOVED: "Staženo ze zdroje",
-    EXPIRED: "Expirováno",
+    EXPIRED: "Platnost vypršela",
     UNKNOWN: "Neznámý stav",
   },
   empty: {
     portfolio:
-      "Zatím nemáte žádné nemovitosti mezi vlastními nemovitostmi. Přidejte první nemovitost nebo vyhledejte nabídky.",
+      "Zatím nemáte uložené vlastní nemovitosti. Přidejte první nebo vyhledejte nabídky.",
     watchlist: "Zatím nemáte oblíbené nabídky. Uložte si nabídku z Hledání nabídek.",
     alerts:
       "Žádná upozornění. Jakmile se změní cena nebo stav sledované nemovitosti, uvidíte to tady.",
