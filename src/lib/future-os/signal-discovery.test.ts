@@ -18,8 +18,8 @@ describe("Future OS leading-signal discovery", () => {
     expect(parseEvidenceNumericValue(" 12.5 ")).toBe(12.5);
     expect(parseEvidenceNumericValue("12,5")).toBe(12.5);
     expect(parseEvidenceNumericValue({ value: 12.5, raw: "12.5" })).toBe(12.5);
-    expect(parseEvidenceNumericValue({ value: null, raw: "12.5" })).toBe(12.5);
-    expect(parseEvidenceNumericValue({ value: "not-a-number", raw: "12.5" })).toBe(12.5);
+    expect(parseEvidenceNumericValue({ value: null, raw: "12.5" })).toBeNull();
+    expect(parseEvidenceNumericValue({ value: "not-a-number", raw: "12.5" })).toBeNull();
     expect(parseEvidenceNumericValue({ value: null, raw: null })).toBeNull();
     expect(parseEvidenceNumericValue("")).toBeNull();
     expect(parseEvidenceNumericValue(true)).toBeNull();
@@ -30,7 +30,7 @@ describe("Future OS leading-signal discovery", () => {
     expect(parseEvidenceNumericValue("1.234,5")).toBe(1234.5);
     expect(parseEvidenceNumericValue("-1 234,5")).toBe(-1234.5);
     expect(parseEvidenceNumericValue("1.234")).toBe(1.234);
-    expect(parseEvidenceNumericValue({ value: null, raw: "1 234,5" })).toBe(1234.5);
+    expect(parseEvidenceNumericValue({ value: null, raw: "1 234,5" })).toBeNull();
     expect(parseEvidenceNumericValue("1 234,5 EUR")).toBeNull();
     expect(parseEvidenceNumericValue("   ")).toBeNull();
   });
@@ -133,7 +133,7 @@ describe("Future OS leading-signal discovery", () => {
     expect(results[0]?.signalKey).toBe("series:signal_a");
   });
 
-  it("discovers a lead from Czech grouped numbers stored only as raw text", () => {
+  it("does not discover a lead from raw text when official numeric values are missing", () => {
     const observations = Array.from({ length: 16 }, (_, i) => {
       const date = new Date(Date.UTC(2021, i, 1)).toISOString();
       const base = {
@@ -186,8 +186,11 @@ describe("Future OS leading-signal discovery", () => {
     }).flat();
 
     const results = discoverLeadingSignals(observations, "macro_indicator:hpi", [90]);
-    expect(results.length).toBeGreaterThan(0);
-    expect(results[0]?.signalKey).toBe("macro_indicator:rate");
-    expect(results[0]?.status).not.toBe("REJECTED");
+    expect(results).toEqual([]);
+  });
+  it("uses only the structured numeric value, including an actual zero", () => {
+    expect(parseEvidenceNumericValue({ value: 12.5, raw: "999" })).toBe(12.5);
+    expect(parseEvidenceNumericValue({ raw: "12.5" })).toBeNull();
+    expect(parseEvidenceNumericValue({ value: 0, raw: "999" })).toBe(0);
   });
 });

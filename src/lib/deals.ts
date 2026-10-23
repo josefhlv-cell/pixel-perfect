@@ -44,6 +44,7 @@ export interface EnrichedListing {
 export function latestStatsByCity(rows: MarketRow[]): Map<string, MarketStat> {
   const m = new Map<string, MarketRow>();
   for (const r of rows) {
+    if (r.is_sample) continue;
     const cur = m.get(r.city);
     if (!cur || cur.period < r.period) m.set(r.city, r);
   }
@@ -80,6 +81,7 @@ export function enrichListing(
   stats: Map<string, MarketStat>,
   snapshots: SnapshotRow[],
 ): EnrichedListing {
+  if (!listing.is_sample && property?.is_sample) property = null;
   const city = property?.city ?? listing.location ?? null;
   const area =
     listing.area_m2 != null

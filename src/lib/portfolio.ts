@@ -53,7 +53,8 @@ export function propertyMetrics(p: PortfolioRow, vals: ValuationRow[], now = new
 
 export function portfolioTotals(rows: PortfolioRow[], vals: ValuationRow[]) {
   const ms = rows.map((r) => propertyMetrics(r, vals));
-  const sum = (k: keyof (typeof ms)[number]) => ms.reduce((a, m) => a + (m[k] as number), 0);
+  const sum = (k: keyof (typeof ms)[number]) =>
+    ms.length ? ms.reduce((a, m) => a + (m[k] as number), 0) : null;
   const purchase = rows.reduce((a, r) => a + r.purchase_price, 0);
   const rent = sum("rent");
   return {
@@ -63,7 +64,7 @@ export function portfolioTotals(rows: PortfolioRow[], vals: ValuationRow[]) {
     rent,
     cashFlow: sum("cashFlow"),
     appreciation: sum("appreciation"),
-    yieldBps: purchase > 0 ? calculateGrossYield(rent, purchase) : null,
+    yieldBps: purchase > 0 && rent != null ? calculateGrossYield(rent, purchase) : null,
     count: rows.length,
   };
 }

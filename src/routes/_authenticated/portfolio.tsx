@@ -101,13 +101,13 @@ function Portfolio() {
         <Kpi
           label="Zůstatek za měsíc"
           value={formatCZK(totals.cashFlow)}
-          tone={totals.cashFlow >= 0 ? "pos" : "neg"}
+          tone={totals.cashFlow == null ? undefined : totals.cashFlow >= 0 ? "pos" : "neg"}
         />
         <Kpi label="Výnos" value={totals.yieldBps == null ? "—" : formatBps(totals.yieldBps)} />
         <Kpi
           label="Zhodnocení"
           value={formatCZK(totals.appreciation)}
-          tone={totals.appreciation >= 0 ? "pos" : "neg"}
+          tone={totals.appreciation == null ? undefined : totals.appreciation >= 0 ? "pos" : "neg"}
         />
       </div>
       {data.properties.length === 0 ? (

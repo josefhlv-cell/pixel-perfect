@@ -68,7 +68,7 @@ function Dashboard() {
         <Kpi
           label="Zůstatek za měsíc"
           value={formatCZK(totals.cashFlow)}
-          tone={totals.cashFlow >= 0 ? "pos" : "neg"}
+          tone={totals.cashFlow == null ? undefined : totals.cashFlow >= 0 ? "pos" : "neg"}
         />
         <Kpi
           label="Průměrný výnos"
