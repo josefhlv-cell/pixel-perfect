@@ -27,7 +27,7 @@ export function ComparePanel({
     },
     { label: "Dispozice", get: (e) => e.listing.rooms ?? "—" },
     { label: "Město", get: (e) => e.city ?? "—" },
-    { label: "Odhad hodnoty", get: (e) => formatCZK(e.estimate?.estimatedValue) },
+    { label: "Cenový benchmark", get: (e) => formatCZK(e.estimate?.estimatedValue) },
     { label: "Cena vůči odhadu", get: (e) => (e.diffBps == null ? "—" : formatBps(e.diffBps, 1)) },
     { label: "Roční nájem vůči ceně", get: (e) => formatBps(e.grossYieldBps) },
     { label: "Zůstatek za měsíc", get: (e) => formatCZK(e.monthlyCashFlow) },
