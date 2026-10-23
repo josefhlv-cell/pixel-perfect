@@ -107,6 +107,51 @@ export function saleComparablesFromListings(
   });
 }
 
+/** Build the rental evidence pool from production RENTAL listings (price = monthly rent). */
+export function rentalComparablesFromListings(
+  rows: ListingRow[],
+  properties: Map<string, PropertyRow>,
+): RentalComparable[] {
+  return rows.flatMap((row) => {
+    if (row.offer_type !== "pronajem") return [];
+    const property = properties.get(row.property_id);
+    const areaM2 = row.area_m2 == null ? null : Number(row.area_m2);
+    const rentCzk = row.price == null ? null : Number(row.price);
+    const city = property?.city ?? row.location;
+    const observedAt = row.last_verified_at ?? row.last_seen_at ?? row.updated_at ?? row.created_at;
+    if (
+      !city ||
+      areaM2 == null ||
+      !Number.isFinite(areaM2) ||
+      areaM2 <= 0 ||
+      rentCzk == null ||
+      !Number.isFinite(rentCzk) ||
+      rentCzk <= 0 ||
+      !row.source_url ||
+      !observedAt
+    ) {
+      return [];
+    }
+    const locationParts = (row.location ?? city).split(/[,–-]/).map((part) => part.trim());
+    return [
+      {
+        sourceUrl: row.source_url,
+        city,
+        district: locationParts.length > 1 ? locationParts.slice(1).join(", ") : null,
+        disposition: property?.disposition ?? row.rooms ?? "",
+        areaM2,
+        monthlyRentCzk: rentCzk,
+        condition: property?.condition,
+        floor: property?.floor,
+        observedAt,
+        isActive: ["ACTIVE_CONFIRMED", "ACTIVE_UNCONFIRMED"].includes(row.availability_status),
+        isVerified: row.last_verified_at != null,
+        isSample: row.is_sample || (property?.is_sample ?? false),
+      },
+    ];
+  });
+}
+
 /** Default investment input for a listing (price, estimated rent, Czech defaults). */
 export function defaultInvestmentInput(
   price: number,
