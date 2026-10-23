@@ -7,7 +7,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { calculateTotalReturn } from "./calculations";
-import { defaultInvestmentInput, enrichListing, latestStatsByCity, saleComparablesFromListings } from "./deals";
+import {
+  defaultInvestmentInput,
+  enrichListing,
+  latestStatsByCity,
+  saleComparablesFromListings,
+} from "./deals";
 import { portfolioTotals } from "./portfolio";
 import { onlyLive } from "./live-data";
 
