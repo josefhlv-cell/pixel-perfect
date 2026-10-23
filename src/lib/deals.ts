@@ -182,6 +182,7 @@ export function enrichListing(
   stats: Map<string, MarketStat>,
   snapshots: SnapshotRow[],
   saleComparables: SaleComparable[] = [],
+  rentalComparables: RentalComparable[] = [],
 ): EnrichedListing {
   if (!listing.is_sample && property?.is_sample) property = null;
   const city = property?.city ?? listing.location ?? null;
@@ -210,7 +211,21 @@ export function enrichListing(
         }
       : null;
   const estimate = estimateValue(saleTarget, saleComparables);
-  const rent = estimateRent(area, stat);
+  const rentTarget =
+    city && area != null && area > 0 && (property?.disposition ?? listing.rooms)
+      ? {
+          city,
+          district: locationParts.length > 1 ? locationParts.slice(1).join(", ") : null,
+          disposition: property?.disposition ?? listing.rooms ?? "",
+          areaM2: area,
+          condition: property?.condition,
+          floor: property?.floor,
+        }
+      : null;
+  const rentEstimate = rentTarget
+    ? estimateRentFromComparables(rentTarget, rentalComparables, new Date().toISOString())
+    : null;
+  const rent = rentEstimate?.monthlyRentCzk ?? null;
   const diffBps = priceDifferenceBps(listing.price, estimate?.estimatedValue ?? null);
   const grossYieldBps = grossYieldFor(listing.price, rent);
   const history = snapshots
