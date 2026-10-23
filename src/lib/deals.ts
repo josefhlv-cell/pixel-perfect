@@ -209,9 +209,11 @@ export function enrichListing(
           areaM2: area,
         }
       : null;
-  const estimate = estimateValue(saleTarget, saleComparables);
+  // Rental listings ARE rent evidence: sale benchmark / rent estimate do not apply to them.
+  const isRental = listing.offer_type === "pronajem";
+  const estimate = isRental ? null : estimateValue(saleTarget, saleComparables);
   const rentTarget =
-    city && area != null && area > 0 && (property?.disposition ?? listing.rooms)
+    !isRental && city && area != null && area > 0 && (property?.disposition ?? listing.rooms)
       ? {
           city,
           district: locationParts.length > 1 ? locationParts.slice(1).join(", ") : null,
