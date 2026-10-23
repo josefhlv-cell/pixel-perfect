@@ -1,6 +1,6 @@
 /**
- * Asking-price comparable valuation + rent estimate + Deal Priority.
- * Pure. Never invents: missing inputs produce null.
+ * Asking-price valuation + rent-estimate guardrails + Deal Priority.
+ * Pure. Never invents: missing or non-comparable inputs produce null.
  */
 import { calculateGrossYield } from "./calculations";
 
@@ -29,7 +29,7 @@ export function estimateValue(
   if (!areaM2 || !stat?.avg_asking_price_m2) return null;
   const v = Math.round(areaM2 * stat.avg_asking_price_m2);
   const n = stat.listings_count ?? 0;
-  const confidence = n >= 300 ? "medium" : n >= 50 ? "low" : "low"; // asking prices → never "high"
+  const confidence = n >= 300 ? "medium" : "low"; // asking prices → never "high"
   return {
     estimatedValue: v,
     low: Math.round(v * 0.9),
@@ -41,9 +41,19 @@ export function estimateValue(
   };
 }
 
+/**
+ * A city-level rent-per-m² statistic is not a comparable-rent dataset.
+ * The current schema's listings_count counts property/sale listings, not
+ * rental comparables, and contains no apartment features. Returning a number
+ * here would create false precision and can inflate yields/cash-flow estimates.
+ *
+ * Fail closed until the caller can provide verified, deduplicated rental
+ * comparables matched on location, layout, area, condition and amenities.
+ */
 export function estimateRent(areaM2: number | null, stat: MarketStat | undefined): number | null {
-  if (!areaM2 || !stat?.avg_rent_m2) return null;
-  return Math.round((areaM2 * stat.avg_rent_m2) / 100) * 100;
+  void areaM2;
+  void stat;
+  return null;
 }
 
 /** % difference between asking price and estimate, in bps (negative = below estimate). */
