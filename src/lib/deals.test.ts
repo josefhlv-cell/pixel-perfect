@@ -9,7 +9,7 @@ const stats = latestStatsByCity([
     avg_asking_price_m2: 100000,
     avg_rent_m2: 300,
     listings_count: 400,
-    is_sample: true,
+    is_sample: false,
     created_at: "",
   },
   {
@@ -19,7 +19,7 @@ const stats = latestStatsByCity([
     avg_asking_price_m2: 110000,
     avg_rent_m2: 330,
     listings_count: 400,
-    is_sample: true,
+    is_sample: false,
     created_at: "",
   },
 ]);
@@ -35,6 +35,35 @@ const listing = {
 } as never;
 
 describe("enrichListing", () => {
+  it("prefers older live statistics over newer sample statistics for rent", () => {
+    const base = {
+      id: "stat",
+      city: "Brno",
+      listings_count: 3,
+      created_at: "",
+      avg_asking_price_m2: 100000,
+    };
+    const mixed = latestStatsByCity([
+      { ...base, period: "2026-01-01", avg_rent_m2: 300, is_sample: false },
+      { ...base, period: "2026-10-01", avg_rent_m2: 900, is_sample: true },
+    ]);
+    expect(enrichListing(listing, null, mixed, []).rent).toBe(15000);
+    expect(
+      latestStatsByCity([{ ...base, period: "2026-10-01", avg_rent_m2: 900, is_sample: true }])
+        .size,
+    ).toBe(0);
+  });
+  it("does not enrich a live listing with a sample property", () => {
+    const e = enrichListing(
+      { ...(listing as object), is_sample: false, area_m2: null, location: null } as never,
+      { id: "p1", is_sample: true, city: "Brno", area_m2: 50 } as never,
+      stats,
+      [],
+    );
+    expect(e.property).toBeNull();
+    expect(e.rent).toBeNull();
+    expect(e.estimate).toBeNull();
+  });
   it("uses the latest market period and existing engines", () => {
     const e = enrichListing(listing, null, stats, []);
     expect(e.estimate?.estimatedValue).toBe(5_500_000);

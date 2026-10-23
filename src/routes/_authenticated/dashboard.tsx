@@ -59,16 +59,16 @@ function Dashboard() {
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
         <Kpi
           label="Hodnota mých nemovitostí"
-          value={formatCZK(totals.value)}
+          value={totals.value == null ? "—" : formatCZK(totals.value)}
           sub={`${totals.count} nemovitostí`}
         />
-        <Kpi label="Hodnota po odečtení dluhu" value={formatCZK(totals.equity)} />
-        <Kpi label="Dluh" value={formatCZK(totals.debt)} />
-        <Kpi label="Měsíční nájem" value={formatCZK(totals.rent)} />
+        <Kpi label="Hodnota po odečtení dluhu" value={totals.equity == null ? "—" : formatCZK(totals.equity)} />
+        <Kpi label="Dluh" value={totals.debt == null ? "—" : formatCZK(totals.debt)} />
+        <Kpi label="Měsíční nájem" value={totals.rent == null ? "—" : formatCZK(totals.rent)} />
         <Kpi
           label="Zůstatek za měsíc"
-          value={formatCZK(totals.cashFlow)}
-          tone={totals.cashFlow >= 0 ? "pos" : "neg"}
+          value={totals.cashFlow == null ? "—" : formatCZK(totals.cashFlow)}
+          tone={totals.cashFlow == null ? undefined : totals.cashFlow >= 0 ? "pos" : "neg"}
         />
         <Kpi
           label="Průměrný výnos"

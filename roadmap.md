@@ -14,6 +14,7 @@
 - [ ] Real-data walk-forward backtest vs naive baseline (needs evidence history with vintages)
 
 ## Current request: production-only data
+- [x] Enforce live-only database reads, correct four adapter timestamp flags, prevent sample property/stat enrichment, return unknown empty portfolio/evidence values; verified authenticated five pages and direct sample reads denied, 220/220 tests, build OK.
 - [x] Hide demo data across lists, market, AI and related reads without deleting history.
 - [x] Verify authenticated preview (21 live listings), 216 tests and lint (0 errors); request publication and verify public /auth HTTP 200.
 - [ ] Confirm new deployment and safe production access — publication completion not yet confirmed; latest security scan reports 7 critical permissive read-policy findings.

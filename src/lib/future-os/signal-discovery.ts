@@ -206,11 +206,7 @@ export function parseEvidenceNumericValue(value: unknown): number | null {
 
   if (value && typeof value === "object" && !Array.isArray(value)) {
     const record = value as Record<string, unknown>;
-    if ("value" in record) {
-      const parsed = parseEvidenceNumericValue(record["value"]);
-      if (parsed !== null) return parsed;
-    }
-    if ("raw" in record) return parseEvidenceNumericValue(record["raw"]);
+    return parseEvidenceNumericValue(record["value"]);
   }
 
   return null;

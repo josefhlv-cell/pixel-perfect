@@ -393,7 +393,11 @@ function DealHunter() {
         )}
       </div>
       {results.length === 0 ? (
-        <Empty>Kritériím neodpovídá žádná nabídka. Zkuste je uvolnit.</Empty>
+        <Empty>
+          {data.length === 0
+            ? "Živé nabídky ještě nejsou k dispozici."
+            : "Kritériím neodpovídá žádná nabídka. Zkuste je uvolnit."}
+        </Empty>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {results.map(({ e, distanceKm }) => (

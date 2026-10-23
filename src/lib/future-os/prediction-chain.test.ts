@@ -44,7 +44,7 @@ function row(
     effectiveFrom: date,
     effectiveTo: null,
     revision: 1,
-    value: { value: null, raw: czech(level), snapshot_id: "local" },
+    value: { value: level, raw: czech(level), snapshot_id: "local" },
     unit: "index",
     frequency: "monthly",
     leadClass: entityKey === "rate" ? "LEADING" : "LAGGING",
@@ -72,7 +72,7 @@ describe("Future OS prediction chain without a database", () => {
     expect(visible.every((item) => parseEvidenceNumericValue(item.value) != null)).toBe(true);
 
     const stored = visible.find((item) => item.id === "hpi-15");
-    expect(stored?.value).toEqual({ value: null, raw: czech(2300), snapshot_id: "local" });
+    expect(stored?.value).toEqual({ value: 2300, raw: czech(2300), snapshot_id: "local" });
     expect(parseEvidenceNumericValue(stored?.value)).toBe(2300);
 
     const signals = discoverLeadingSignals(visible, "macro_indicator:hpi", [30]);
