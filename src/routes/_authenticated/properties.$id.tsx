@@ -251,7 +251,7 @@ function Detail() {
             </p>
           )}
         </Section>
-        <Section title="Odhad hodnoty" right={e.estimate?.isSample ? <SampleBadge /> : null}>
+        <Section title="Orientační cenový benchmark" right={e.estimate?.isSample ? <SampleBadge /> : null}>
           {e.estimate ? (
             <>
               <div className="num text-xl font-semibold">
@@ -273,11 +273,13 @@ function Detail() {
                   )
                 }
               />
-              <Row k="Metoda" v="Nabídkové ceny v lokalitě" />
+              <Row k="Metoda" v="Aktivní srovnatelné inzeráty (nabídkové ceny)" />
+              <Row k="Počet srovnání" v={String(e.estimate.comparables)} />
+              <Row k="Data nejpozději k" v={new Date(e.estimate.evidenceAsOf).toLocaleDateString("cs-CZ")} />
               <Row k="Jistota" v={e.estimate.confidence === "medium" ? "střední" : "nízká"} />
               <p className="mt-2 text-xs text-muted-foreground">
-                Odhad vychází z nabídkových (ne realizovaných) cen – jde o odhad, ne potvrzenou
-                prodejní cenu.
+                Benchmark vychází z aktuálních nabídkových cen podobných inzerátů, nikoli z realizovaných
+                prodejů. Rozsah je orientační a závisí na dostupnosti a kvalitě srovnání.
               </p>
             </>
           ) : (
@@ -290,8 +292,9 @@ function Detail() {
             <span className="text-sm text-muted-foreground"> / měs.</span>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            Průměrný nájem za m² v lokalitě × plocha. Nízká jistota – ověřte u srovnatelných
-            pronájmů.
+            {e.rent == null
+              ? "Odhad není dostupný: chybí dostatek ověřených srovnatelných pronájmů se stejnou dispozicí a podobnou plochou. Výnos, cash flow a scénáře proto nejsou dopočítány."
+              : "Orientační nájemní benchmark musí vycházet ze srovnatelných pronájmů; služby a energie se posuzují odděleně."}
           </p>
         </Section>
         <Section title="Financování">
