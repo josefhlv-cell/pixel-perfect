@@ -276,7 +276,7 @@ function Detail() {
               <Row k="Metoda" v="Aktivní srovnatelné inzeráty (nabídkové ceny)" />
               <Row k="Počet srovnání" v={String(e.estimate.comparables)} />
               <Row k="Data nejpozději k" v={new Date(e.estimate.evidenceAsOf).toLocaleDateString("cs-CZ")} />
-              <Row k="Jistota" v={e.estimate.confidence === "medium" ? "střední" : "nízká"} />
+              <Row k="Jistota" v={e.estimate.confidence === "high" ? "vysoká" : e.estimate.confidence === "medium" ? "střední" : "nízká"} />
               <p className="mt-2 text-xs text-muted-foreground">
                 Benchmark vychází z aktuálních nabídkových cen podobných inzerátů, nikoli z realizovaných
                 prodejů. Rozsah je orientační a závisí na dostupnosti a kvalitě srovnání.
