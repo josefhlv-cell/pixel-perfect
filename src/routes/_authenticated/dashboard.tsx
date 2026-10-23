@@ -13,7 +13,6 @@ import {
   Kpi,
   PageHeader,
   PriorityBadge,
-  SampleBadge,
   Section,
 } from "@/components/app/shared";
 import { ValueChart, SERIES } from "@/components/app/Charts";
@@ -85,11 +84,7 @@ function Dashboard() {
         <Kpi
           label="Aktivní dealy"
           value={active.length}
-          sub={
-            <span className="inline-flex items-center gap-1">
-              vč. <SampleBadge />
-            </span>
-          }
+          sub="skutečné nabídky"
         />
         <Kpi label="Watchlist" value={wl.length} />
       </div>
@@ -152,7 +147,7 @@ function Dashboard() {
           }
         >
           <div className="mb-2 text-xs text-muted-foreground">
-            Zdroj: <SampleBadge /> – datový zdroj není připojen.
+            Zdroj: veřejné realitní nabídky
           </div>
           <ul className="divide-y">
             {top.map((e) => (
@@ -207,7 +202,7 @@ function Dashboard() {
             </ul>
           )}
         </Section>
-        <Section title="Trh · cena za m²" right={<SampleBadge />}>
+        <Section title="Trh · cena za m²">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs text-muted-foreground">
@@ -229,7 +224,7 @@ function Dashboard() {
         </Section>
         <Section title="AI Insight">
           <p className="mb-3 text-sm text-muted-foreground">
-            Krátké shrnutí trhu z dostupných (ukázkových) dat.
+            Krátké shrnutí trhu z dostupných skutečných dat.
           </p>
           <AiRunner kind="market" label="Vygenerovat insight" />
         </Section>

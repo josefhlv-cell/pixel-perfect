@@ -4,7 +4,9 @@ import { useMemo, useState } from "react";
 import { marketQuery } from "@/lib/queries";
 import { formatCZK } from "@/lib/format";
 import { pageHead } from "@/lib/head";
-import { Kpi, PageHeader, SampleBadge, Section } from "@/components/app/shared";
+import { Empty, Kpi, PageHeader, Section } from "@/components/app/shared";
+import { observedMean } from "@/lib/live-data";
+import { Button } from "@/components/ui/button";
 import { HousePriceForecast } from "@/components/app/HousePriceForecast";
 import { Bars, MultiLine } from "@/components/app/Charts";
 import { AiRunner } from "@/components/app/AiPanel";
@@ -24,6 +26,7 @@ function Market() {
   const [range, setRange] = useState<R>("1R");
   const latestPeriod = data.reduce((m, r) => (r.period > m ? r.period : m), "");
   const filtered = useMemo(() => {
+    if (!latestPeriod) return [];
     const end = new Date(latestPeriod);
     const start = new Date(end.getFullYear(), end.getMonth() - RANGE[range], 1)
       .toISOString()
@@ -46,12 +49,8 @@ function Market() {
   const latest = data.filter((r) => r.period === latestPeriod);
   const first = (c: string) =>
     filtered.filter((r) => r.city === c).sort((a, b) => a.period.localeCompare(b.period))[0];
-  const avg = Math.round(
-    latest.reduce((a, r) => a + (r.avg_asking_price_m2 ?? 0), 0) / Math.max(1, latest.length),
-  );
-  const avgRent = Math.round(
-    latest.reduce((a, r) => a + (r.avg_rent_m2 ?? 0), 0) / Math.max(1, latest.length),
-  );
+  const avg = observedMean(latest.map((row) => row.avg_asking_price_m2));
+  const avgRent = observedMean(latest.map((row) => row.avg_rent_m2));
 
   return (
     <div className="space-y-5">
@@ -59,13 +58,15 @@ function Market() {
         title="Trh"
         sub={
           <span className="inline-flex items-center gap-2">
-            Zdroj: <SampleBadge /> · připraveno pro napojení skutečných datových providerů
+            Zdroj: skutečné nabídkové ceny a dostupné nájemní údaje
           </span>
         }
         actions={
           <div className="flex gap-0.5 rounded-md border p-0.5">
             {(Object.keys(RANGE) as R[]).map((r) => (
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 key={r}
                 onClick={() => setRange(r)}
                 className={cn(
@@ -74,18 +75,19 @@ function Market() {
                 )}
               >
                 {r}
-              </button>
+              </Button>
             ))}
           </div>
         }
       />
       <HousePriceForecast />
+      {data.length === 0 && <Empty>Zatím nejsou dostupná skutečná tržní data.</Empty>}
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
         <Kpi label="Prům. nabídková cena" value={`${formatCZK(avg)}/m²`} sub="napříč městy" />
         <Kpi label="Prům. nájem" value={`${formatCZK(avgRent)}/m²`} />
         <Kpi
           label="Hrubý výnos trhu"
-          value={`${(((avgRent * 12) / avg) * 100).toFixed(2).replace(".", ",")} %`}
+          value={avg != null && avg > 0 && avgRent != null ? `${(((avgRent * 12) / avg) * 100).toFixed(2).replace(".", ",")} %` : "—"}
           sub="nájem×12 / cena"
         />
         <Kpi label="Sledovaná města" value={cities.length} />
@@ -160,8 +162,7 @@ function Market() {
             </table>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            Změna za zvolené období. Ukázková data pokrývají 3 kvartály – delší rozsahy zobrazí vše
-            dostupné.
+            Změna za zvolené období podle dostupných skutečných pozorování.
           </p>
         </Section>
       </div>

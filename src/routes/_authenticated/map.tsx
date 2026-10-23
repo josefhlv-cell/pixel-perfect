@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { listingsQuery, portfolioQuery, watchlistQuery } from "@/lib/queries";
 import { formatCZK } from "@/lib/format";
 import { pageHead } from "@/lib/head";
-import { PageHeader, SampleBadge } from "@/components/app/shared";
+import { PageHeader } from "@/components/app/shared";
 import { MapLazy, type MapPoint } from "@/components/app/MapLazy";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -86,7 +86,7 @@ function MapPage() {
         title="Mapa"
         sub={
           <span className="inline-flex items-center gap-2">
-            Klikněte na bod pro kartu nemovitosti · <SampleBadge />
+            Skutečné nabídky a vaše portfolio
           </span>
         }
       />

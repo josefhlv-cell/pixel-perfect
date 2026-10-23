@@ -44,12 +44,13 @@ export const marketQuery = queryOptions({
 export const watchlistQuery = queryOptions({
   queryKey: ["watchlist"],
   queryFn: async () => {
-    const listings = await listingsQuery.queryFn();
-    if (!listings.length) return [];
+    const { data: listings, error: listingsError } = await onlyLive(supabase.from("listings").select("id"));
+    if (listingsError) throw listingsError;
+    if (!listings?.length) return [];
     const { data, error } = await supabase
       .from("watchlist")
       .select("*")
-      .in("listing_id", listings.map((row) => row.listing.id))
+      .in("listing_id", listings.map((row) => row.id))
       .order("created_at", { ascending: false });
     if (error) throw error;
     return data;
