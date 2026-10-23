@@ -13,13 +13,18 @@
 - [ ] #2 rest: baseline-forecast(s) (strict-type fixes), house-price server fn + UI, dashboard/market edits, migrations
 - [ ] Real-data walk-forward backtest vs naive baseline (needs evidence history with vintages)
 
-## Current request: production-only data
-- [x] Enforce live-only database reads, correct four adapter timestamp flags, prevent sample property/stat enrichment, return unknown empty portfolio/evidence values; verified authenticated five pages and direct sample reads denied, 220/220 tests, build OK.
-- [x] Hide demo data across lists, market, AI and related reads without deleting history.
-- [x] Verify authenticated preview (21 live listings), 216 tests and lint (0 errors); request publication and verify public /auth HTTP 200.
-- [ ] Confirm new deployment and safe production access — publication completion not yet confirmed; latest security scan reports 7 critical permissive read-policy findings.
+## Earlier requests (done)
+- [x] Live-only database reads; hide demo data; 220/220 tests, build OK
+- [x] 7 critical permissive read-policy findings fixed via migration
+- [x] Plain-Czech UI pass; 11 authenticated pages verified; 216/216 tests, lint 0 errors
 
-## Current request: srozumitelná čeština
-- [x] Nahradit anglické názvy a odborné zkratky v navigaci, stránkách, porovnání a popisech nabídek.
-- [x] Vysvětlit finanční údaje a nejistotu odhadů jednoduchou češtinou bez změny výpočtů; zachovat upozornění na chybějící historické verze dat.
-- [x] Ověřit 11 přihlášených stránek, detail skutečné nabídky a zadání nájmu 20 000 Kč; bez starých zkratek, vodorovného přetečení a chyb prohlížeče. 216/216 testů, lint 0 chyb/9 varování, automatická kontrola build OK. Nezveřejněno.
+## Current request: FINAL AUDIT & COMPLETION (uploaded spec)
+- [x] Audit: single engine confirmed (deals.ts/valuation.ts/calculations) shared by UI, AI and API; no divergent math
+- [x] Rent model wired: listings.offer_type (migration 0017), extraction distinguishes prodej/pronajem, monthly_rent without services, rental comparables feed estimateRentFromComparables in enrichListing (UI + AI)
+- [x] Sale pool excludes rentals; rental listings are not sale targets (no benchmark/yield/cash-flow on them)
+- [x] Deal score capped at 20 without any financial evidence; priorityBreakdown mirrors the cap
+- [x] UI null fixes: portfolio-import rent no longer defaults to 0 (save blocked without real rent), cash-flow tone no longer treats null as positive, market bar chart skips missing cities, rental cards show "Nájem za měsíc" instead of "Cena"
+- [x] Tests added (webagent offer_type/rent, rental pool, rent estimate wiring, score cap): 240/240 pass, tsgo clean, lint 0 errors/9 pre-existing warnings, production build OK
+- [x] Authenticated browser check: /deals (33 live listings) + detail — no console errors, missing rent shows "Neuvedeno" with explanation
+- [ ] Live rental search to populate rental comparables (user runs e.g. "pronájem 2+kk Pardubice" in Deal Hunter; costs Firecrawl/AI credits)
+- [ ] Publication of these changes — awaiting user approval

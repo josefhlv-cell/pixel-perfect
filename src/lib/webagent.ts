@@ -4,7 +4,11 @@ export interface ExtractedListing {
   source_url: string;
   source_domain: string;
   title: string | null;
+  /** "prodej" = price is the asking price; "pronajem" = price is the monthly rent. */
+  offer_type: "prodej" | "pronajem" | null;
   price: number | null;
+  /** Base monthly rent only (services/energy excluded). Set for rentals. */
+  monthly_rent: number | null;
   currency: string | null;
   location: string | null;
   address: string | null;
@@ -102,17 +106,37 @@ const bool = (v: unknown): boolean | null => (typeof v === "boolean" ? v : null)
 
 /** Normalize model output. Missing / invalid → null. Never invents values. */
 export function normalizeExtraction(j: Record<string, unknown>, url: string): ExtractedListing {
-  const price = num(j["price"]);
+  const rawOffer = str(j["offer_type"])?.toLowerCase() ?? null;
+  const offerType =
+    rawOffer === "pronajem" || rawOffer === "pronájem"
+      ? ("pronajem" as const)
+      : rawOffer === "prodej"
+        ? ("prodej" as const)
+        : null;
+  const rawPrice = num(j["price"]);
+  const rawRent = num(j["monthly_rent"]);
   const area = num(j["area_m2"]);
   const lat = num(j["latitude"]);
   const lng = num(j["longitude"]);
   const floor = num(j["floor"]);
   const rooms = str(j["rooms"])?.replace(/\s+/g, "").toLowerCase() ?? null;
+  // Rentals: monthly rent is a few thousand CZK, so the sale-price floor would reject it.
+  const rent =
+    offerType === "pronajem" && rawRent != null && rawRent >= 1_000 && rawRent <= 500_000
+      ? Math.round(rawRent)
+      : null;
+  const salePrice =
+    offerType !== "pronajem" && rawPrice != null && rawPrice > 50_000 && rawPrice < 1_000_000_000
+      ? Math.round(rawPrice)
+      : null;
+  const price = offerType === "pronajem" ? rent : salePrice;
   return {
     source_url: url,
     source_domain: domainOf(url),
     title: str(j["title"]),
-    price: price != null && price > 50_000 && price < 1_000_000_000 ? Math.round(price) : null,
+    offer_type: offerType,
+    price,
+    monthly_rent: rent,
     currency: str(j["currency"]) ?? (price != null ? "CZK" : null),
     location: str(j["location"]),
     address: str(j["address"]),
@@ -146,9 +170,10 @@ function validDate(v: unknown): string | null {
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
-/** A listing is usable only if it is a single-offer detail page with a real price. */
+/** A listing is usable only if it is a single-offer detail page with a real price (sale) or rent (rental). */
 export function isUsable(e: ExtractedListing): boolean {
-  return e.is_listing_detail && e.price != null;
+  if (!e.is_listing_detail) return false;
+  return e.offer_type === "pronajem" ? e.monthly_rent != null : e.price != null;
 }
 
 /** Parse a free-text investor query into coarse filters (UI hints only). */

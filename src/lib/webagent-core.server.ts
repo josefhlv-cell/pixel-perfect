@@ -254,6 +254,7 @@ export async function runAgentPipeline(
           created_by: userId,
           is_sample: false,
           source_type: LIVE_SOURCE_TYPE,
+          offer_type: ex.offer_type ?? "prodej",
           source_url: sourceUrl,
           source_domain: ex.source_domain,
           title: ex.title,

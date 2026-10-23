@@ -22,7 +22,10 @@ export type RentalComparable = {
   isSample: boolean;
 };
 
-export type RentTarget = Omit<RentalComparable, "sourceUrl" | "monthlyRentCzk" | "observedAt" | "isActive" | "isVerified" | "isSample">;
+export type RentTarget = Omit<
+  RentalComparable,
+  "sourceUrl" | "monthlyRentCzk" | "observedAt" | "isActive" | "isVerified" | "isSample"
+>;
 
 export type RentEstimate = {
   monthlyRentCzk: number;
@@ -46,14 +49,19 @@ function similarity(target: RentTarget, c: RentalComparable, nowMs: number): num
   const areaRatio = Math.abs(c.areaM2 - target.areaM2) / target.areaM2;
   if (areaRatio > 0.35) return 0;
   let w = Math.exp(-areaRatio * 3);
-  if (target.district && c.district) w *= normalize(target.district) === normalize(c.district) ? 1.35 : 0.72;
-  if (target.condition && c.condition) w *= knownEqual(normalize(target.condition), normalize(c.condition)) ? 1.15 : 0.82;
-  if (target.furnishing && c.furnishing) w *= knownEqual(normalize(target.furnishing), normalize(c.furnishing)) ? 1.12 : 0.88;
+  if (target.district && c.district)
+    w *= normalize(target.district) === normalize(c.district) ? 1.35 : 0.72;
+  if (target.condition && c.condition)
+    w *= knownEqual(normalize(target.condition), normalize(c.condition)) ? 1.15 : 0.82;
+  if (target.furnishing && c.furnishing)
+    w *= knownEqual(normalize(target.furnishing), normalize(c.furnishing)) ? 1.12 : 0.88;
   for (const key of ["elevator", "parking", "storage", "balcony"] as const) {
-    const tv = target[key], cv = c[key];
+    const tv = target[key],
+      cv = c[key];
     if (tv != null && cv != null) w *= tv === cv ? 1.06 : 0.94;
   }
-  if (target.floor != null && c.floor != null) w *= Math.abs(target.floor - c.floor) <= 1 ? 1.04 : 0.96;
+  if (target.floor != null && c.floor != null)
+    w *= Math.abs(target.floor - c.floor) <= 1 ? 1.04 : 0.96;
   const ageDays = Math.max(0, (nowMs - Date.parse(c.observedAt)) / 86_400_000);
   if (!Number.isFinite(ageDays) || ageDays > 365) return 0;
   w *= Math.exp(-ageDays / 180);
@@ -84,11 +92,23 @@ export function estimateRentFromComparables(
   minimumComparables = 5,
 ): RentEstimate | null {
   const nowMs = Date.parse(nowIso);
-  if (!Number.isFinite(nowMs) || !target.city.trim() || !target.disposition.trim() || !(target.areaM2 > 0)) return null;
+  if (
+    !Number.isFinite(nowMs) ||
+    !target.city.trim() ||
+    !target.disposition.trim() ||
+    !(target.areaM2 > 0)
+  )
+    return null;
   const seen = new Set<string>();
   const scored: { item: RentalComparable; weight: number }[] = [];
   for (const item of comparables) {
-    if (!item.isActive || item.isSample || !item.sourceUrl || !Number.isFinite(Date.parse(item.observedAt))) continue;
+    if (
+      !item.isActive ||
+      item.isSample ||
+      !item.sourceUrl ||
+      !Number.isFinite(Date.parse(item.observedAt))
+    )
+      continue;
     const key = item.sourceUrl.trim().toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
@@ -110,7 +130,9 @@ export function estimateRentFromComparables(
     comparableCount: scored.length,
     method: "similarity_weighted_median",
     confidence,
-    evidenceAsOf: new Date(Math.max(...scored.map(x => Date.parse(x.item.observedAt)))).toISOString(),
-    sources: scored.map(x => x.item.sourceUrl),
+    evidenceAsOf: new Date(
+      Math.max(...scored.map((x) => Date.parse(x.item.observedAt))),
+    ).toISOString(),
+    sources: scored.map((x) => x.item.sourceUrl),
   };
 }

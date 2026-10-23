@@ -4,8 +4,12 @@
  */
 import { calculateTotalReturn, DEFAULT_ASSUMPTIONS, type InvestmentInput } from "./calculations";
 import {
+  estimateRentFromComparables,
+  type RentEstimate,
+  type RentalComparable,
+} from "./rent-model";
+import {
   computeDealPriority,
-  estimateRent,
   estimateValue,
   grossYieldFor,
   priceDifferenceBps,
@@ -32,6 +36,7 @@ export interface EnrichedListing {
   estimate: ReturnType<typeof estimateValue>;
   diffBps: number | null;
   rent: number | null;
+  rentEstimate: RentEstimate | null;
   grossYieldBps: number | null;
   monthlyCashFlow: number | null;
   priceDropped: boolean;
@@ -52,12 +57,14 @@ export function latestStatsByCity(rows: MarketRow[]): Map<string, MarketStat> {
   return new Map([...m].map(([k, r]) => [k, r as MarketStat]));
 }
 
-/** Build the evidence pool from production listings; no city-average fallback. */
+/** Build the evidence pool from production SALE listings; no city-average fallback. */
 export function saleComparablesFromListings(
   rows: ListingRow[],
   properties: Map<string, PropertyRow>,
 ): SaleComparable[] {
   return rows.flatMap((row) => {
+    // Rental listings carry a monthly rent in `price`; they must never enter the sale pool.
+    if (row.offer_type === "pronajem") return [];
     const property = properties.get(row.property_id);
     const areaM2 = row.area_m2 == null ? null : Number(row.area_m2);
     const priceCzk = row.price == null ? null : Number(row.price);
@@ -86,14 +93,59 @@ export function saleComparablesFromListings(
         district: locationParts.length > 1 ? locationParts.slice(1).join(", ") : null,
         rooms: property?.disposition ?? row.rooms,
         propertyType: property?.property_type ?? row.property_type,
-        condition: property?.condition,
-        buildingType: property?.building_type,
-        floor: property?.floor,
+        condition: property?.condition ?? null,
+        buildingType: property?.building_type ?? null,
+        floor: property?.floor ?? null,
         areaM2,
         priceCzk,
         observedAt,
         availability: row.availability_status,
         freshness: row.freshness_status,
+        isSample: row.is_sample || (property?.is_sample ?? false),
+      },
+    ];
+  });
+}
+
+/** Build the rental evidence pool from production RENTAL listings (price = monthly rent). */
+export function rentalComparablesFromListings(
+  rows: ListingRow[],
+  properties: Map<string, PropertyRow>,
+): RentalComparable[] {
+  return rows.flatMap((row) => {
+    if (row.offer_type !== "pronajem") return [];
+    const property = properties.get(row.property_id);
+    const areaM2 = row.area_m2 == null ? null : Number(row.area_m2);
+    const rentCzk = row.price == null ? null : Number(row.price);
+    const city = property?.city ?? row.location;
+    const observedAt = row.last_verified_at ?? row.last_seen_at ?? row.updated_at ?? row.created_at;
+    if (
+      !city ||
+      areaM2 == null ||
+      !Number.isFinite(areaM2) ||
+      areaM2 <= 0 ||
+      rentCzk == null ||
+      !Number.isFinite(rentCzk) ||
+      rentCzk <= 0 ||
+      !row.source_url ||
+      !observedAt
+    ) {
+      return [];
+    }
+    const locationParts = (row.location ?? city).split(/[,–-]/).map((part) => part.trim());
+    return [
+      {
+        sourceUrl: row.source_url,
+        city,
+        district: locationParts.length > 1 ? locationParts.slice(1).join(", ") : null,
+        disposition: property?.disposition ?? row.rooms ?? "",
+        areaM2,
+        monthlyRentCzk: rentCzk,
+        condition: property?.condition ?? null,
+        floor: property?.floor ?? null,
+        observedAt,
+        isActive: ["ACTIVE_CONFIRMED", "ACTIVE_UNCONFIRMED"].includes(row.availability_status),
+        isVerified: row.last_verified_at != null,
         isSample: row.is_sample || (property?.is_sample ?? false),
       },
     ];
@@ -130,6 +182,7 @@ export function enrichListing(
   stats: Map<string, MarketStat>,
   snapshots: SnapshotRow[],
   saleComparables: SaleComparable[] = [],
+  rentalComparables: RentalComparable[] = [],
 ): EnrichedListing {
   if (!listing.is_sample && property?.is_sample) property = null;
   const city = property?.city ?? listing.location ?? null;
@@ -140,7 +193,6 @@ export function enrichListing(
         ? Number(property.area_m2)
         : null;
   // Live listings often carry "City, District" (e.g. "Pardubice, Zelené Předměstí"); fall back to the base city.
-  const stat = city ? (stats.get(city) ?? stats.get(city.split(/[,–-]/)[0]!.trim())) : undefined;
   const locationParts = (listing.location ?? city ?? "").split(/[,–-]/).map((part) => part.trim());
   const saleTarget =
     city && area != null && area > 0
@@ -151,14 +203,30 @@ export function enrichListing(
           district: locationParts.length > 1 ? locationParts.slice(1).join(", ") : null,
           rooms: property?.disposition ?? listing.rooms,
           propertyType: property?.property_type ?? listing.property_type,
-          condition: property?.condition,
-          buildingType: property?.building_type,
-          floor: property?.floor,
+          condition: property?.condition ?? null,
+          buildingType: property?.building_type ?? null,
+          floor: property?.floor ?? null,
           areaM2: area,
         }
       : null;
-  const estimate = estimateValue(saleTarget, saleComparables);
-  const rent = estimateRent(area, stat);
+  // Rental listings ARE rent evidence: sale benchmark / rent estimate do not apply to them.
+  const isRental = listing.offer_type === "pronajem";
+  const estimate = isRental ? null : estimateValue(saleTarget, saleComparables);
+  const rentTarget =
+    !isRental && city && area != null && area > 0 && (property?.disposition ?? listing.rooms)
+      ? {
+          city,
+          district: locationParts.length > 1 ? locationParts.slice(1).join(", ") : null,
+          disposition: property?.disposition ?? listing.rooms ?? "",
+          areaM2: area,
+          condition: property?.condition ?? null,
+          floor: property?.floor ?? null,
+        }
+      : null;
+  const rentEstimate = rentTarget
+    ? estimateRentFromComparables(rentTarget, rentalComparables, new Date().toISOString())
+    : null;
+  const rent = rentEstimate?.monthlyRentCzk ?? null;
   const diffBps = priceDifferenceBps(listing.price, estimate?.estimatedValue ?? null);
   const grossYieldBps = grossYieldFor(listing.price, rent);
   const history = snapshots
@@ -214,21 +282,23 @@ export function enrichListing(
       positive: false,
       text: "Nájem nepokryje náklady a splátku hypotéky na 80 % ceny; každý měsíc je třeba doplácet",
     });
-  if (rent != null)
-    reasons.push({
-      positive: false,
-      text: "Nájemní odhad vyžaduje kontrolu srovnatelných pronájmů a oddělení služeb a energií.",
-    });
-  else
-    reasons.push({
-      positive: false,
-      text: "Odhad nájmu není k dispozici: chybí ověřené srovnatelné nabídky; výnos a cash flow proto nejsou dopočítány.",
-    });
-  if (estimate == null) {
-    reasons.push({
-      positive: false,
-      text: "Chybí srovnatelné nabídky: pro orientační cenový benchmark je potřeba alespoň pět aktuálních inzerátů.",
-    });
+  if (!isRental) {
+    if (rent != null)
+      reasons.push({
+        positive: false,
+        text: `Odhad nájmu vychází z ${rentEstimate?.comparableCount ?? 0} srovnatelných pronájmů; vyžaduje kontrolu oddělení služeb a energií.`,
+      });
+    else
+      reasons.push({
+        positive: false,
+        text: "Odhad nájmu není k dispozici: chybí ověřené srovnatelné nabídky; výnos a cash flow proto nejsou dopočítány.",
+      });
+    if (estimate == null) {
+      reasons.push({
+        positive: false,
+        text: "Chybí srovnatelné nabídky: pro orientační cenový benchmark je potřeba alespoň pět aktuálních inzerátů.",
+      });
+    }
   }
 
   return {
@@ -239,6 +309,7 @@ export function enrichListing(
     estimate,
     diffBps,
     rent,
+    rentEstimate,
     grossYieldBps,
     monthlyCashFlow,
     priceDropped,
@@ -255,7 +326,7 @@ export function priorityBreakdown(
 ): { label: string; points: number; max: number }[] {
   const dead = ["SOLD", "REMOVED", "EXPIRED"].includes(e.listing.availability_status);
   if (dead) return [{ label: "Nabídka není aktivní", points: 0, max: 100 }];
-  return [
+  const rows = [
     {
       label: "Sleva vůči odhadu",
       points: e.diffBps != null ? Math.round(Math.max(0, Math.min(35, -e.diffBps / 40))) : 0,
@@ -289,4 +360,14 @@ export function priorityBreakdown(
     },
     { label: "Snížení ceny", points: e.priceDropped ? 5 : 0, max: 5 },
   ];
+  // Mirror the computeDealPriority cap: without any financial evidence the total
+  // is limited to 20, so scale the non-financial rows down to match.
+  if (e.diffBps == null && e.grossYieldBps == null) {
+    const raw = rows.reduce((a, b) => a + b.points, 0);
+    if (raw > 20) {
+      const f = 20 / raw;
+      return rows.map((r) => ({ ...r, points: Math.round(r.points * f) }));
+    }
+  }
+  return rows;
 }

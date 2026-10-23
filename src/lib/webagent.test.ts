@@ -52,6 +52,37 @@ describe("web agent helpers", () => {
       minYieldPct: 5,
     });
   });
+  it("keeps monthly rent for rentals and rejects it as a sale price", () => {
+    const e = normalizeExtraction(
+      { is_listing_detail: true, offer_type: "pronajem", price: 15500, monthly_rent: 15500 },
+      "https://x.cz/pronajem/1",
+    );
+    expect(e.offer_type).toBe("pronajem");
+    expect(e.monthly_rent).toBe(15500);
+    expect(e.price).toBe(15500);
+    expect(isUsable(e)).toBe(true);
+  });
+  it("rejects rentals without a plausible base rent", () => {
+    const low = normalizeExtraction(
+      { is_listing_detail: true, offer_type: "pronajem", monthly_rent: 500 },
+      "https://x.cz/pronajem/2",
+    );
+    expect(low.monthly_rent).toBeNull();
+    expect(isUsable(low)).toBe(false);
+    const missing = normalizeExtraction(
+      { is_listing_detail: true, offer_type: "pronajem" },
+      "https://x.cz/pronajem/3",
+    );
+    expect(isUsable(missing)).toBe(false);
+  });
+  it("treats missing offer_type as a sale and keeps the sale price floor", () => {
+    const cheap = normalizeExtraction(
+      { is_listing_detail: true, price: 20000 },
+      "https://x.cz/prodej/1",
+    );
+    expect(cheap.price).toBeNull();
+    expect(isUsable(cheap)).toBe(false);
+  });
 });
 
 import { detailLinksFrom } from "./webagent";

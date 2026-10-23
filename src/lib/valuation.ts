@@ -92,7 +92,8 @@ export function estimateValueFromComparables(
     !target.city.trim() ||
     !(target.areaM2 > 0) ||
     !Number.isFinite(target.areaM2)
-  ) return null;
+  )
+    return null;
 
   const seen = new Set<string>();
   const scored: {
@@ -113,21 +114,19 @@ export function estimateValueFromComparables(
       !(item.priceCzk > 0) ||
       !Number.isFinite(item.areaM2) ||
       !Number.isFinite(item.priceCzk)
-    ) continue;
+    )
+      continue;
     const urlKey = item.sourceUrl.trim().toLocaleLowerCase("cs-CZ");
     if (seen.has(urlKey)) continue;
 
     if (baseCity(item.city) !== baseCity(target.city)) continue;
-    if (
-      target.rooms &&
-      item.rooms &&
-      normalize(target.rooms) !== normalize(item.rooms)
-    ) continue;
+    if (target.rooms && item.rooms && normalize(target.rooms) !== normalize(item.rooms)) continue;
     if (
       target.propertyType &&
       item.propertyType &&
       normalize(target.propertyType) !== normalize(item.propertyType)
-    ) continue;
+    )
+      continue;
 
     const areaRatio = Math.abs(item.areaM2 - target.areaM2) / target.areaM2;
     if (areaRatio > 0.35) continue;
@@ -170,9 +169,7 @@ export function estimateValueFromComparables(
     comparables: scored.length,
     confidence: effectiveN >= 12 ? "high" : effectiveN >= 7 ? "medium" : "low",
     isSample: false,
-    evidenceAsOf: new Date(
-      Math.max(...scored.map((item) => item.observedMs)),
-    ).toISOString(),
+    evidenceAsOf: new Date(Math.max(...scored.map((item) => item.observedMs))).toISOString(),
     sources: scored.map((item) => item.item.sourceUrl),
   };
 }
@@ -205,7 +202,12 @@ export interface DealPriorityInput {
   priceDropped: boolean;
 }
 
-/** 0–100. Unknown factors contribute 0 (no invented upside). */
+/**
+ * 0–100. Unknown factors contribute 0 (no invented upside).
+ * Without ANY financial evidence (no price benchmark and no rent estimate) the
+ * score is capped at 20: freshness and availability alone must not present a
+ * listing as a strong investment opportunity.
+ */
 export function computeDealPriority(i: DealPriorityInput): number {
   if (i.availability === "SOLD" || i.availability === "REMOVED" || i.availability === "EXPIRED")
     return 0;
@@ -216,6 +218,7 @@ export function computeDealPriority(i: DealPriorityInput): number {
   if (i.availability === "ACTIVE_CONFIRMED") s += 10;
   else if (i.availability === "ACTIVE_UNCONFIRMED") s += 4;
   if (i.priceDropped) s += 5;
+  if (i.diffBps == null && i.grossYieldBps == null) s = Math.min(s, 20);
   return Math.round(Math.min(100, s));
 }
 

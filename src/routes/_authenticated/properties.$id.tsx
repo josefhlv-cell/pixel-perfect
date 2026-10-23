@@ -156,7 +156,7 @@ function Detail() {
           <Kpi
             label="Zůstatek za měsíc"
             value={formatCZK(e.monthlyCashFlow)}
-            tone={(e.monthlyCashFlow ?? 0) >= 0 ? "pos" : "neg"}
+            tone={e.monthlyCashFlow == null ? undefined : e.monthlyCashFlow >= 0 ? "pos" : "neg"}
             sub="Po nákladech a splátce; před daní. Hypotéka na 80 % ceny."
           />
           <div className="rounded-md border bg-card p-3">
@@ -294,12 +294,18 @@ function Detail() {
               />
               <p className="mt-2 text-xs text-muted-foreground">
                 Benchmark vychází z aktuálních nabídkových cen podobných inzerátů, nikoli z
-                realizovaných prodejů. Rozsah je orientační a závisí na dostupnosti a kvalitě srovnání.
+                realizovaných prodejů. Rozsah je orientační a závisí na dostupnosti a kvalitě
+                srovnání.
               </p>
               <ul className="mt-2 space-y-1 text-xs">
                 {e.estimate.sources.slice(0, 5).map((source, index) => (
                   <li key={source}>
-                    <a href={source} target="_blank" rel="noopener noreferrer" className="underline">
+                    <a
+                      href={source}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline"
+                    >
                       Srovnávací nabídka {index + 1}
                     </a>
                   </li>
@@ -453,11 +459,16 @@ function AddToPortfolio({
     mortgage: String(Math.round(price * 0.8)),
     rate: "4.89",
     years: "30",
-    rent: String(e.rent ?? 0),
-    expenses: String(Math.round((e.rent ?? 0) * 0.15)),
+    rent: e.rent != null ? String(e.rent) : "",
+    expenses: e.rent != null ? String(Math.round(e.rent * 0.15)) : "",
     date: new Date().toISOString().slice(0, 10),
   });
   const save = async () => {
+    const rentNum = Math.round(Number(v.rent));
+    if (!Number.isFinite(rentNum) || rentNum <= 0) {
+      toast.error("Doplňte skutečný měsíční nájem – bez něj nelze nemovitost uložit do portfolia.");
+      return;
+    }
     try {
       const user_id = await uid();
       const { error } = await supabase.from("portfolio_properties").insert({

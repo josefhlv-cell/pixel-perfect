@@ -406,6 +406,7 @@ export type Database = {
           latitude: number | null
           location: string | null
           longitude: number | null
+          offer_type: string
           price: number | null
           property_id: string
           property_type: string | null
@@ -437,6 +438,7 @@ export type Database = {
           latitude?: number | null
           location?: string | null
           longitude?: number | null
+          offer_type?: string
           price?: number | null
           property_id: string
           property_type?: string | null
@@ -468,6 +470,7 @@ export type Database = {
           latitude?: number | null
           location?: string | null
           longitude?: number | null
+          offer_type?: string
           price?: number | null
           property_id?: string
           property_type?: string | null
@@ -1982,6 +1985,108 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rental_comparables: {
+        Row: {
+          area_m2: number
+          balcony: boolean | null
+          building_year: number | null
+          city: string
+          condition: string | null
+          created_at: string
+          dedupe_key: string
+          disposition: string
+          district: string | null
+          elevator: boolean | null
+          external_id: string | null
+          floor: number | null
+          floor_count: number | null
+          furnishing: string | null
+          id: string
+          is_active: boolean
+          is_sample: boolean
+          is_verified: boolean
+          last_seen_at: string
+          latitude: number | null
+          longitude: number | null
+          monthly_energy_czk: number | null
+          monthly_rent_czk: number
+          monthly_services_czk: number | null
+          observed_at: string
+          parking: boolean | null
+          published_at: string | null
+          raw_features: Json
+          source_domain: string
+          source_url: string
+          storage: boolean | null
+        }
+        Insert: {
+          area_m2: number
+          balcony?: boolean | null
+          building_year?: number | null
+          city: string
+          condition?: string | null
+          created_at?: string
+          dedupe_key: string
+          disposition: string
+          district?: string | null
+          elevator?: boolean | null
+          external_id?: string | null
+          floor?: number | null
+          floor_count?: number | null
+          furnishing?: string | null
+          id?: string
+          is_active?: boolean
+          is_sample?: boolean
+          is_verified?: boolean
+          last_seen_at?: string
+          latitude?: number | null
+          longitude?: number | null
+          monthly_energy_czk?: number | null
+          monthly_rent_czk: number
+          monthly_services_czk?: number | null
+          observed_at?: string
+          parking?: boolean | null
+          published_at?: string | null
+          raw_features?: Json
+          source_domain: string
+          source_url: string
+          storage?: boolean | null
+        }
+        Update: {
+          area_m2?: number
+          balcony?: boolean | null
+          building_year?: number | null
+          city?: string
+          condition?: string | null
+          created_at?: string
+          dedupe_key?: string
+          disposition?: string
+          district?: string | null
+          elevator?: boolean | null
+          external_id?: string | null
+          floor?: number | null
+          floor_count?: number | null
+          furnishing?: string | null
+          id?: string
+          is_active?: boolean
+          is_sample?: boolean
+          is_verified?: boolean
+          last_seen_at?: string
+          latitude?: number | null
+          longitude?: number | null
+          monthly_energy_czk?: number | null
+          monthly_rent_czk?: number
+          monthly_services_czk?: number | null
+          observed_at?: string
+          parking?: boolean | null
+          published_at?: string | null
+          raw_features?: Json
+          source_domain?: string
+          source_url?: string
+          storage?: boolean | null
+        }
+        Relationships: []
       }
       search_results: {
         Row: {
