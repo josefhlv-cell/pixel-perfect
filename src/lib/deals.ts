@@ -73,26 +73,30 @@ export function saleComparablesFromListings(
       priceCzk <= 0 ||
       !row.source_url ||
       !observedAt
-    ) return [];
+    ) {
+      return [];
+    }
     const locationParts = (row.location ?? city).split(/[,–-]/).map((part) => part.trim());
-    return [{
-      listingId: row.id,
-      propertyId: row.property_id,
-      sourceUrl: row.source_url,
-      city,
-      district: locationParts.length > 1 ? locationParts.slice(1).join(", ") : null,
-      rooms: property?.disposition ?? row.rooms,
-      propertyType: property?.property_type ?? row.property_type,
-      condition: property?.condition,
-      buildingType: property?.building_type,
-      floor: property?.floor,
-      areaM2,
-      priceCzk,
-      observedAt,
-      availability: row.availability_status,
-      freshness: row.freshness_status,
-      isSample: row.is_sample || (property?.is_sample ?? false),
-    }];
+    return [
+      {
+        listingId: row.id,
+        propertyId: row.property_id,
+        sourceUrl: row.source_url,
+        city,
+        district: locationParts.length > 1 ? locationParts.slice(1).join(", ") : null,
+        rooms: property?.disposition ?? row.rooms,
+        propertyType: property?.property_type ?? row.property_type,
+        condition: property?.condition,
+        buildingType: property?.building_type,
+        floor: property?.floor,
+        areaM2,
+        priceCzk,
+        observedAt,
+        availability: row.availability_status,
+        freshness: row.freshness_status,
+        isSample: row.is_sample || (property?.is_sample ?? false),
+      },
+    ];
   });
 }
 
@@ -138,18 +142,21 @@ export function enrichListing(
   // Live listings often carry "City, District" (e.g. "Pardubice, Zelené Předměstí"); fall back to the base city.
   const stat = city ? (stats.get(city) ?? stats.get(city.split(/[,–-]/)[0]!.trim())) : undefined;
   const locationParts = (listing.location ?? city ?? "").split(/[,–-]/).map((part) => part.trim());
-  const saleTarget = city && area != null && area > 0 ? {
-    listingId: listing.id,
-    propertyId: listing.property_id,
-    city,
-    district: locationParts.length > 1 ? locationParts.slice(1).join(", ") : null,
-    rooms: property?.disposition ?? listing.rooms,
-    propertyType: property?.property_type ?? listing.property_type,
-    condition: property?.condition,
-    buildingType: property?.building_type,
-    floor: property?.floor,
-    areaM2: area,
-  } : null;
+  const saleTarget =
+    city && area != null && area > 0
+      ? {
+          listingId: listing.id,
+          propertyId: listing.property_id,
+          city,
+          district: locationParts.length > 1 ? locationParts.slice(1).join(", ") : null,
+          rooms: property?.disposition ?? listing.rooms,
+          propertyType: property?.property_type ?? listing.property_type,
+          condition: property?.condition,
+          buildingType: property?.building_type,
+          floor: property?.floor,
+          areaM2: area,
+        }
+      : null;
   const estimate = estimateValue(saleTarget, saleComparables);
   const rent = estimateRent(area, stat);
   const diffBps = priceDifferenceBps(listing.price, estimate?.estimatedValue ?? null);
@@ -208,13 +215,21 @@ export function enrichListing(
       text: "Nájem nepokryje náklady a splátku hypotéky na 80 % ceny; každý měsíc je třeba doplácet",
     });
   if (rent != null)
-    reasons.push({ positive: false, text: "Nájemní odhad vyžaduje kontrolu srovnatelných pronájmů a oddělení služeb a energií." });
+    reasons.push({
+      positive: false,
+      text: "Nájemní odhad vyžaduje kontrolu srovnatelných pronájmů a oddělení služeb a energií.",
+    });
   else
     reasons.push({
       positive: false,
       text: "Odhad nájmu není k dispozici: chybí ověřené srovnatelné nabídky; výnos a cash flow proto nejsou dopočítány.",
     });
-  if (estimate == null) reasons.push({ positive: false, text: "Chybí srovnatelné nabídky: pro orientační cenový benchmark je potřeba alespoň pět aktuálních inzerátů." });
+  if (estimate == null) {
+    reasons.push({
+      positive: false,
+      text: "Chybí srovnatelné nabídky: pro orientační cenový benchmark je potřeba alespoň pět aktuálních inzerátů.",
+    });
+  }
 
   return {
     listing,
