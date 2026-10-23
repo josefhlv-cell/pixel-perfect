@@ -116,7 +116,6 @@ export function estimateValueFromComparables(
     ) continue;
     const urlKey = item.sourceUrl.trim().toLocaleLowerCase("cs-CZ");
     if (seen.has(urlKey)) continue;
-    seen.add(urlKey);
 
     if (baseCity(item.city) !== baseCity(target.city)) continue;
     if (
@@ -152,6 +151,7 @@ export function estimateValueFromComparables(
     }
     if (item.availability === "ACTIVE_CONFIRMED") weight *= 1.1;
     if (item.freshness === "FRESH") weight *= 1.1;
+    seen.add(urlKey);
     scored.push({ item, pricePerM2: item.priceCzk / item.areaM2, weight, observedMs });
   }
 
