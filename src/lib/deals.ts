@@ -52,6 +52,47 @@ export function latestStatsByCity(rows: MarketRow[]): Map<string, MarketStat> {
   return new Map([...m].map(([k, r]) => [k, r as MarketStat]));
 }
 
+/** Build the evidence pool from production listings; no city-average fallback. */
+export function saleComparablesFromListings(
+  rows: ListingRow[],
+  properties: Map<string, PropertyRow>,
+): SaleComparable[] {
+  return rows.flatMap((row) => {
+    const property = properties.get(row.property_id);
+    const areaM2 = row.area_m2 == null ? null : Number(row.area_m2);
+    const priceCzk = row.price == null ? null : Number(row.price);
+    const city = property?.city ?? row.location;
+    const observedAt = row.last_verified_at ?? row.last_seen_at ?? row.updated_at ?? row.created_at;
+    if (
+      !city ||
+      areaM2 == null ||
+      !Number.isFinite(areaM2) ||
+      areaM2 <= 0 ||
+      priceCzk == null ||
+      !Number.isFinite(priceCzk) ||
+      priceCzk <= 0 ||
+      !row.source_url ||
+      !observedAt
+    ) return [];
+    const locationParts = (row.location ?? city).split(/[,–-]/).map((part) => part.trim());
+    return [{
+      listingId: row.id,
+      propertyId: row.property_id,
+      sourceUrl: row.source_url,
+      city,
+      district: locationParts.length > 1 ? locationParts.slice(1).join(", ") : null,
+      rooms: row.rooms,
+      propertyType: row.property_type,
+      areaM2,
+      priceCzk,
+      observedAt,
+      availability: row.availability_status,
+      freshness: row.freshness_status,
+      isSample: row.is_sample || (property?.is_sample ?? false),
+    }];
+  });
+}
+
 /** Default investment input for a listing (price, estimated rent, Czech defaults). */
 export function defaultInvestmentInput(
   price: number,
