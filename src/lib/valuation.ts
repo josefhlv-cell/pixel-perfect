@@ -205,7 +205,12 @@ export interface DealPriorityInput {
   priceDropped: boolean;
 }
 
-/** 0–100. Unknown factors contribute 0 (no invented upside). */
+/**
+ * 0–100. Unknown factors contribute 0 (no invented upside).
+ * Without ANY financial evidence (no price benchmark and no rent estimate) the
+ * score is capped at 20: freshness and availability alone must not present a
+ * listing as a strong investment opportunity.
+ */
 export function computeDealPriority(i: DealPriorityInput): number {
   if (i.availability === "SOLD" || i.availability === "REMOVED" || i.availability === "EXPIRED")
     return 0;
@@ -216,6 +221,7 @@ export function computeDealPriority(i: DealPriorityInput): number {
   if (i.availability === "ACTIVE_CONFIRMED") s += 10;
   else if (i.availability === "ACTIVE_UNCONFIRMED") s += 4;
   if (i.priceDropped) s += 5;
+  if (i.diffBps == null && i.grossYieldBps == null) s = Math.min(s, 20);
   return Math.round(Math.min(100, s));
 }
 
