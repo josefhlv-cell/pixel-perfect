@@ -208,7 +208,7 @@ export function enrichListing(
       positive: false,
       text: "Odhad nájmu není k dispozici: chybí ověřené srovnatelné nabídky; výnos a cash flow proto nejsou dopočítány.",
     });
-  if (estimate == null) reasons.push({ positive: false, text: "Chybí alespoň pět aktuálních srovnatelných nabídek pro orientační cenový benchmark." });
+  if (estimate == null) reasons.push({ positive: false, text: "Chybí srovnatelné nabídky: pro orientační cenový benchmark je potřeba alespoň pět aktuálních inzerátů." });
 
   return {
     listing,
