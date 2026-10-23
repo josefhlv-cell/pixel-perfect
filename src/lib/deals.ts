@@ -193,7 +193,6 @@ export function enrichListing(
         ? Number(property.area_m2)
         : null;
   // Live listings often carry "City, District" (e.g. "Pardubice, Zelené Předměstí"); fall back to the base city.
-  const stat = city ? (stats.get(city) ?? stats.get(city.split(/[,–-]/)[0]!.trim())) : undefined;
   const locationParts = (listing.location ?? city ?? "").split(/[,–-]/).map((part) => part.trim());
   const saleTarget =
     city && area != null && area > 0
@@ -306,6 +305,7 @@ export function enrichListing(
     estimate,
     diffBps,
     rent,
+    rentEstimate,
     grossYieldBps,
     monthlyCashFlow,
     priceDropped,
