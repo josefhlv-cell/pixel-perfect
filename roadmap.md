@@ -14,5 +14,5 @@
 - [ ] Real-data walk-forward backtest vs naive baseline (needs evidence history with vintages)
 
 ## Current request: production-only data
-- [ ] Hide demo data across lists, market, AI and related reads without deleting history.
+- [x] Hide demo data across lists, market, AI and related reads without deleting history.
 - [ ] Verify authenticated preview and publish; confirm live availability.
