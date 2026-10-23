@@ -326,7 +326,7 @@ export function priorityBreakdown(
 ): { label: string; points: number; max: number }[] {
   const dead = ["SOLD", "REMOVED", "EXPIRED"].includes(e.listing.availability_status);
   if (dead) return [{ label: "Nabídka není aktivní", points: 0, max: 100 }];
-  return [
+  const rows = [
     {
       label: "Sleva vůči odhadu",
       points: e.diffBps != null ? Math.round(Math.max(0, Math.min(35, -e.diffBps / 40))) : 0,
@@ -360,4 +360,14 @@ export function priorityBreakdown(
     },
     { label: "Snížení ceny", points: e.priceDropped ? 5 : 0, max: 5 },
   ];
+  // Mirror the computeDealPriority cap: without any financial evidence the total
+  // is limited to 20, so scale the non-financial rows down to match.
+  if (e.diffBps == null && e.grossYieldBps == null) {
+    const raw = rows.reduce((a, b) => a + b.points, 0);
+    if (raw > 20) {
+      const f = 20 / raw;
+      return rows.map((r) => ({ ...r, points: Math.round(r.points * f) }));
+    }
+  }
+  return rows;
 }
