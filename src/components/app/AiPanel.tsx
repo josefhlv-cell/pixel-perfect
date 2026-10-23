@@ -25,14 +25,14 @@ function Claims({ title, items }: { title: string; items: Claim[] }) {
       </h4>
       <ul className="space-y-1.5">
         {items.map((c, i) => (
-          <li key={i} className="flex gap-2 text-sm">
+          <li key={i} className="flex flex-wrap gap-2 text-sm">
             <span
               className={cn(
                 "mt-0.5 h-fit shrink-0 rounded-sm border px-1 font-mono text-[9px]",
                 kindTone[c.kind],
               )}
             >
-              {c.kind}
+              {{ FACT: "Z údajů", ESTIMATE: "Odhad", ASSUMPTION: "Předpoklad", UNKNOWN: "Nevíme" }[c.kind] ?? "Nevíme"}
             </span>
             <span>{c.text}</span>
           </li>
@@ -69,7 +69,7 @@ export function AnalysisView({ a, focus }: { a: PropertyAnalysis; focus?: AiKind
   if (focus === "due_diligence")
     return (
       <div className="space-y-4">
-        <List title="Due diligence" items={a.dueDiligence} />
+        <List title="Co ověřit před koupí" items={a.dueDiligence} />
         <List title="Otázky na prodávajícího" items={a.sellerQuestions} />
         <List title="Chybějící informace" items={a.missingInfo} />
       </div>
@@ -85,7 +85,7 @@ export function AnalysisView({ a, focus }: { a: PropertyAnalysis; focus?: AiKind
         <List title="Chybějící informace" items={a.missingInfo} />
         <List title="Otázky na prodávajícího" items={a.sellerQuestions} />
       </div>
-      <List title="Due diligence" items={a.dueDiligence} />
+      <List title="Co ověřit před koupí" items={a.dueDiligence} />
     </div>
   );
 }
@@ -111,7 +111,7 @@ export function AiRunner({
         ok: false,
         provider: "lovable",
         kind,
-        error: "AI analýza je momentálně nedostupná. Výpočty a uložená data zůstávají dostupná.",
+        error: "Automatické vysvětlení je momentálně nedostupná. Výpočty a uložená data zůstávají dostupná.",
       });
     } finally {
       setBusy(false);
@@ -121,7 +121,7 @@ export function AiRunner({
     <div className="space-y-3">
       <Button onClick={go} disabled={busy} size="sm">
         <Sparkles className={cn("mr-1.5 h-4 w-4", busy && "animate-pulse")} />
-        {busy ? "Analyzuji…" : (label ?? "Analyzovat AI")}
+        {busy ? "Analyzuji…" : (label ?? "Vysvětlit nabídku")}
       </Button>
       {res && !res.ok && (
         <div className="rounded-md border border-warning/40 bg-warning/10 p-3 text-sm">
@@ -136,7 +136,7 @@ export function AiRunner({
       )}
       {res?.ok && (
         <p className="text-[11px] text-muted-foreground">
-          Provider: Lovable AI · Čísla pochází z výpočetního jádra, AI je nepřepočítává. Nejde o
+          Vysvětlení připravuje umělá inteligence. Čísla přebírá z kalkulačky; údaje si ověřte. Nejde o
           investiční poradenství.
         </p>
       )}

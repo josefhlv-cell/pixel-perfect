@@ -20,13 +20,13 @@ type Field = {
 };
 const FIELDS: Field[] = [
   { key: "purchasePrice", label: "Kupní cena", unit: "Kč" },
-  { key: "equity", label: "Vlastní kapitál", unit: "Kč" },
-  { key: "ltvBps", label: "LTV", unit: "%" },
-  { key: "interestRateBps", label: "Úrok", unit: "%" },
+  { key: "equity", label: "Vlastní peníze na kupní cenu", unit: "Kč" },
+  { key: "ltvBps", label: "Část ceny hrazená hypotékou", unit: "%" },
+  { key: "interestRateBps", label: "Roční úrok hypotéky", unit: "%" },
   { key: "termMonths", label: "Délka hypotéky", unit: "let" },
-  { key: "fixYears", label: "Fixace", unit: "let" },
+  { key: "fixYears", label: "Doba se stejným úrokem", unit: "let" },
   { key: "monthlyRent", label: "Nájem / měs.", unit: "Kč" },
-  { key: "vacancyBps", label: "Neobsazenost", unit: "%" },
+  { key: "vacancyBps", label: "Část roku bez nájemníka", unit: "%" },
   { key: "monthlyExpenses", label: "Provozní náklady / měs.", unit: "Kč" },
   { key: "renovation", label: "Rekonstrukce", unit: "Kč" },
   { key: "rentGrowthBps", label: "Růst nájemného / rok", unit: "%" },
@@ -35,9 +35,9 @@ const FIELDS: Field[] = [
 ];
 
 const MORTGAGE_PRESETS = [
-  { label: "LTV 70 % · 4,5 %", ltvBps: 7000, interestRateBps: 450, termMonths: 360 },
-  { label: "LTV 80 % · 4,89 %", ltvBps: 8000, interestRateBps: 489, termMonths: 360 },
-  { label: "LTV 90 % · 5,3 %", ltvBps: 9000, interestRateBps: 530, termMonths: 360 },
+  { label: "Úvěr 70 % · úrok 4,5 %", ltvBps: 7000, interestRateBps: 450, termMonths: 360 },
+  { label: "Úvěr 80 % · úrok 4,89 %", ltvBps: 8000, interestRateBps: 489, termMonths: 360 },
+  { label: "Úvěr 90 % · úrok 5,3 %", ltvBps: 9000, interestRateBps: 530, termMonths: 360 },
 ] as const;
 
 type ScenarioKey = "base" | "optimistic" | "pessimistic";
@@ -179,39 +179,41 @@ export function InvestmentCalculator({
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <Kpi label="Měsíční splátka" value={formatCZK(r.monthlyMortgage)} />
           <Kpi
-            label="NOI / měs."
+            label="Nájem po provozních nákladech"
             value={formatCZK(r.monthlyNOI)}
             tone={r.monthlyNOI >= 0 ? "pos" : "neg"}
           />
           <Kpi
-            label="Cash-flow / měs."
+            label="Zůstatek za měsíc"
+            sub="Nájem po nákladech a splátce, před daní; záporná částka = doplatek"
             value={formatCZK(r.monthlyCashFlow)}
             tone={r.monthlyCashFlow >= 0 ? "pos" : "neg"}
           />
-          <Kpi label="DSCR" value={dscr ?? "—"} sub="NOI / splátka" />
+          <Kpi label="Pokrytí splátky nájmem" value={dscr ?? "Bez hypotéky"} sub="1× = nájem po nákladech právě pokryje splátku" />
           <Kpi
-            label="Nájem na nulu CF"
+            label="Nájem potřebný na pokrytí nákladů"
             value={r.breakEvenRent > 0 ? formatCZK(r.breakEvenRent) : "—"}
             sub="měsíčně, před daní"
           />
-          <Kpi label="Gross yield" value={formatBps(r.grossYieldBps)} />
-          <Kpi label="Net yield" value={formatBps(r.netYieldBps)} />
+          <Kpi label="Roční nájem vůči ceně" value={formatBps(r.grossYieldBps)} sub="Před odečtením nákladů" />
+          <Kpi label="Roční nájem po nákladech vůči ceně" value={formatBps(r.netYieldBps)} sub="Bez splátek a daně" />
           <Kpi
-            label="Cash-on-cash"
+            label="Roční příjem z vlastních peněz"
+            sub="Roční zůstatek vůči vloženým penězům, před daní"
             value={formatBps(r.cashOnCashBps)}
             tone={r.cashOnCashBps >= 0 ? "pos" : "neg"}
           />
-          <Kpi label="ROI" value={formatBps(r.roiBps)} sub={`za ${inp.holdingYears} let`} />
-          <Kpi label="IRR" value={r.irrBps == null ? "—" : formatBps(r.irrBps)} />
-          <Kpi label="LTV" value={formatBps(r.ltvBps, 0)} />
+          <Kpi label="Celkové zhodnocení vlastních peněz" value={formatBps(r.roiBps)} sub={`za ${inp.holdingYears} let včetně prodeje`} />
+          <Kpi label="Roční zhodnocení včetně prodeje" value={r.irrBps == null ? "—" : formatBps(r.irrBps)} sub="Zohledňuje, kdy peníze vložíte a kdy je dostanete zpět" />
+          <Kpi label="Část ceny hrazená hypotékou" value={formatBps(r.ltvBps, 0)} />
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-md border bg-card p-4">
             <Row k="Úvěr" v={formatCZK(r.loan)} />
-            <Row k="NOI / měsíc" v={formatCZK(r.monthlyNOI)} />
-            <Row k="DSCR" v={dscr ?? "Bez úvěru"} />
+            <Row k="Nájem po provozních nákladech za měsíc" v={formatCZK(r.monthlyNOI)} />
+            <Row k="Kolikrát nájem po nákladech pokryje splátku" v={dscr ?? "Bez úvěru"} />
             <Row
-              k="Nájem na nulu CF"
+              k="Nájem potřebný na pokrytí nákladů"
               v={
                 r.breakEvenRent > 0
                   ? formatCZK(r.breakEvenRent)
@@ -222,10 +224,10 @@ export function InvestmentCalculator({
             <Row k="Celkové pořizovací náklady" v={formatCZK(r.totalCost)} />
             <Row k={`Budoucí hodnota (rok ${inp.holdingYears})`} v={formatCZK(r.exitValue)} />
             <Row k="Zbývající dluh" v={formatCZK(r.exitDebt)} />
-            <Row k="Splacená jistina" v={formatCZK(paydown)} />
-            <Row k="Equity při prodeji" v={formatCZK(r.exitEquity)} />
+            <Row k="Splacená část hypotéky" v={formatCZK(paydown)} />
+            <Row k="Peníze z prodeje po splacení dluhu" v={formatCZK(r.exitEquity)} />
             <Row
-              k="Total return"
+              k="Celkový zisk nebo ztráta"
               v={
                 <span className={r.totalReturn >= 0 ? "text-positive" : "text-negative"}>
                   {formatCZK(r.totalReturn)}
@@ -238,20 +240,20 @@ export function InvestmentCalculator({
               </div>
               <Row k="Základ daně / rok" v={formatCZK(taxEstimate.taxBase)} />
               <Row k="Daň / rok" v={formatCZK(taxEstimate.tax)} />
-              <Row k="CF po dani / měs. (odhad)" v={formatCZK(taxEstimate.monthlyAfterTaxCf)} />
+              <Row k="Zůstatek po dani za měsíc (odhad)" v={formatCZK(taxEstimate.monthlyAfterTaxCf)} />
               <p className="mt-1 text-[11px] text-muted-foreground">
                 Nejde o daňové poradenství. Skutečná daň závisí na režimu a odpočtech.
               </p>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              Scénář: {SCENARIOS[scenario].label}. Refixace po {fixYears} letech – výpočet
-              předpokládá stejnou sazbu. Výchozí LTV {DEFAULT_ASSUMPTIONS.ltvBps / 100} %.
+              Scénář: {SCENARIOS[scenario].label}. Nové sjednání úroku po {fixYears} letech – výpočet
+              předpokládá stejnou sazbu. Výchozí část ceny hrazená hypotékou {DEFAULT_ASSUMPTIONS.ltvBps / 100} %.
             </p>
           </div>
           {!compact && (
             <div className="rounded-md border bg-card p-4">
               <div className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">
-                Hodnota · dluh · equity
+                Hodnota · dluh · hodnota po odečtení dluhu
               </div>
               <ValueChart
                 data={r.yearly.map((y) => ({

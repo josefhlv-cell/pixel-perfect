@@ -51,7 +51,7 @@ import {
 
 export const Route = createFileRoute("/_authenticated/deals")({
   head: () =>
-    pageHead("Deal Hunter", "Potenciální investiční dealy s transparentním Deal Priority."),
+    pageHead("Hledání nabídek", "Vyhledejte nemovitosti a porovnejte jejich cenu, nájem a náklady."),
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.ensureQueryData(listingsQuery),
@@ -129,7 +129,7 @@ function DealHunter() {
         if (!centroid) {
           setOrigin(null);
           setGeoStatus("error");
-          setGeoError("Geokódování selhalo.");
+          setGeoError("Polohu adresy se nepodařilo určit.");
         } else setGeoStatus("ok");
       }
     }, 450);
@@ -227,7 +227,7 @@ function DealHunter() {
         source_url: e.listing.source_url,
       })),
     );
-    toast.success("CSV staženo");
+    toast.success("Tabulka stažena");
   };
 
   const savePreset = () => {
@@ -246,12 +246,12 @@ function DealHunter() {
   return (
     <div className={`space-y-5 ${compareItems.length >= 2 ? "pb-56" : ""}`}>
       <PageHeader
-        title="Deal Hunter"
+        title="Hledání nabídek"
         sub="Nastavte kritéria. Každý výsledek ukazuje, proč se shoduje – i co mluví proti."
         actions={
           <Button size="sm" variant="outline" onClick={exportCsv} disabled={results.length === 0}>
             <Download className="mr-1.5 h-4 w-4" />
-            Export CSV
+            Stáhnout tabulku
           </Button>
         }
       />
@@ -296,23 +296,23 @@ function DealHunter() {
         <F label="Min. výnos (%)">
           <Input value={f.minYield} onChange={set("minYield")} inputMode="decimal" />
         </F>
-        <F label="Min. sleva vs. odhad (%)">
+        <F label="Nejméně pod odhadem ceny (%)">
           <Input value={f.minDiscount} onChange={set("minDiscount")} inputMode="decimal" />
         </F>
-        <F label="Min. cash-flow (Kč)">
+        <F label="Nejnižší měsíční zůstatek (Kč)">
           <Input value={f.minCashFlow} onChange={set("minCashFlow")} inputMode="numeric" />
         </F>
-        <F label="Max. LTV (%)">
+        <F label="Část ceny hrazená hypotékou (%)">
           <Input value={f.maxLtv} onChange={set("maxLtv")} inputMode="decimal" />
         </F>
-        <F label="Strategie">
+        <F label="Seřadit podle">
           <Select value={f.strategy} onValueChange={(v) => setF({ ...f, strategy: v as Strategy })}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="priority">Deal Priority</SelectItem>
-              <SelectItem value="cashflow">Cash-flow</SelectItem>
+              <SelectItem value="priority">Hodnocení nabídky</SelectItem>
+              <SelectItem value="cashflow">Měsíční zůstatek</SelectItem>
               <SelectItem value="yield">Výnos</SelectItem>
               <SelectItem value="discount">Sleva vůči odhadu</SelectItem>
               <SelectItem value="distance">Vzdálenost</SelectItem>
@@ -382,7 +382,7 @@ function DealHunter() {
 
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Potential deals
+          Vyhovující nabídky
         </h2>
         <span className="num text-xs text-muted-foreground">({results.length})</span>
         {compareIds.length > 0 && (
@@ -407,8 +407,8 @@ function DealHunter() {
         </div>
       )}
       <p className="text-xs text-muted-foreground">
-        Deal Priority = sleva (35) + výnos (30) + čerstvost (20) + dostupnost (10) + snížení ceny
-        (5). Zaškrtněte až 3 nabídky pro porovnání. Export CSV exportuje aktuálně vyfiltrované
+        Hodnocení nabídky = sleva (35) + výnos (30) + čerstvost (20) + dostupnost (10) + snížení ceny
+        (5). Zaškrtněte až 3 nabídky pro porovnání. Stáhnout tabulku exportuje aktuálně vyfiltrované
         výsledky.
       </p>
 
@@ -471,7 +471,7 @@ function WebAgentBox() {
       setFailed(r.failed);
       setPhase("done");
       setMsg(
-        `Našel jsem ${r.pagesFound} relevantních stránek, analyzoval ${r.analyzed}. Nalezeno ${r.listingIds.length} použitelných nabídek.`,
+        `Našel jsem ${r.pagesFound} souvisejících stránek, zkontroloval ${r.analyzed}. Nalezeno ${r.listingIds.length} použitelných nabídek.`,
       );
     } catch {
       setPhase("error");
@@ -501,7 +501,7 @@ function WebAgentBox() {
 
   return (
     <div className="space-y-3 rounded-md border bg-card p-4">
-      <Label className="text-xs text-muted-foreground">AI Web Agent – co hledáš?</Label>
+      <Label className="text-xs text-muted-foreground">Vyhledávání na webu – co hledáš?</Label>
       <form
         className="flex gap-2"
         onSubmit={(e) => {

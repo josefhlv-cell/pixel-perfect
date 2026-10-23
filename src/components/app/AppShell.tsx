@@ -201,7 +201,7 @@ function TopBar() {
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label="Notifikace" className="relative">
+          <Button variant="ghost" size="icon" aria-label="Upozornění" className="relative">
             <Bell className="h-4 w-4" />
             {unread.length > 0 && (
               <span className="num absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[9px] text-primary-foreground">
@@ -211,10 +211,10 @@ function TopBar() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-72">
-          <DropdownMenuLabel>Notifikace</DropdownMenuLabel>
+          <DropdownMenuLabel>Upozornění</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {unread.length === 0 && (
-            <div className="px-2 py-3 text-xs text-muted-foreground">Žádné nové notifikace.</div>
+            <div className="px-2 py-3 text-xs text-muted-foreground">Žádné nové upozornění.</div>
           )}
           {unread.slice(0, 5).map((a) => (
             <DropdownMenuItem
@@ -230,7 +230,7 @@ function TopBar() {
           ))}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => navigate({ to: "/alerts" })}>
-            Otevřít Alert Center
+            Všechna upozornění
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -246,7 +246,7 @@ function TopBar() {
               {profile?.profile?.display_name || profile?.email}
             </div>
             <div className="text-xs text-muted-foreground">
-              Plán: {profile?.profile?.plan ?? "FREE"}
+              Tarif: {profile?.profile?.plan === "PRO" ? "Rozšířený" : "Základní"}
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />

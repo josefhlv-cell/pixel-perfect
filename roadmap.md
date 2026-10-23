@@ -17,3 +17,8 @@
 - [x] Hide demo data across lists, market, AI and related reads without deleting history.
 - [x] Verify authenticated preview (21 live listings), 216 tests and lint (0 errors); request publication and verify public /auth HTTP 200.
 - [ ] Confirm new deployment and safe production access — publication completion not yet confirmed; latest security scan reports 7 critical permissive read-policy findings.
+
+## Current request: srozumitelná čeština
+- [ ] Nahradit anglické názvy a odborné zkratky na všech obrazovkách.
+- [ ] Vysvětlit finanční údaje a nejistotu odhadů jednoduchou češtinou bez změny výpočtů.
+- [ ] Ověřit přihlášený náhled a regresní testy.

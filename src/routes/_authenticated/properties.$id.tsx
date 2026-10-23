@@ -12,7 +12,7 @@ import { pageHead } from "@/lib/head";
 import {
   AvailabilityBadge,
   Delta,
-  FreshnessBadge,
+  Aktuálnost nabídkyBadge,
   Kpi,
   PriorityBadge,
   Row,
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/_authenticated/properties/$id")({
   head: () =>
     pageHead(
       "Detail nemovitosti",
-      "Investiční analýza nemovitosti: cena, odhad, výnos, cash-flow, scénáře a rizika.",
+      "Investiční analýza nemovitosti: cena, odhad, výnos, měsíční zůstatek, scénáře a rizika.",
     ),
   loader: async ({ context, params }) => {
     const [all] = await Promise.all([
@@ -62,11 +62,11 @@ export const Route = createFileRoute("/_authenticated/properties/$id")({
 
 const DD = [
   "Výpis z katastru nemovitostí (vlastník, věcná břemena, zástavy)",
-  "Stanovy a hospodaření SVJ / družstva, fond oprav, plánované investice",
-  "Energetický štítek (PENB) a stav rozvodů",
+  "Pravidla a hospodaření společenství vlastníků nebo družstva, peníze na opravy a plánované práce",
+  "Energetický štítek budovy a stav elektřiny, vody a topení",
   "Nájemní smlouva a historie plateb (pokud je pronajato)",
   "Územní plán a plánovaná výstavba v okolí",
-  "Ověření plochy dle prohlášení vlastníka",
+  "Ověření skutečné plochy bytu podle dokumentů vlastníka",
   "Nezávislý odhad banky pro hypotéku",
 ];
 
@@ -87,7 +87,7 @@ function Detail() {
     ? (
         [
           [
-            "Conservative",
+            "Opatrný",
             {
               ...base,
               monthlyRent: Math.round(base.monthlyRent * 0.9),
@@ -97,9 +97,9 @@ function Detail() {
               rentGrowthBps: 100,
             },
           ],
-          ["Base", base],
+          ["Základní", base],
           [
-            "Optimistic",
+            "Příznivý",
             {
               ...base,
               monthlyRent: Math.round(base.monthlyRent * 1.05),
@@ -117,7 +117,7 @@ function Detail() {
     try {
       await addToWatchlist(id);
       await qc.invalidateQueries({ queryKey: ["watchlist"] });
-      toast.success("Uloženo do Watchlistu");
+      toast.success("Uloženo do oblíbených");
     } catch {
       toast.error("Uložení se nepovedlo");
     }
@@ -150,17 +150,17 @@ function Detail() {
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <Kpi label="Hrubý výnos" value={formatBps(e.grossYieldBps)} sub="odhad" />
           <Kpi
-            label="Cash-flow / měs."
+            label="Zůstatek za měsíc"
             value={formatCZK(e.monthlyCashFlow)}
             tone={(e.monthlyCashFlow ?? 0) >= 0 ? "pos" : "neg"}
-            sub="80% LTV"
+            sub="Hypotéka na 80 % ceny"
           />
           <div className="rounded-md border bg-card p-3">
             <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              Freshness
+              Aktuálnost nabídky
             </div>
             <div className="mt-1.5">
-              <FreshnessBadge status={l.freshness_status} />
+              <Aktuálnost nabídkyBadge status={l.freshness_status} />
             </div>
           </div>
           <div className="rounded-md border bg-card p-3">
@@ -186,17 +186,17 @@ function Detail() {
             disabled={inWl}
           >
             <Star className="mr-1.5 h-4 w-4" />
-            {inWl ? "Ve Watchlistu" : "Uložit do Watchlistu"}
+            {inWl ? "Ve oblíbených" : "Uložit do oblíbených"}
           </Button>
           <Button size="sm" variant="outline" onClick={() => setPfOpen(true)}>
             <Plus className="mr-1.5 h-4 w-4" />
-            Přidat do portfolia
+            Přidat k mým nemovitostem
           </Button>
         </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Section title="Deal Priority – rozpad">
+        <Section title="Jak vzniklo hodnocení nabídky">
           {priorityBreakdown(e).map((b) => (
             <div key={b.label} className="mb-2">
               <div className="flex justify-between text-xs">
@@ -224,7 +224,7 @@ function Detail() {
           <Row k="Stav" v={e.property?.condition ?? "Neuvedeno"} />
           <Row k="Budova" v={e.property?.building_type ?? "Neuvedeno"} />
           <Row k="Podlaží" v={e.property?.floor ?? "Neuvedeno"} />
-          <Row k="PENB" v={e.property?.energy_class ?? "Neuvedeno"} />
+          <Row k="Energetická třída budovy" v={e.property?.energy_class ?? "Neuvedeno"} />
           <Row k="První výskyt" v={new Date(l.first_seen_at).toLocaleDateString("cs-CZ")} />
         </Section>
         <Section title="Cena a historie ceny">
@@ -272,7 +272,7 @@ function Detail() {
               <Row k="Metoda" v="Nabídkové ceny v lokalitě" />
               <Row k="Jistota" v={e.estimate.confidence === "medium" ? "střední" : "nízká"} />
               <p className="mt-2 text-xs text-muted-foreground">
-                Odhad vychází z nabídkových (ne realizovaných) cen – ESTIMATE.
+                Odhad vychází z nabídkových (ne realizovaných) cen – jde o odhad, ne potvrzenou prodejní cenu.
               </p>
             </>
           ) : (
@@ -292,11 +292,11 @@ function Detail() {
         <Section title="Financování">
           {calc ? (
             <>
-              <Row k="Úvěr (80 % LTV)" v={formatCZK(calc.loan)} />
+              <Row k="Hypotéka na 80 % ceny" v={formatCZK(calc.loan)} />
               <Row k="Vlastní zdroje" v={formatCZK(calc.cashInvested)} />
               <Row k="Splátka (4,89 %, 30 let)" v={formatCZK(calc.monthlyMortgage)} />
               <Row
-                k="Splátka při 70 % LTV"
+                k="Splátka při hypotéce na 70 % ceny"
                 v={formatCZK(calculateMortgagePayment(Math.round(l.price! * 0.7), 489, 360))}
               />
             </>
@@ -307,17 +307,17 @@ function Detail() {
       </div>
 
       {scenarios.length > 0 && (
-        <Section title="Scénáře · cash-flow · výnos">
+        <Section title="Scénáře · měsíční zůstatek · výnos">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
               <thead className="text-left text-[11px] uppercase tracking-wider text-muted-foreground">
                 <tr>
                   <th className="py-1 font-medium">Scénář</th>
-                  <th className="text-right font-medium">Cash-flow/měs.</th>
-                  <th className="text-right font-medium">Net yield</th>
-                  <th className="text-right font-medium">Cash-on-cash</th>
-                  <th className="text-right font-medium">IRR</th>
-                  <th className="text-right font-medium">Total return (10 let)</th>
+                  <th className="text-right font-medium">Zůstatek za měsíc</th>
+                  <th className="text-right font-medium">Nájem po nákladech vůči ceně</th>
+                  <th className="text-right font-medium">Roční příjem z vlastních peněz</th>
+                  <th className="text-right font-medium">Roční zhodnocení včetně prodeje</th>
+                  <th className="text-right font-medium">Celkový zisk za 10 let</th>
                 </tr>
               </thead>
               <tbody>
@@ -341,8 +341,8 @@ function Detail() {
             </table>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            Conservative: nájem −10 %, neobsazenost 10 %, úrok +1 p.b., růst ceny 1 %. Optimistic:
-            nájem +5 %, neobsazenost 3 %, růst ceny 4,5 %. ASSUMPTION.
+            Opatrný: nájem −10 %, neobsazenost 10 %, úrok vyšší o 1 procentní bod, růst ceny 1 %. Příznivý:
+            nájem +5 %, neobsazenost 3 %, růst ceny 4,5 %. Jde o předpoklady, nikoli o zaručený vývoj.
           </p>
         </Section>
       )}
@@ -386,14 +386,14 @@ function Detail() {
             )}
           </ul>
         </Section>
-        <Section title="Due diligence">
+        <Section title="Co ověřit před koupí">
           <ul className="list-disc space-y-1 pl-5 text-sm">
             {DD.map((d) => (
               <li key={d}>{d}</li>
             ))}
           </ul>
         </Section>
-        <Section title="AI analýza">
+        <Section title="Vysvětlení nabídky">
           <AiRunner kind="property" listingId={id} />
         </Section>
       </div>
@@ -445,7 +445,7 @@ function AddToPortfolio({
       });
       if (error) throw error;
       await qc.invalidateQueries({ queryKey: ["portfolio"] });
-      toast.success("Přidáno do portfolia");
+      toast.success("Přidáno k mým nemovitostem");
       onOpenChange(false);
     } catch {
       toast.error("Přidání se nepovedlo – zkontrolujte hodnoty.");
@@ -465,7 +465,7 @@ function AddToPortfolio({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Přidat do portfolia</DialogTitle>
+          <DialogTitle>Přidat k mým nemovitostem</DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-3">
           {fields.map(([k, label]) => (

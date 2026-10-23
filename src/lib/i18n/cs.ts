@@ -1,30 +1,30 @@
 export const cs = {
-  app: { name: "Reality Investor", tagline: "Investiční inteligence pro české nemovitosti" },
+  app: { name: "Reality Investor", tagline: "Přehled nemovitostí, nájmů a nákladů na jednom místě" },
   nav: {
-    dashboard: "Dashboard",
-    dealHunter: "Deal Hunter",
+    dashboard: "Přehled",
+    dealHunter: "Hledání nabídek",
     properties: "Nemovitosti",
-    portfolio: "Portfolio",
-    watchlist: "Watchlist",
+    portfolio: "Moje nemovitosti",
+    watchlist: "Oblíbené",
     market: "Trh",
     calculator: "Kalkulačka",
-    alerts: "Alerty",
-    aiAnalyst: "AI Analytik",
+    alerts: "Upozornění",
+    aiAnalyst: "Pomocník",
     settings: "Nastavení",
   },
   common: {
     unknown: "Neuvedeno",
     sample: "UKÁZKOVÁ DATA",
     openListing: "Otevřít inzerát",
-    analyzeAi: "Analyzovat AI",
-    saveDeal: "Uložit deal",
+    analyzeAi: "Vysvětlit nabídku",
+    saveDeal: "Uložit nabídku",
     saved: "Uloženo",
     signOut: "Odhlásit",
     providerNotConnected: "Datový zdroj není připojen",
   },
   errors: {
     aiUnavailable:
-      "AI analýza je momentálně nedostupná. Výpočty a uložená data zůstávají dostupná.",
+      "Automatické vysvětlení je momentálně nedostupná. Výpočty a uložená data zůstávají dostupná.",
     discoveryUnavailable: "Vyhledávání se nepodařilo dokončit.",
     generic: "Něco se nepovedlo. Zkuste to prosím znovu.",
   },
@@ -49,8 +49,8 @@ export const cs = {
   },
   empty: {
     portfolio:
-      "Zatím nemáte žádné nemovitosti v portfoliu. Přidejte první nemovitost nebo spusťte Deal Hunter.",
-    watchlist: "Watchlist je prázdný. Uložte si zajímavý deal z Deal Hunteru.",
-    alerts: "Žádné alerty. Jakmile se změní cena nebo stav sledované nemovitosti, uvidíte to tady.",
+      "Zatím nemáte žádné nemovitosti mezi vlastními nemovitostmi. Přidejte první nemovitost nebo vyhledejte nabídky.",
+    watchlist: "Zatím nemáte oblíbené nabídky. Uložte si nabídku z Hledání nabídek.",
+    alerts: "Žádná upozornění. Jakmile se změní cena nebo stav sledované nemovitosti, uvidíte to tady.",
   },
 } as const;

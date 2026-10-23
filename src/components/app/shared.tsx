@@ -13,7 +13,7 @@ export function SampleBadge({ className }: { className?: string }) {
         className,
       )}
     >
-      SAMPLE DATA
+      UKÁZKOVÁ DATA
     </span>
   );
 }
@@ -60,7 +60,7 @@ export function PriorityBadge({ value, size = "sm" }: { value: number; size?: "s
         : "bg-muted text-muted-foreground border-border";
   return (
     <span
-      title="Deal Priority (0–100)"
+      title="Hodnocení nabídky z 100 bodů. Vyšší číslo znamená zajímavější nabídku, ne jistý zisk."
       className={cn(
         "num inline-flex items-center justify-center rounded border font-semibold",
         tone,
@@ -85,10 +85,10 @@ export function Kpi({
 }) {
   return (
     <div className="rounded-md border bg-card p-3">
-      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="text-[11px] uppercase tracking-wider text-muted-foreground break-words">{label}</div>
       <div
         className={cn(
-          "num mt-1 text-lg font-semibold sm:text-xl",
+          "num mt-1 break-words text-lg font-semibold sm:text-xl",
           tone === "pos" && "text-positive",
           tone === "neg" && "text-negative",
         )}
@@ -133,7 +133,7 @@ export function Section({
 }) {
   return (
     <section className={cn("rounded-md border bg-card", className)}>
-      <div className="flex items-center justify-between border-b px-4 py-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2.5">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {title}
         </h2>

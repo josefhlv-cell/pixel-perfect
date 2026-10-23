@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => pageHead("Dashboard", "Přehled portfolia, dealů, watchlistu a trhu."),
+  head: () => pageHead("Přehled", "Přehled vlastních nemovitostí, nabídek, oblíbených a trhu."),
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.ensureQueryData(listingsQuery),
@@ -55,18 +55,18 @@ function Dashboard() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Dashboard" sub={t("app.tagline")} />
+      <PageHeader title="Přehled" sub={t("app.tagline")} />
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
         <Kpi
-          label="Hodnota portfolia"
+          label="Hodnota mých nemovitostí"
           value={formatCZK(totals.value)}
           sub={`${totals.count} nemovitostí`}
         />
-        <Kpi label="Vlastní kapitál" value={formatCZK(totals.equity)} />
+        <Kpi label="Hodnota po odečtení dluhu" value={formatCZK(totals.equity)} />
         <Kpi label="Dluh" value={formatCZK(totals.debt)} />
         <Kpi label="Měsíční nájem" value={formatCZK(totals.rent)} />
         <Kpi
-          label="Měsíční cash-flow"
+          label="Zůstatek za měsíc"
           value={formatCZK(totals.cashFlow)}
           tone={totals.cashFlow >= 0 ? "pos" : "neg"}
         />
@@ -75,14 +75,14 @@ function Dashboard() {
           value={totals.yieldBps == null ? "—" : formatBps(totals.yieldBps)}
           sub="hrubý, z kupní ceny"
         />
-        <Kpi label="Aktivní dealy" value={active.length} sub="skutečné nabídky" />
-        <Kpi label="Watchlist" value={wl.length} />
+        <Kpi label="Dostupné nabídky" value={active.length} sub="skutečné nabídky" />
+        <Kpi label="Oblíbené nabídky" value={wl.length} />
       </div>
 
       <HousePriceForecast compact />
 
       <Section
-        title="Vývoj portfolia"
+        title="Vývoj mých nemovitostí"
         right={
           <div className="flex gap-0.5">
             {(Object.keys(RANGES) as RangeKey[]).map((r) => (
@@ -129,7 +129,7 @@ function Dashboard() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Section
-          title="Deal Hunter · top příležitosti"
+          title="Nejlépe hodnocené nabídky"
           right={
             <Link to="/deals" className="text-xs text-primary hover:underline">
               Vše →
@@ -159,7 +159,7 @@ function Dashboard() {
           </ul>
         </Section>
         <Section
-          title="Watchlist · poslední změny"
+          title="Oblíbené · poslední změny"
           right={
             <Link to="/watchlist" className="text-xs text-primary hover:underline">
               Vše →
@@ -210,11 +210,11 @@ function Dashboard() {
             </tbody>
           </table>
         </Section>
-        <Section title="AI Insight">
+        <Section title="Shrnutí trhu">
           <p className="mb-3 text-sm text-muted-foreground">
             Krátké shrnutí trhu z dostupných skutečných dat.
           </p>
-          <AiRunner kind="market" label="Vygenerovat insight" />
+          <AiRunner kind="market" label="Připravit shrnutí" />
         </Section>
       </div>
       <p className="text-xs text-muted-foreground">{t("disclaimer")}</p>
