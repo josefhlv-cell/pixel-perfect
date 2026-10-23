@@ -113,6 +113,13 @@
       "when": 1792721740157,
       "tag": "0015_enforce_live_only_read_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792723000000,
+      "tag": "0016_rental_comparables",
+      "breakpoints": true
     }
   ]
 }

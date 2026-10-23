@@ -48,7 +48,7 @@ GRANT SELECT ON public.rental_comparables TO authenticated;
 GRANT ALL ON public.rental_comparables TO service_role;
 DROP POLICY IF EXISTS "authenticated read rental comparables" ON public.rental_comparables;
 CREATE POLICY "authenticated read rental comparables"
-  ON public.rental_comparables FOR SELECT TO authenticated USING (is_sample = false OR is_sample = true);
+  ON public.rental_comparables FOR SELECT TO authenticated USING (true);
 
 -- Deliberately no INSERT/UPDATE/DELETE grant or policy for authenticated users.
 -- Ingestion must use a server-side service-role client and validate source provenance.

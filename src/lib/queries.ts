@@ -1,7 +1,7 @@
 /** Browser-side data access (RLS applies as the signed-in user). */
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { enrichListing, latestStatsByCity } from "./deals";
+import { enrichListing, latestStatsByCity, saleComparablesFromListings } from "./deals";
 import { onlyLive } from "./live-data";
 
 async function uid() {
@@ -24,9 +24,17 @@ export const listingsQuery = queryOptions({
     for (const r of [l, p, m, s]) if (r.error) throw r.error;
     const props = new Map((p.data ?? []).map((x) => [x.id, x]));
     const stats = latestStatsByCity(m.data ?? []);
+    // City averages are never used as a substitute for property-level evidence.
+    const saleComparables = saleComparablesFromListings(l.data ?? [], props);
     return (l.data ?? [])
       .map((x) =>
-        enrichListing(x, props.get(x.property_id) ?? null, stats, (s.data ?? []) as never),
+        enrichListing(
+          x,
+          props.get(x.property_id) ?? null,
+          stats,
+          (s.data ?? []) as never,
+          saleComparables,
+        ),
       )
       .sort((a, b) => b.priority - a.priority);
   },

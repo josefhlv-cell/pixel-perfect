@@ -37,7 +37,13 @@ describe("estimateRentFromComparables", () => {
       { ...sample(10), areaM2: 110 },
       { ...sample(11), observedAt: "2025-01-01T00:00:00.000Z" },
     ];
-    expect(estimateRentFromComparables(target, rows, "2026-10-10T00:00:00.000Z")).toBeNull();
+    const result = estimateRentFromComparables(target, rows, "2026-10-10T00:00:00.000Z");
+    expect(result).not.toBeNull();
+    expect(result!.comparableCount).toBe(5);
+    expect(result!.sources).not.toContain("https://example.test/rent/6");
+    expect(result!.sources).not.toContain("https://example.test/rent/7");
+    expect(result!.sources).not.toContain("https://example.test/rent/9");
+    expect(result!.sources).not.toContain("https://example.test/rent/11");
   });
   it("is deterministic for a fixed as-of time", () => {
     const rows = [sample(1), sample(2), sample(3), sample(4), sample(5), sample(6)];
