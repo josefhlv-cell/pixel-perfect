@@ -87,6 +87,24 @@ describe("total return & stress", () => {
     expect(r.exitEquity).toBeGreaterThan(0);
     expect(r.irrBps).not.toBeNull();
   });
+  it("exposes NOI, DSCR and break-even rent transparently", () => {
+    const r = calculateTotalReturn(base);
+    expect(r.monthlyNOI).toBe(14_575);
+    expect(r.monthlyCashFlow).toBe(r.monthlyNOI - r.monthlyMortgage);
+    expect(r.debtServiceCoverageRatio).toBe(0.8);
+    expect(r.breakEvenRent).toBeGreaterThan(base.monthlyRent);
+  });
+
+  it("returns null DSCR when there is no debt service", () => {
+    const r = calculateTotalReturn({ ...base, ltvBps: 0 });
+    expect(r.debtServiceCoverageRatio).toBeNull();
+  });
+
+  it("does not claim break-even rent when vacancy is 100%", () => {
+    const r = calculateTotalReturn({ ...base, vacancyBps: 10_000 });
+    expect(r.breakEvenRent).toBe(0);
+  });
+
   it("stress scenario is worse", () => {
     const b = calculateTotalReturn(base);
     const s = calculateStressScenario(base, {

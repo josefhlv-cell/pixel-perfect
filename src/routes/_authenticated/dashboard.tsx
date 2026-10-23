@@ -11,6 +11,7 @@ import { t } from "@/lib/i18n";
 import { Empty, Kpi, PageHeader, PriorityBadge, Section } from "@/components/app/shared";
 import { ValueChart, SERIES } from "@/components/app/Charts";
 import { AiRunner } from "@/components/app/AiPanel";
+import { HousePriceForecast } from "@/components/app/HousePriceForecast";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -52,22 +53,25 @@ function Dashboard() {
     (a, b) => (b.avg_asking_price_m2 ?? 0) - (a.avg_asking_price_m2 ?? 0),
   );
 
+  const hasPortfolio = totals.count > 0;
+  const money = (value: number) => (hasPortfolio ? formatCZK(value) : "—");
+
   return (
     <div className="space-y-5">
       <PageHeader title="Dashboard" sub={t("app.tagline")} />
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
         <Kpi
           label="Hodnota portfolia"
-          value={formatCZK(totals.value)}
+          value={money(totals.value)}
           sub={`${totals.count} nemovitostí`}
         />
-        <Kpi label="Vlastní kapitál" value={formatCZK(totals.equity)} />
-        <Kpi label="Dluh" value={formatCZK(totals.debt)} />
-        <Kpi label="Měsíční nájem" value={formatCZK(totals.rent)} />
+        <Kpi label="Vlastní kapitál" value={money(totals.equity)} />
+        <Kpi label="Dluh" value={money(totals.debt)} />
+        <Kpi label="Měsíční nájem" value={money(totals.rent)} />
         <Kpi
           label="Měsíční cash-flow"
-          value={formatCZK(totals.cashFlow)}
-          tone={totals.cashFlow >= 0 ? "pos" : "neg"}
+          value={money(totals.cashFlow)}
+          tone={hasPortfolio ? (totals.cashFlow >= 0 ? "pos" : "neg") : undefined}
         />
         <Kpi
           label="Průměrný výnos"
@@ -77,6 +81,8 @@ function Dashboard() {
         <Kpi label="Aktivní dealy" value={active.length} sub="jen živé nabídky" />
         <Kpi label="Watchlist" value={wl.length} />
       </div>
+
+      <HousePriceForecast compact />
 
       <Section
         title="Vývoj portfolia"
@@ -134,9 +140,7 @@ function Dashboard() {
           }
         >
           {top.length === 0 ? (
-            <Empty>
-              Žádné živé nabídky. Deal Hunter je stáhne z portálů; ukázkové inzeráty se nezobrazují.
-            </Empty>
+            <Empty>{t("empty.deals")}</Empty>
           ) : (
             <ul className="divide-y">
               {top.map((e) => (
@@ -201,10 +205,7 @@ function Dashboard() {
           }
         >
           {stats.length === 0 ? (
-            <Empty>
-              Živá cena za m² zatím není. Vznikne z vlastních neukázkových nabídek, ne z demo
-              katalogu.
-            </Empty>
+            <Empty>{t("empty.market")}</Empty>
           ) : (
             <table className="w-full text-sm">
               <thead>

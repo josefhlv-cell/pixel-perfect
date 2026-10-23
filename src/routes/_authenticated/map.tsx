@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import { listingsQuery, portfolioQuery, watchlistQuery } from "@/lib/queries";
 import { formatCZK } from "@/lib/format";
 import { pageHead } from "@/lib/head";
-import { PageHeader } from "@/components/app/shared";
+import { t } from "@/lib/i18n";
+import { PageHeader, Empty } from "@/components/app/shared";
 import { MapLazy, type MapPoint } from "@/components/app/MapLazy";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -106,6 +107,7 @@ function MapPage() {
         onOpen={(id) => navigate({ to: "/properties/$id", params: { id } })}
         height={600}
       />
+      {points.length === 0 && <Empty>{t("empty.map")}</Empty>}
       <p className="text-xs text-muted-foreground">
         Portfolio se zobrazí, pokud je nemovitost propojená se záznamem s polohou.
       </p>

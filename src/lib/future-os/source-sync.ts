@@ -23,14 +23,16 @@ export async function runSourceSync(
   signal?: AbortSignal,
 ): Promise<SourceSyncResult> {
   const startedAt = new Date().toISOString();
+  let fetched = 0;
   try {
     const rows = await adapter(signal);
+    fetched = rows.length;
     const result = await ingest(adapterKey, rows);
     return {
       adapterKey,
       startedAt,
       finishedAt: new Date().toISOString(),
-      fetched: rows.length,
+      fetched,
       ...result,
     };
   } catch (error) {
@@ -38,7 +40,7 @@ export async function runSourceSync(
       adapterKey,
       startedAt,
       finishedAt: new Date().toISOString(),
-      fetched: 0,
+      fetched,
       inserted: 0,
       unchanged: 0,
       revised: 0,

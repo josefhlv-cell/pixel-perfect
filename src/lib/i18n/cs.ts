@@ -52,5 +52,9 @@ export const cs = {
       "Zatím nemáte žádné nemovitosti v portfoliu. Přidejte první nemovitost nebo spusťte Deal Hunter.",
     watchlist: "Watchlist je prázdný. Uložte si zajímavý deal z Deal Hunteru.",
     alerts: "Žádné alerty. Jakmile se změní cena nebo stav sledované nemovitosti, uvidíte to tady.",
+    deals: "Žádné živé nabídky. Spusťte hledání. Ukázkové inzeráty se nezobrazují.",
+    dealsFiltered: "Kritériím neodpovídá žádná živá nabídka. Zkuste je uvolnit.",
+    market: "Živá cena za m² zatím není. Vznikne z vlastních nabídek, ne z ukázkového katalogu.",
+    map: "Na mapě zatím není žádný bod. Živé nabídky se objeví po hledání, portfolio až s polohou.",
   },
 } as const;

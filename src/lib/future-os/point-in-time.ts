@@ -1,15 +1,31 @@
 import type { DataQuality, EvidenceFilters, EvidenceObservation } from "./types";
 
+function validTimestamp(value: Date | string): number {
+  const timestamp = new Date(value).getTime();
+  if (!Number.isFinite(timestamp)) {
+    throw new Error(`Invalid point-in-time cutoff: ${String(value)}`);
+  }
+  return timestamp;
+}
+
 export function isAvailableAt(row: EvidenceObservation, asOf: Date | string): boolean {
-  return new Date(row.availableAt).getTime() <= new Date(asOf).getTime();
+  const cutoff = validTimestamp(asOf);
+  const availableAt = new Date(row.availableAt).getTime();
+  return Number.isFinite(availableAt) && availableAt <= cutoff;
 }
 
 export function assertNoFutureEvidence(rows: EvidenceObservation[], asOf: Date | string): void {
-  const cutoff = new Date(asOf).getTime();
+  const cutoff = validTimestamp(asOf);
+  const invalid = rows.find((row) => !Number.isFinite(new Date(row.availableAt).getTime()));
+  if (invalid) {
+    throw new Error(
+      `Point-in-time violation: evidence ${invalid.id} has an invalid availableAt timestamp (${invalid.availableAt})`,
+    );
+  }
   const future = rows.find((row) => new Date(row.availableAt).getTime() > cutoff);
   if (future) {
     throw new Error(
-      `Point-in-time violation: evidence ${future.id} is available at ${future.availableAt}, after cutoff ${new Date(asOf).toISOString()}`,
+      `Point-in-time violation: evidence ${future.id} is available at ${future.availableAt}, after cutoff ${new Date(cutoff).toISOString()}`,
     );
   }
 }
@@ -19,9 +35,10 @@ export function getEvidenceAvailableAt(
   asOf: Date | string,
   filters: EvidenceFilters = {},
 ): EvidenceObservation[] {
-  const cutoff = new Date(asOf).getTime();
+  const cutoff = validTimestamp(asOf);
   const eligible = rows.filter((row) => {
-    if (new Date(row.availableAt).getTime() > cutoff) return false;
+    const availableAt = new Date(row.availableAt).getTime();
+    if (!Number.isFinite(availableAt) || availableAt > cutoff) return false;
     if (filters.sourceId && row.sourceId !== filters.sourceId) return false;
     if (filters.geographyType && row.geographyType !== filters.geographyType) return false;
     if (filters.geographyKey && row.geographyKey !== filters.geographyKey) return false;

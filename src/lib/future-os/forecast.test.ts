@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { scoreForecast, validateForecastInput, type ForecastInput } from "./forecast";
+import {
+  scoreForecast,
+  validateForecastInput,
+  calibrateForecastIntervals,
+  type ForecastInput,
+} from "./forecast";
 import { buildFutureRadarFoundation } from "./future-radar";
 import type { EvidenceObservation } from "./types";
 
@@ -60,6 +65,42 @@ describe("Future OS forecast integrity", () => {
     expect(score.directionalHit).toBe(true);
     expect(score.brierScore).toBeCloseTo(0.09);
     expect(score.absoluteError).toBe(1);
+  });
+  it("rejects NaN or infinite quantiles", () => {
+    expect(() => validateForecastInput({ ...input, p50: Number.NaN })).toThrow(/finite/);
+    expect(() => validateForecastInput({ ...input, p90: Infinity })).toThrow(/finite/);
+  });
+  it("rejects NaN or out-of-range probability", () => {
+    expect(() => validateForecastInput({ ...input, probabilityPositive: Number.NaN })).toThrow();
+    expect(() => validateForecastInput({ ...input, probabilityPositive: 1.2 })).toThrow();
+  });
+  it("rejects a non-finite realized outcome when scoring", () => {
+    expect(() => scoreForecast(input, Number.NaN)).toThrow(/Realized/);
+  });
+  it("rejects an invalid data cutoff", () => {
+    expect(() => validateForecastInput({ ...input, dataCutoff: "bad" })).toThrow(/cutoff/);
+  });
+  it("does not count a flat forecast as a directional hit", () => {
+    expect(scoreForecast({ ...input, p50: 0 }, 3, 0).directionalHit).toBe(false);
+  });
+
+  it("does not calibrate from outcomes that were not yet observable", () => {
+    const calibrated = calibrateForecastIntervals(input, "2026-02-03T00:00:00Z", [
+      {
+        forecastIssuedAt: "2026-01-01T00:00:00Z",
+        outcomeObservedAt: "2026-03-01T00:00:00Z",
+        actual: 1,
+        p10: -1,
+        p90: 4,
+      },
+    ]);
+    expect(calibrated.calibration.status).toBe("INSUFFICIENT_DATA");
+    expect(calibrated.calibration.excludedFutureOutcomes).toBe(1);
+    expect(calibrated.p50).toBe(input.p50);
+  });
+
+  it("rejects an issue time before the data cutoff", () => {
+    expect(() => calibrateForecastIntervals(input, "2026-02-01T00:00:00Z", [])).toThrow(/cutoff/);
   });
   it("reports DATA_STARVED rather than fabricating a future", () => {
     const radar = buildFutureRadarFoundation([], "2026-02-03T00:00:00Z", ["price_growth"]);

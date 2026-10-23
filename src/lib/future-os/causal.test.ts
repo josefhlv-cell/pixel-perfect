@@ -74,7 +74,7 @@ describe("causal propagation", () => {
     });
   });
 
-  it("drops an object that has no numeric payload and ignores evidence after the cutoff", () => {
+  it("reads raw text when the numeric field is absent and ignores evidence after the cutoff", () => {
     const unknown = obs({
       id: "unknown",
       entityKey: "rate",
@@ -89,8 +89,17 @@ describe("causal propagation", () => {
       availableAt: "2024-10-15T00:00:00.000Z",
       value: 1,
     });
-    expect(propagateCausalSignal([edge], [unknown, future], "2024-08-01T00:00:00.000Z")).toEqual(
-      [],
-    );
+    const result = propagateCausalSignal([edge], [unknown, future], "2024-08-01T00:00:00.000Z");
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({ parentEvidenceId: "unknown", parentValue: 3.75 });
+  });
+
+  it("drops an object that has no numeric payload", () => {
+    const unknown = obs({
+      id: "unknown",
+      entityKey: "rate",
+      value: { snapshot_id: null, note: "missing" },
+    });
+    expect(propagateCausalSignal([edge], [unknown], "2024-08-01T00:00:00.000Z")).toEqual([]);
   });
 });
