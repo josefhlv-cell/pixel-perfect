@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { estimateValueFromComparables, type SaleComparable, type SaleTarget } from "./valuation";
+import {
+  estimateValueFromComparables,
+  type SaleComparable,
+  type SaleTarget,
+} from "./valuation";
 
 const target: SaleTarget = {
   listingId: "target-listing",
@@ -29,11 +33,25 @@ const comparable = (i: number, price = 5_000_000): SaleComparable => ({
 
 describe("estimateValueFromComparables", () => {
   it("does not fall back to city averages when comparable evidence is insufficient", () => {
-    expect(estimateValueFromComparables(target, [comparable(1), comparable(2), comparable(3), comparable(4)], "2026-10-23T00:00:00.000Z")).toBeNull();
+    expect(
+      estimateValueFromComparables(
+        target,
+        [comparable(1), comparable(2), comparable(3), comparable(4)],
+        "2026-10-23T00:00:00.000Z",
+      ),
+    ).toBeNull();
   });
 
   it("uses a robust asking-price median and returns the evidence window", () => {
-    const rows = [comparable(1), comparable(2), comparable(3), comparable(4), comparable(5), comparable(6), comparable(7, 20_000_000)];
+    const rows = [
+      comparable(1),
+      comparable(2),
+      comparable(3),
+      comparable(4),
+      comparable(5),
+      comparable(6),
+      comparable(7, 20_000_000),
+    ];
     const estimate = estimateValueFromComparables(target, rows, "2026-10-23T00:00:00.000Z");
     expect(estimate).not.toBeNull();
     expect(estimate!.method).toBe("active_listing_asking_comparables");
@@ -62,7 +80,14 @@ describe("estimateValueFromComparables", () => {
   });
 
   it("does not compare across cities or duplicate source URLs", () => {
-    const rows = [comparable(1), comparable(2), comparable(3), comparable(4), comparable(5), comparable(6)];
+    const rows = [
+      comparable(1),
+      comparable(2),
+      comparable(3),
+      comparable(4),
+      comparable(5),
+      comparable(6),
+    ];
     rows[5] = { ...rows[5]!, sourceUrl: rows[0]!.sourceUrl };
     rows[4] = { ...rows[4]!, city: "Brno" };
     expect(estimateValueFromComparables(target, rows, "2026-10-23T00:00:00.000Z")).toBeNull();
