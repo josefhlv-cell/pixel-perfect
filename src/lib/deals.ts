@@ -282,21 +282,23 @@ export function enrichListing(
       positive: false,
       text: "Nájem nepokryje náklady a splátku hypotéky na 80 % ceny; každý měsíc je třeba doplácet",
     });
-  if (rent != null)
-    reasons.push({
-      positive: false,
-      text: "Nájemní odhad vyžaduje kontrolu srovnatelných pronájmů a oddělení služeb a energií.",
-    });
-  else
-    reasons.push({
-      positive: false,
-      text: "Odhad nájmu není k dispozici: chybí ověřené srovnatelné nabídky; výnos a cash flow proto nejsou dopočítány.",
-    });
-  if (estimate == null) {
-    reasons.push({
-      positive: false,
-      text: "Chybí srovnatelné nabídky: pro orientační cenový benchmark je potřeba alespoň pět aktuálních inzerátů.",
-    });
+  if (!isRental) {
+    if (rent != null)
+      reasons.push({
+        positive: false,
+        text: `Odhad nájmu vychází z ${rentEstimate?.comparableCount ?? 0} srovnatelných pronájmů; vyžaduje kontrolu oddělení služeb a energií.`,
+      });
+    else
+      reasons.push({
+        positive: false,
+        text: "Odhad nájmu není k dispozici: chybí ověřené srovnatelné nabídky; výnos a cash flow proto nejsou dopočítány.",
+      });
+    if (estimate == null) {
+      reasons.push({
+        positive: false,
+        text: "Chybí srovnatelné nabídky: pro orientační cenový benchmark je potřeba alespoň pět aktuálních inzerátů.",
+      });
+    }
   }
 
   return {
