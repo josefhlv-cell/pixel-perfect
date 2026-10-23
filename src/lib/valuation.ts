@@ -17,6 +17,7 @@ export interface MarketStat {
 
 export type SaleComparable = {
   listingId: string;
+  propertyId: string;
   sourceUrl: string;
   city: string;
   district?: string | null;
@@ -32,6 +33,7 @@ export type SaleComparable = {
 
 export type SaleTarget = {
   listingId: string;
+  propertyId: string;
   city: string;
   district?: string | null;
   rooms?: string | null;
@@ -91,6 +93,7 @@ export function estimateValueFromComparables(
   for (const item of comparables) {
     if (
       item.listingId === target.listingId ||
+      item.propertyId === target.propertyId ||
       item.isSample ||
       !["ACTIVE_CONFIRMED", "ACTIVE_UNCONFIRMED"].includes(item.availability) ||
       ["STALE", "EXPIRED", "UNKNOWN"].includes(item.freshness) ||
