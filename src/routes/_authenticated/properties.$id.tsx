@@ -156,9 +156,7 @@ function Detail() {
           <Kpi
             label="Zůstatek za měsíc"
             value={formatCZK(e.monthlyCashFlow)}
-            tone={
-              e.monthlyCashFlow == null ? undefined : e.monthlyCashFlow >= 0 ? "pos" : "neg"
-            }
+            tone={e.monthlyCashFlow == null ? undefined : e.monthlyCashFlow >= 0 ? "pos" : "neg"}
             sub="Po nákladech a splátce; před daní. Hypotéka na 80 % ceny."
           />
           <div className="rounded-md border bg-card p-3">
@@ -296,12 +294,18 @@ function Detail() {
               />
               <p className="mt-2 text-xs text-muted-foreground">
                 Benchmark vychází z aktuálních nabídkových cen podobných inzerátů, nikoli z
-                realizovaných prodejů. Rozsah je orientační a závisí na dostupnosti a kvalitě srovnání.
+                realizovaných prodejů. Rozsah je orientační a závisí na dostupnosti a kvalitě
+                srovnání.
               </p>
               <ul className="mt-2 space-y-1 text-xs">
                 {e.estimate.sources.slice(0, 5).map((source, index) => (
                   <li key={source}>
-                    <a href={source} target="_blank" rel="noopener noreferrer" className="underline">
+                    <a
+                      href={source}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline"
+                    >
                       Srovnávací nabídka {index + 1}
                     </a>
                   </li>

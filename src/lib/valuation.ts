@@ -92,7 +92,8 @@ export function estimateValueFromComparables(
     !target.city.trim() ||
     !(target.areaM2 > 0) ||
     !Number.isFinite(target.areaM2)
-  ) return null;
+  )
+    return null;
 
   const seen = new Set<string>();
   const scored: {
@@ -113,21 +114,19 @@ export function estimateValueFromComparables(
       !(item.priceCzk > 0) ||
       !Number.isFinite(item.areaM2) ||
       !Number.isFinite(item.priceCzk)
-    ) continue;
+    )
+      continue;
     const urlKey = item.sourceUrl.trim().toLocaleLowerCase("cs-CZ");
     if (seen.has(urlKey)) continue;
 
     if (baseCity(item.city) !== baseCity(target.city)) continue;
-    if (
-      target.rooms &&
-      item.rooms &&
-      normalize(target.rooms) !== normalize(item.rooms)
-    ) continue;
+    if (target.rooms && item.rooms && normalize(target.rooms) !== normalize(item.rooms)) continue;
     if (
       target.propertyType &&
       item.propertyType &&
       normalize(target.propertyType) !== normalize(item.propertyType)
-    ) continue;
+    )
+      continue;
 
     const areaRatio = Math.abs(item.areaM2 - target.areaM2) / target.areaM2;
     if (areaRatio > 0.35) continue;
@@ -170,9 +169,7 @@ export function estimateValueFromComparables(
     comparables: scored.length,
     confidence: effectiveN >= 12 ? "high" : effectiveN >= 7 ? "medium" : "low",
     isSample: false,
-    evidenceAsOf: new Date(
-      Math.max(...scored.map((item) => item.observedMs)),
-    ).toISOString(),
+    evidenceAsOf: new Date(Math.max(...scored.map((item) => item.observedMs))).toISOString(),
     sources: scored.map((item) => item.item.sourceUrl),
   };
 }

@@ -167,7 +167,9 @@ export class WebAgentProvider {
     const groups = [MAJOR_PORTALS.slice(0, half), MAJOR_PORTALS.slice(half), CLASSIFIED_SITES];
     const lists = await Promise.all([
       one(`${q} ${offerTerm} inzerát`, 10),
-      ...groups.map((g) => one(`${q} ${offerTerm} (${g.map((d) => `site:${d}`).join(" OR ")})`, 12)),
+      ...groups.map((g) =>
+        one(`${q} ${offerTerm} (${g.map((d) => `site:${d}`).join(" OR ")})`, 12),
+      ),
     ]);
     // Interleave so every portal gets a slot before any portal gets a second one.
     const out: string[] = [];

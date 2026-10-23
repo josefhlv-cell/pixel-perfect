@@ -95,7 +95,10 @@ function Portfolio() {
       />
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-7">
         <Kpi label="Hodnota" value={totals.value == null ? "—" : formatCZK(totals.value)} />
-        <Kpi label="Hodnota po odečtení dluhu" value={totals.equity == null ? "—" : formatCZK(totals.equity)} />
+        <Kpi
+          label="Hodnota po odečtení dluhu"
+          value={totals.equity == null ? "—" : formatCZK(totals.equity)}
+        />
         <Kpi label="Dluh" value={totals.debt == null ? "—" : formatCZK(totals.debt)} />
         <Kpi label="Nájem / měs." value={totals.rent == null ? "—" : formatCZK(totals.rent)} />
         <Kpi

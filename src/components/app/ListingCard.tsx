@@ -75,7 +75,9 @@ export function ListingCard({
               <Stat k="Cenový benchmark" v={formatCZK(e.estimate?.estimatedValue)} />
               <Stat
                 k="Rozdíl"
-                v={e.diffBps == null ? "—" : `${e.diffBps > 0 ? "+" : ""}${formatBps(e.diffBps, 1)}`}
+                v={
+                  e.diffBps == null ? "—" : `${e.diffBps > 0 ? "+" : ""}${formatBps(e.diffBps, 1)}`
+                }
                 tone={e.diffBps != null ? (e.diffBps < 0 ? "pos" : "neg") : undefined}
               />
               <Stat k="Nájem (odhad)" v={formatCZK(e.rent)} />
@@ -83,7 +85,9 @@ export function ListingCard({
               <Stat
                 k="Zůstatek za měsíc"
                 v={formatCZK(e.monthlyCashFlow)}
-                tone={e.monthlyCashFlow != null ? (e.monthlyCashFlow >= 0 ? "pos" : "neg") : undefined}
+                tone={
+                  e.monthlyCashFlow != null ? (e.monthlyCashFlow >= 0 ? "pos" : "neg") : undefined
+                }
               />
             </>
           )}

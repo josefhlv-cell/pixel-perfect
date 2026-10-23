@@ -161,7 +161,10 @@ describe("rental evidence pool", () => {
     expect(e.rentEstimate?.method).toBe("similarity_weighted_median");
   });
   it("returns no rent estimate with insufficient rental evidence", () => {
-    const rentals = rentalComparablesFromListings([rentalRow(1), rentalRow(2)] as never[], new Map());
+    const rentals = rentalComparablesFromListings(
+      [rentalRow(1), rentalRow(2)] as never[],
+      new Map(),
+    );
     const e = enrichListing(
       { ...(listing as object), offer_type: "prodej", is_sample: false, rooms: "2+kk" } as never,
       null,

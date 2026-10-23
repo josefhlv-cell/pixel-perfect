@@ -65,7 +65,11 @@ describe("estimateValueFromComparables", () => {
 
   it("excludes target duplicates, samples, inactive, stale, wrong-layout, distant-area and future rows", () => {
     const rows = [
-      comparable(1), comparable(2), comparable(3), comparable(4), comparable(5),
+      comparable(1),
+      comparable(2),
+      comparable(3),
+      comparable(4),
+      comparable(5),
       { ...comparable(6), listingId: target.listingId },
       { ...comparable(7), propertyId: target.propertyId },
       { ...comparable(8), isSample: true },
@@ -95,9 +99,17 @@ describe("estimateValueFromComparables", () => {
   });
 
   it("is deterministic for a fixed as-of timestamp", () => {
-    const rows = [comparable(1), comparable(2), comparable(3), comparable(4), comparable(5), comparable(6)];
-    expect(estimateValueFromComparables(target, rows, "2026-10-23T00:00:00.000Z"))
-      .toEqual(estimateValueFromComparables(target, rows, "2026-10-23T00:00:00.000Z"));
+    const rows = [
+      comparable(1),
+      comparable(2),
+      comparable(3),
+      comparable(4),
+      comparable(5),
+      comparable(6),
+    ];
+    expect(estimateValueFromComparables(target, rows, "2026-10-23T00:00:00.000Z")).toEqual(
+      estimateValueFromComparables(target, rows, "2026-10-23T00:00:00.000Z"),
+    );
   });
 });
 

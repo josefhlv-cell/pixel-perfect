@@ -62,7 +62,10 @@ function Dashboard() {
           value={totals.value == null ? "—" : formatCZK(totals.value)}
           sub={`${totals.count} nemovitostí`}
         />
-        <Kpi label="Hodnota po odečtení dluhu" value={totals.equity == null ? "—" : formatCZK(totals.equity)} />
+        <Kpi
+          label="Hodnota po odečtení dluhu"
+          value={totals.equity == null ? "—" : formatCZK(totals.equity)}
+        />
         <Kpi label="Dluh" value={totals.debt == null ? "—" : formatCZK(totals.debt)} />
         <Kpi label="Měsíční nájem" value={totals.rent == null ? "—" : formatCZK(totals.rent)} />
         <Kpi
