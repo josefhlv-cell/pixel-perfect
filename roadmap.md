@@ -15,4 +15,5 @@
 
 ## Current request: production-only data
 - [x] Hide demo data across lists, market, AI and related reads without deleting history.
-- [ ] Verify authenticated preview and publish; confirm live availability.
+- [x] Verify authenticated preview (21 live listings), 216 tests and lint (0 errors); request publication and verify public /auth HTTP 200.
+- [ ] Confirm new deployment and safe production access — publication completion not yet confirmed; latest security scan reports 7 critical permissive read-policy findings.
