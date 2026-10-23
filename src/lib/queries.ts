@@ -28,7 +28,13 @@ export const listingsQuery = queryOptions({
     const saleComparables = saleComparablesFromListings(l.data ?? [], props);
     return (l.data ?? [])
       .map((x) =>
-        enrichListing(x, props.get(x.property_id) ?? null, stats, (s.data ?? []) as never, saleComparables),
+        enrichListing(
+          x,
+          props.get(x.property_id) ?? null,
+          stats,
+          (s.data ?? []) as never,
+          saleComparables,
+        ),
       )
       .sort((a, b) => b.priority - a.priority);
   },
