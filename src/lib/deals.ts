@@ -4,8 +4,12 @@
  */
 import { calculateTotalReturn, DEFAULT_ASSUMPTIONS, type InvestmentInput } from "./calculations";
 import {
+  estimateRentFromComparables,
+  type RentEstimate,
+  type RentalComparable,
+} from "./rent-model";
+import {
   computeDealPriority,
-  estimateRent,
   estimateValue,
   grossYieldFor,
   priceDifferenceBps,
@@ -32,6 +36,7 @@ export interface EnrichedListing {
   estimate: ReturnType<typeof estimateValue>;
   diffBps: number | null;
   rent: number | null;
+  rentEstimate: RentEstimate | null;
   grossYieldBps: number | null;
   monthlyCashFlow: number | null;
   priceDropped: boolean;
@@ -52,12 +57,14 @@ export function latestStatsByCity(rows: MarketRow[]): Map<string, MarketStat> {
   return new Map([...m].map(([k, r]) => [k, r as MarketStat]));
 }
 
-/** Build the evidence pool from production listings; no city-average fallback. */
+/** Build the evidence pool from production SALE listings; no city-average fallback. */
 export function saleComparablesFromListings(
   rows: ListingRow[],
   properties: Map<string, PropertyRow>,
 ): SaleComparable[] {
   return rows.flatMap((row) => {
+    // Rental listings carry a monthly rent in `price`; they must never enter the sale pool.
+    if (row.offer_type === "pronajem") return [];
     const property = properties.get(row.property_id);
     const areaM2 = row.area_m2 == null ? null : Number(row.area_m2);
     const priceCzk = row.price == null ? null : Number(row.price);
